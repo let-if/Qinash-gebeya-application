@@ -1,31 +1,49 @@
 
 // import { Router, Request, Response } from 'express';
 // import multer from 'multer';
-// import path from 'path';
-// import fs from 'fs';
 // import bcrypt from 'bcryptjs';
+// import { v2 as cloudinary } from 'cloudinary';
+// import { Readable } from 'stream';
 // import prisma from '../../config/db';
 
 // const router = Router();
 
-// // 1. Ensure uploads directory exists on disk
-// const uploadDir = path.resolve(process.cwd(), 'uploads');
-// if (!fs.existsSync(uploadDir)) {
-//   fs.mkdirSync(uploadDir, { recursive: true });
-// }
-
-// // 2. Safe diskStorage with clean unique filenames
-// const storage = multer.diskStorage({
-//   destination: (_req, _file, cb) => {
-//     cb(null, uploadDir);
-//   },
-//   filename: (_req, file, cb) => {
-//     const ext = path.extname(file.originalname) || '.png';
-//     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-//     cb(null, `${uniqueSuffix}${ext}`);
-//   },
+// // ====================================================
+// // Cloudinary Configuration
+// // ====================================================
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'beahlrqy',
+//   api_key: process.env.CLOUDINARY_API_KEY || '953418283816441',
+//   api_secret: process.env.CLOUDINARY_API_SECRET || 'RJVVmv3OHuzQ05Zm_l4L_F6SwZo',
+//   secure: true,
 // });
 
+// // Stream buffer directly to Cloudinary
+// const uploadToCloudinary = (
+//   buffer: Buffer,
+//   folder: string = 'b2b-retail',
+//   resourceType: 'image' | 'video' | 'auto' = 'auto'
+// ): Promise<string> => {
+//   return new Promise((resolve, reject) => {
+//     const uploadStream = cloudinary.uploader.upload_stream(
+//       {
+//         folder,
+//         resource_type: resourceType,
+//       },
+//       (error, result) => {
+//         if (error || !result) {
+//           return reject(error || new Error('Cloudinary upload failed'));
+//         }
+//         resolve(result.secure_url);
+//       }
+//     );
+
+//     Readable.from(buffer).pipe(uploadStream);
+//   });
+// };
+
+// // Memory Storage (eliminates ephemeral disk deletion on cloud deployment)
+// const storage = multer.memoryStorage();
 // const upload = multer({
 //   storage,
 //   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB for video ads & photos
@@ -57,21 +75,28 @@
 // });
 
 // // ====================================================
-// // 1. Upload File Route (Images & MP4 Videos)
+// // 1. Upload File Route (Cloudinary Stream for Images & Videos)
 // // ====================================================
-// router.post('/upload', upload.single('file'), (req: Request, res: Response): any => {
-//   if (!req.file) {
-//     return res.status(400).json({ error: 'ምንም ፋይል አልተመረጠም (No file selected)' });
+// router.post('/upload', upload.single('file'), async (req: Request, res: Response): Promise<any> => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: 'ምንም ፋይል አልተመረጠም (No file selected)' });
+//     }
+
+//     const isVideo = req.file.mimetype.startsWith('video');
+//     const folder = isVideo ? 'b2b-retail/videos' : 'b2b-retail/images';
+//     const resourceType = isVideo ? 'video' : 'image';
+
+//     const secureUrl = await uploadToCloudinary(req.file.buffer, folder, resourceType);
+
+//     return res.json({
+//       url: secureUrl,
+//       mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+//     });
+//   } catch (err: any) {
+//     console.error('Cloudinary upload error:', err);
+//     return res.status(500).json({ error: err.message || 'ፋይሉን መጫን አልተቻለም' });
 //   }
-
-//   // Clean absolute public URL without literal syntax errors
-//   const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-//   const isVideo = req.file.mimetype.startsWith('video');
-
-//   return res.json({
-//     url: fileUrl,
-//     mediaType: isVideo ? 'VIDEO' : 'IMAGE',
-//   });
 // });
 
 // // ====================================================
@@ -85,7 +110,8 @@
 //     return res.status(500).json({ error: err.message });
 //   }
 // });
-// router.post('/banners', async (req: Request, res: Response): Promise => {
+
+// router.post('/banners', async (req: Request, res: Response): Promise<any> => {
 //   try {
 //     const {
 //       title,
@@ -132,46 +158,6 @@
 //     return res.status(400).json({ error: err.message });
 //   }
 // });
-// // router.post('/banners', async (req: Request, res: Response): Promise<any> => {
-// //   try {
-// //     const {
-// //       title,
-// //       mediaType,
-// //       mediaUrl,
-// //       mediaUrls,
-// //       mediaTypes,
-// //       actionLink,
-// //       displayOrder,
-// //     } = req.body;
-
-// //     const urlsArray: string[] = Array.isArray(mediaUrls) && mediaUrls.length > 0
-// //       ? mediaUrls
-// //       : (mediaUrl ? [mediaUrl] : []);
-
-// //     const typesArray: string[] = Array.isArray(mediaTypes) && mediaTypes.length > 0
-// //       ? mediaTypes
-// //       : [mediaType || 'IMAGE'];
-
-// //     const primaryUrl = urlsArray[0] || mediaUrl || '';
-// //     const primaryType = (typesArray[0] as any) || mediaType || 'IMAGE';
-
-// //     const banner = await prisma.banner.create({
-// //       data: {
-// //         title,
-// //         mediaType: primaryType === 'VIDEO' ? 'VIDEO' : 'IMAGE',
-// //         mediaUrl: primaryUrl,
-// //         mediaUrls: urlsArray.slice(0, 3), // Supports up to 3 media items
-// //         mediaTypes: typesArray.slice(0, 3),
-// //         actionLink,
-// //         displayOrder: Number(displayOrder) || 0,
-// //       },
-// //     });
-
-// //     return res.status(201).json(banner);
-// //   } catch (err: any) {
-// //     return res.status(400).json({ error: err.message });
-// //   }
-// // });
 
 // // ====================================================
 // // 3. Categories
@@ -385,7 +371,7 @@
 
 // router.patch('/users/:id/approval', async (req: Request, res: Response): Promise<any> => {
 //   try {
-//     const { status } = req.body; // 'APPROVED' | 'REJECTED' | 'SUSPENDED'
+//     const { status } = req.body;
 //     const updated = await prisma.user.update({
 //       where: { id: req.params.id },
 //       data: { approvalStatus: status },
@@ -396,7 +382,6 @@
 //   }
 // });
 
-// // Create Sub-Admin with Custom Checkbox Permissions
 // router.post('/users', async (req: Request, res: Response): Promise<any> => {
 //   try {
 //     const { phoneNumber, shopName, password, role, allowedTabs } = req.body;
@@ -420,7 +405,6 @@
 //   }
 // });
 
-// // Modify Sub-Admin Permissions
 // router.patch('/users/:id/permissions', async (req: Request, res: Response): Promise<any> => {
 //   try {
 //     const { id } = req.params;
@@ -448,17 +432,6 @@
 // // ====================================================
 // // 9. Delete Category (Cascades products)
 // // ====================================================
-// // router.delete('/categories/:id', async (req: Request, res: Response): Promise<any> => {
-// //   try {
-// //     const { id } = req.params;
-// //     await prisma.category.delete({
-// //       where: { id },
-// //     });
-// //     return res.status(200).json({ message: 'ምድቡና በውስጡ ያሉ ምርቶች በሙሉ ተሰርዘዋል' });
-// //   } catch (err: any) {
-// //     return res.status(400).json({ error: err.message || 'ምድቡን መሰረዝ አልተቻለም' });
-// //   }
-// // });
 // router.delete('/categories/:id', async (req: Request, res: Response): Promise<any> => {
 //   try {
 //     const { id } = req.params;
@@ -475,19 +448,16 @@
 //     const productIds = category.products.map((p) => p.id);
 
 //     await prisma.$transaction(async (tx) => {
-//       // 1. Delete order item records pointing to products in this category
 //       if (productIds.length > 0) {
 //         await tx.orderItem.deleteMany({
 //           where: { productId: { in: productIds } },
 //         });
 
-//         // 2. Delete products inside this category
 //         await tx.product.deleteMany({
 //           where: { categoryId: id },
 //         });
 //       }
 
-//       // 3. Delete the category itself
 //       await tx.category.delete({
 //         where: { id },
 //       });
@@ -506,19 +476,7 @@
 // // ====================================================
 // // 10. Delete Single Product
 // // ====================================================
-// // router.delete('/products/:id', async (req: Request, res: Response): Promise<any> => {
-// //   try {
-// //     const { id } = req.params;
-// //     await prisma.product.delete({
-// //       where: { id },
-// //     });
-// //     return res.status(200).json({ message: 'ምርቱ በተሳካ ሁኔታ ተሰርዟል' });
-// //   } catch (err: any) {
-// //     return res.status(400).json({ error: err.message || 'ምርቱን መሰረዝ አልተቻለም' });
-// //   }
-// // });
-// // DELETE /api/catalog/products/:id
-// router.delete('/products/:id', async (req, res: Response): Promise => {
+// router.delete('/products/:id', async (req: Request, res: Response): Promise<any> => {
 //   try {
 //     const { id } = req.params;
 
@@ -813,7 +771,7 @@ router.post('/products', async (req: Request, res: Response): Promise<any> => {
 // ====================================================
 router.put('/products/:id', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const {
       categoryId,
       nameAm,
@@ -868,7 +826,7 @@ router.put('/products/:id', async (req: Request, res: Response): Promise<any> =>
 // ====================================================
 router.patch('/products/:id/restock', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { addedStock } = req.body;
 
     const quantityToAdd = Number(addedStock);
@@ -923,9 +881,10 @@ router.get('/users', async (_req, res): Promise<any> => {
 
 router.patch('/users/:id/approval', async (req: Request, res: Response): Promise<any> => {
   try {
+    const id = String(req.params.id);
     const { status } = req.body;
     const updated = await prisma.user.update({
-      where: { id: req.params.id },
+      where: { id },
       data: { approvalStatus: status },
     });
     return res.json({ success: true, user: updated });
@@ -959,7 +918,7 @@ router.post('/users', async (req: Request, res: Response): Promise<any> => {
 
 router.patch('/users/:id/permissions', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const { allowedTabs } = req.body;
 
     if (!Array.isArray(allowedTabs)) {
@@ -986,7 +945,7 @@ router.patch('/users/:id/permissions', async (req: Request, res: Response): Prom
 // ====================================================
 router.delete('/categories/:id', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -997,7 +956,7 @@ router.delete('/categories/:id', async (req: Request, res: Response): Promise<an
       return res.status(404).json({ error: 'ምድቡ አልተገኘም' });
     }
 
-    const productIds = category.products.map((p) => p.id);
+    const productIds = category.products.map((p: any) => p.id);
 
     await prisma.$transaction(async (tx) => {
       if (productIds.length > 0) {
@@ -1030,7 +989,7 @@ router.delete('/categories/:id', async (req: Request, res: Response): Promise<an
 // ====================================================
 router.delete('/products/:id', async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const existing = await prisma.product.findUnique({ where: { id } });
     if (!existing) {

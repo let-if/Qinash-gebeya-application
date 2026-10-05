@@ -14,7 +14,7 @@ function normalizePhone(raw: string): string {
 }
 
 // Inbound SMS webhook (Compatible with AfroMessage / Twilio / SMS Gateway apps)
-router.post('/webhook', async (req: Request, res: Response): Promise => {
+router.post('/webhook', async (req: Request, res: Response): Promise<any> => {
   try {
     // Accommodate common gateway payload keys (from/sender/phone and text/message/body)
     const sender = req.body.from || req.body.sender || req.body.phoneNumber || req.query.from;
@@ -95,7 +95,7 @@ router.post('/webhook', async (req: Request, res: Response): Promise => {
           totalAmount,
           deliverySlot: slotRaw === 'BATCH_12PM' ? 'BATCH_12PM' : 'BATCH_6AM',
           status: 'PENDING',
-          orderSource: 'SMS',
+         orderSource: 'SMS' as any,
           isCreditOrder: isCreditRaw,
           creditApproved: isCreditRaw ? null : null,
           items: {
