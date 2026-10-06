@@ -1,5 +1,5 @@
 
-// import { Router, Response } from 'express';
+// import { Router, Request, Response } from 'express';
 // import { CatalogService } from './catalog.service';
 // import prisma from '../../config/db';
 
@@ -15,9 +15,8 @@
 // }
 
 // // GET /api/catalog/ads (Active dynamic image & video banners including 3-slot media arrays)
-// router.get('/ads', async (_req, res: Response): Promise<any> => {
+// router.get('/ads', async (_req, res: Response): Promise => {
 //   try {
-//     // Directly query with mediaUrls & mediaTypes to guarantee multi-video arrays are returned
 //     const ads = await prisma.banner.findMany({
 //       where: { isActive: true },
 //       orderBy: { displayOrder: 'asc' },
@@ -26,8 +25,8 @@
 //         title: true,
 //         mediaType: true,
 //         mediaUrl: true,
-//         mediaUrls: true,    // <-- CRITICAL: Exposes all 3 video links
-//         mediaTypes: true,   // <-- CRITICAL: Exposes array of VIDEO / IMAGE types
+//         mediaUrls: true,    // <-- Exposes all 3 video/image links
+//         mediaTypes: true,   // <-- Exposes array of VIDEO / IMAGE types
 //         actionLink: true,
 //         displayOrder: true,
 //         isActive: true,
@@ -40,8 +39,22 @@
 //   }
 // });
 
+// // GET /api/catalog/post-order-ad (Active 3-second skippable ad for post-order popup)
+// router.get('/post-order-ad', async (_req, res: Response): Promise => {
+//   try {
+//     const ad = await prisma.interstitialAd.findFirst({
+//       where: { isActive: true },
+//       orderBy: { createdAt: 'desc' },
+//     });
+
+//     return res.status(200).json({ ad: ad || null });
+//   } catch (err: any) {
+//     return res.status(500).json({ error: err.message || 'ማስታወቂያውን ማግኘት አልተቻለም' });
+//   }
+// });
+
 // // GET /api/catalog/categories
-// router.get('/categories', async (_req, res: Response): Promise<any> => {
+// router.get('/categories', async (_req, res: Response): Promise => {
 //   try {
 //     const categories = await CatalogService.listCategories();
 //     return res.status(200).json({ categories });
@@ -51,7 +64,7 @@
 // });
 
 // // GET /api/catalog/products (Supports categoryId and fastMoving filters)
-// router.get('/products', async (req, res: Response): Promise<any> => {
+// router.get('/products', async (req: Request, res: Response): Promise => {
 //   try {
 //     const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : undefined;
 //     const fastMoving = req.query.fastMoving === 'true';
@@ -69,9 +82,9 @@
 // });
 
 // // GET /api/catalog/products/:id (Single product detail)
-// router.get('/products/:id', async (req, res: Response): Promise<any> => {
+// router.get('/products/:id', async (req: Request, res: Response): Promise => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     const rawProduct = await CatalogService.getProductById(id);
 //     if (!rawProduct) {
 //       return res.status(404).json({ error: 'ምርቱ አልተገኘም' });
@@ -85,9 +98,9 @@
 // });
 
 // // PATCH /api/catalog/products/:id (Quick inventory & price updates from Admin Portal)
-// router.patch('/products/:id', async (req, res: Response): Promise<any> => {
+// router.patch('/products/:id', async (req: Request, res: Response): Promise => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     const {
 //       actualStock,
 //       postedStock,
@@ -127,9 +140,9 @@
 // // ====================================================
 // // DELETE /api/catalog/categories/:id (Safe Cascade Deletion)
 // // ====================================================
-// router.delete('/categories/:id', async (req, res: Response): Promise<any> => {
+// router.delete('/categories/:id', async (req: Request, res: Response): Promise => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 
 //     const category = await prisma.category.findUnique({
 //       where: { id },
@@ -195,9 +208,9 @@
 // // ====================================================
 // // DELETE /api/catalog/products/:id (Safe Soft/Hard Delete)
 // // ====================================================
-// router.delete('/products/:id', async (req, res: Response): Promise<any> => {
+// router.delete('/products/:id', async (req: Request, res: Response): Promise => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 
 //     const existing = await prisma.product.findUnique({ where: { id } });
 //     if (!existing) {
@@ -247,7 +260,7 @@ function mapToPublicProduct(product: any) {
 }
 
 // GET /api/catalog/ads (Active dynamic image & video banners including 3-slot media arrays)
-router.get('/ads', async (_req, res: Response): Promise => {
+router.get('/ads', async (_req, res: Response) => {
   try {
     const ads = await prisma.banner.findMany({
       where: { isActive: true },
@@ -272,7 +285,7 @@ router.get('/ads', async (_req, res: Response): Promise => {
 });
 
 // GET /api/catalog/post-order-ad (Active 3-second skippable ad for post-order popup)
-router.get('/post-order-ad', async (_req, res: Response): Promise => {
+router.get('/post-order-ad', async (_req, res: Response) => {
   try {
     const ad = await prisma.interstitialAd.findFirst({
       where: { isActive: true },
@@ -286,7 +299,7 @@ router.get('/post-order-ad', async (_req, res: Response): Promise => {
 });
 
 // GET /api/catalog/categories
-router.get('/categories', async (_req, res: Response): Promise => {
+router.get('/categories', async (_req, res: Response) => {
   try {
     const categories = await CatalogService.listCategories();
     return res.status(200).json({ categories });
@@ -296,7 +309,7 @@ router.get('/categories', async (_req, res: Response): Promise => {
 });
 
 // GET /api/catalog/products (Supports categoryId and fastMoving filters)
-router.get('/products', async (req: Request, res: Response): Promise => {
+router.get('/products', async (req: Request, res: Response) => {
   try {
     const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : undefined;
     const fastMoving = req.query.fastMoving === 'true';
@@ -314,7 +327,7 @@ router.get('/products', async (req: Request, res: Response): Promise => {
 });
 
 // GET /api/catalog/products/:id (Single product detail)
-router.get('/products/:id', async (req: Request, res: Response): Promise => {
+router.get('/products/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
     const rawProduct = await CatalogService.getProductById(id);
@@ -330,7 +343,7 @@ router.get('/products/:id', async (req: Request, res: Response): Promise => {
 });
 
 // PATCH /api/catalog/products/:id (Quick inventory & price updates from Admin Portal)
-router.patch('/products/:id', async (req: Request, res: Response): Promise => {
+router.patch('/products/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
     const {
@@ -372,7 +385,7 @@ router.patch('/products/:id', async (req: Request, res: Response): Promise => {
 // ====================================================
 // DELETE /api/catalog/categories/:id (Safe Cascade Deletion)
 // ====================================================
-router.delete('/categories/:id', async (req: Request, res: Response): Promise => {
+router.delete('/categories/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
 
@@ -440,7 +453,7 @@ router.delete('/categories/:id', async (req: Request, res: Response): Promise =>
 // ====================================================
 // DELETE /api/catalog/products/:id (Safe Soft/Hard Delete)
 // ====================================================
-router.delete('/products/:id', async (req: Request, res: Response): Promise => {
+router.delete('/products/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
 
