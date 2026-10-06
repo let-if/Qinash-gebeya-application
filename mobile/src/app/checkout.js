@@ -1,9 +1,9 @@
 
-
 // import React, { useCallback, useMemo, useState } from 'react';
 // import {
 //   ActivityIndicator,
 //   Image,
+//   Linking,
 //   Platform,
 //   SafeAreaView,
 //   ScrollView,
@@ -13,16 +13,20 @@
 //   View,
 //   useWindowDimensions,
 // } from 'react-native';
-// import { useFocusEffect, useRouter } from 'expo-router';
+// import { useFocusEffect, useRouter, useLocalSearchParams } from 'expo-router';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
+// import * as Location from 'expo-location';
 // import { apiRequest } from '../lib/api';
 // import { useSession } from '../context/SessionContext';
 // import CustomAlert from '../components/CustomAlert';
+
+// const ADMIN_DESTINATION_PHONE = '+251911000000';
 
 // const UNIT_MAP = {
 //   'ካርቶን': 'CARTON',
 //   'ግማሽ': 'HALF_CARTON',
 //   'ግማሽ ካርቶን': 'HALF_CARTON',
+//   'ግማሽ ደርዘን': 'HALF_DOZEN',
 //   'ፓኬት': 'PACK',
 //   'ደርዘን': 'DOZEN',
 //   'ኪሎ': 'KG',
@@ -31,6 +35,7 @@
 //   'መረብ': 'MEREB',
 //   CARTON: 'CARTON',
 //   HALF_CARTON: 'HALF_CARTON',
+//   HALF_DOZEN: 'HALF_DOZEN',
 //   PACK: 'PACK',
 //   DOZEN: 'DOZEN',
 //   KG: 'KG',
@@ -41,14 +46,22 @@
 
 // export default function CheckoutScreen() {
 //   const router = useRouter();
+//   const params = useLocalSearchParams();
 //   const { token, lang } = useSession();
 //   const { width: SCREEN_W } = useWindowDimensions();
 
 //   const [cart, setCart] = useState({});
+//   const [drafts, setDrafts] = useState({});
+//   const [draftExpanded, setDraftExpanded] = useState(false);
+//   const [canOrderOnCredit, setCanOrderOnCredit] = useState(false);
+
 //   const [slot, setSlot] = useState('BATCH_12PM');
-//   const [isCredit, setIsCredit] = useState(false); // Credit option state
+//   const [isCredit, setIsCredit] = useState(false);
 //   const [submitting, setSubmitting] = useState(false);
 //   const [loadingCart, setLoadingCart] = useState(true);
+
+//   const [offlinePromptVisible, setOfflinePromptVisible] = useState(false);
+//   const [pendingSmsPayload, setPendingSmsPayload] = useState('');
 
 //   const [alertConfig, setAlertConfig] = useState({
 //     visible: false,
@@ -57,23 +70,62 @@
 //     type: 'error',
 //   });
 
-//   // ---- Adaptive layout metrics (UI only) ----
 //   const isSmall = SCREEN_W < 350;
 //   const isTablet = SCREEN_W >= 680;
 //   const S = isSmall ? 0.9 : isTablet ? 1.12 : SCREEN_W >= 420 ? 1.06 : 1;
 //   const dyn = useMemo(() => buildDynamic(S, isTablet), [S, isTablet]);
 
-//   const loadCartFromStorage = async () => {
+//   const loadUserData = async () => {
 //     try {
-//       const stored = await AsyncStorage.getItem('user_cart');
-//       if (stored) {
-//         setCart(JSON.parse(stored));
-//       } else {
-//         setCart({});
+//       // 1. Fetch live user state from the server
+//       if (token) {
+//         const res = await apiRequest('/auth/me', { token }).catch(() => null);
+//         const userData = res?.user || res?.data;
+//         if (userData && typeof userData.canOrderOnCredit !== 'undefined') {
+//           const eligible = Boolean(userData.canOrderOnCredit);
+//           setCanOrderOnCredit(eligible);
+//           await AsyncStorage.setItem('user_credit_eligible', eligible ? '1' : '0');
+//           return;
+//         }
 //       }
-//     } catch (err) {
-//       console.log('Checkout loadCart error:', err);
+
+//       // 2. Check local fallback storage
+//       const cachedEligible = await AsyncStorage.getItem('user_credit_eligible').catch(() => null);
+//       if (cachedEligible !== null) {
+//         setCanOrderOnCredit(cachedEligible === '1');
+//         return;
+//       }
+
+//       const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
+//       if (storedUser) {
+//         const parsed = JSON.parse(storedUser);
+//         setCanOrderOnCredit(Boolean(parsed?.canOrderOnCredit));
+//       }
+//     } catch {
+//       setCanOrderOnCredit(false);
+//     }
+//   };
+
+//   const loadStorageCarts = async () => {
+//     try {
+//       const [storedCart, storedDrafts] = await Promise.all([
+//         AsyncStorage.getItem('user_cart'),
+//         AsyncStorage.getItem('user_draft_cart'),
+//       ]);
+
+//       const parsedCart = storedCart ? JSON.parse(storedCart) : {};
+//       const parsedDrafts = storedDrafts ? JSON.parse(storedDrafts) : {};
+
+//       setCart(parsedCart);
+//       setDrafts(parsedDrafts);
+
+//       // Default draft view to collapsed unless opened via draft action
+//       if (params?.isDraft === 'true' && Object.keys(parsedDrafts).length > 0) {
+//         setDraftExpanded(true);
+//       }
+//     } catch {
 //       setCart({});
+//       setDrafts({});
 //     } finally {
 //       setLoadingCart(false);
 //     }
@@ -81,8 +133,9 @@
 
 //   useFocusEffect(
 //     useCallback(() => {
-//       loadCartFromStorage();
-//     }, [])
+//       loadStorageCarts();
+//       loadUserData();
+//     }, [token])
 //   );
 
 //   const updateQuantity = async (key, delta) => {
@@ -104,6 +157,39 @@
 //     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
 //   };
 
+//   const removeItem = async (key) => {
+//     const updated = { ...cart };
+//     delete updated[key];
+//     setCart(updated);
+//     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
+//   };
+
+//   // Move all draft items into the active cart and clear draft storage
+//   const handleApplyDraftToCart = async () => {
+//     if (Object.keys(drafts).length === 0) return;
+
+//     const mergedCart = { ...cart, ...drafts };
+//     setCart(mergedCart);
+//     setDrafts({});
+
+//     await AsyncStorage.setItem('user_cart', JSON.stringify(mergedCart));
+//     await AsyncStorage.removeItem('user_draft_cart');
+
+//     setDraftExpanded(false);
+//     setAlertConfig({
+//       visible: true,
+//       title: 'ረቂቅ ተጭኗል',
+//       message: 'የተቀመጡት የረቂቅ እቃዎች ወደ ትእዛዝ መላኪያ ዝርዝር ገብተዋል',
+//       type: 'success',
+//     });
+//   };
+
+//   const handleDiscardDraft = async () => {
+//     setDrafts({});
+//     await AsyncStorage.removeItem('user_draft_cart');
+//     setDraftExpanded(false);
+//   };
+
 //   const handleSafeBack = () => {
 //     if (router.canGoBack()) {
 //       router.back();
@@ -113,12 +199,123 @@
 //   };
 
 //   const cartEntries = Object.entries(cart);
+//   const draftEntries = Object.entries(drafts);
 
 //   const totalPrice = cartEntries.reduce(
 //     (sum, [_, item]) =>
 //       sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
 //     0
 //   );
+
+//   const draftTotalPrice = draftEntries.reduce(
+//     (sum, [_, item]) =>
+//       sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
+//     0
+//   );
+
+//   const generateSmsOrderText = (loc) => {
+//     if (cartEntries.length === 0) return '';
+//     const itemChunks = cartEntries.map(([_, it]) => {
+//       const pId = it.productId || 'PROD';
+//       const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
+//       const u = UNIT_MAP[it.unit] || 'CARTON';
+//       return `${pId}:${qty}:${u}`;
+//     });
+//     const creditFlag = isCredit && canOrderOnCredit ? '1' : '0';
+//     const locPart = loc?.latitude ? `#LOC:${loc.latitude},${loc.longitude}` : '';
+//     return `ORD#${itemChunks.join('|')}#${slot}#${creditFlag}${locPart}`;
+//   };
+
+//   const acquireAccurateGps = async () => {
+//     try {
+//       if (Platform.OS === 'web') {
+//         return new Promise((resolve) => {
+//           if (typeof navigator !== 'undefined' && navigator.geolocation) {
+//             navigator.geolocation.getCurrentPosition(
+//               (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+//               () => resolve({ latitude: null, longitude: null }),
+//               { timeout: 5000 }
+//             );
+//           } else {
+//             resolve({ latitude: null, longitude: null });
+//           }
+//         });
+//       }
+
+//       const { status } = await Location.requestForegroundPermissionsAsync();
+//       if (status !== 'granted') return { latitude: null, longitude: null };
+
+//       const location = await Location.getCurrentPositionAsync({
+//         accuracy: Location.Accuracy.Balanced,
+//       });
+
+//       return {
+//         latitude: location.coords.latitude,
+//         longitude: location.coords.longitude,
+//       };
+//     } catch {
+//       return { latitude: null, longitude: null };
+//     }
+//   };
+
+//   const checkIsDeviceOnline = async () => {
+//     if (Platform.OS === 'web') {
+//       return typeof navigator !== 'undefined' ? navigator.onLine : true;
+//     }
+//     try {
+//       const controller = new AbortController();
+//       const timeoutId = setTimeout(() => controller.abort(), 3500);
+//       await fetch('https://clients3.google.com/generate_204', {
+//         method: 'HEAD',
+//         signal: controller.signal,
+//       });
+//       clearTimeout(timeoutId);
+//       return true;
+//     } catch {
+//       return false;
+//     }
+//   };
+
+//   const openSmsApplicationWithPayload = async (payload) => {
+//     setOfflinePromptVisible(false);
+//     const separator = Platform.OS === 'ios' ? '&' : '?';
+//     const smsUrl = `sms:${ADMIN_DESTINATION_PHONE}${separator}body=${encodeURIComponent(payload)}`;
+
+//     try {
+//       const supported = await Linking.canOpenURL(smsUrl);
+//       if (supported) {
+//         await Linking.openURL(smsUrl);
+//       } else {
+//         await Linking.openURL(`sms:${ADMIN_DESTINATION_PHONE}`);
+//       }
+//     } catch {
+//       setAlertConfig({
+//         visible: true,
+//         title: 'መልእክት ስህተት',
+//         message: 'የ SMS መተግበሪያውን በስልኮ ላይ መክፈት አልተቻለም',
+//         type: 'error',
+//       });
+//     }
+//   };
+
+//   const handleOpenMobileDataSettings = async () => {
+//     setOfflinePromptVisible(false);
+//     try {
+//       if (Platform.OS === 'android') {
+//         await Linking.sendIntent('android.settings.DATA_ROAMING_SETTINGS').catch(async () => {
+//           await Linking.openSettings();
+//         });
+//       } else if (Platform.OS === 'ios') {
+//         await Linking.openURL('App-Prefs:root=MOBILE_DATA_SETTINGS_ID').catch(async () => {
+//           await Linking.openSettings();
+//         });
+//       } else {
+//         await Linking.openSettings();
+//       }
+//     } catch {
+//       await Linking.openSettings();
+//     }
+//   };
 
 //   const handleSubmitOrder = async () => {
 //     if (cartEntries.length === 0) {
@@ -133,6 +330,17 @@
 
 //     setSubmitting(true);
 
+//     const isOnline = await checkIsDeviceOnline();
+//     const gpsLocation = await acquireAccurateGps();
+
+//     if (!isOnline) {
+//       setSubmitting(false);
+//       const offlineSmsString = generateSmsOrderText(gpsLocation);
+//       setPendingSmsPayload(offlineSmsString);
+//       setOfflinePromptVisible(true);
+//       return;
+//     }
+
 //     try {
 //       const payload = cartEntries.map(([_, item]) => ({
 //         productId: item.productId,
@@ -146,7 +354,9 @@
 //         token,
 //         body: {
 //           deliverySlot: slot,
-//           isCreditOrder: isCredit,
+//           isCreditOrder: Boolean(isCredit && canOrderOnCredit),
+//           latitude: gpsLocation.latitude,
+//           longitude: gpsLocation.longitude,
 //           items: payload,
 //         },
 //       });
@@ -160,12 +370,10 @@
 //           ? 'ጠዋት 6:00 ሰዓት'
 //           : 'ቀትር 12:00 ሰዓት';
 
-//       // Clear local storage cart
 //       await AsyncStorage.removeItem('user_cart');
 //       setCart({});
 
-//       // If requested on Credit, route directly to Ledger tab; else go to confirmation
-//       if (isCredit) {
+//       if (isCredit && canOrderOnCredit) {
 //         router.replace('/(tabs)/ledger');
 //       } else {
 //         router.replace({
@@ -208,7 +416,6 @@
 
 //       <View style={[styles.container, dyn.container]}>
 //         <View style={[styles.contentWrap, dyn.contentWrap]}>
-//           {/* ---------- HEADER ---------- */}
 //           <View style={styles.headerRow}>
 //             <TouchableOpacity
 //               style={[styles.backLink, dyn.backChip]}
@@ -220,6 +427,63 @@
 //           </View>
 
 //           <Text style={[styles.pageTitle, dyn.pageTitle]}>ትእዛዙን ላክ</Text>
+
+//           {/* DRAFT ACCORDION PANEL */}
+//           {draftEntries.length > 0 && (
+//             <View style={styles.draftCardMaster}>
+//               <TouchableOpacity
+//                 style={styles.draftToggleHeader}
+//                 activeOpacity={0.8}
+//                 onPress={() => setDraftExpanded(!draftExpanded)}
+//               >
+//                 <View style={styles.draftLeftTitle}>
+//                   <View style={styles.draftIconTag}>
+//                     <Text style={styles.draftIconEmoji}>📁</Text>
+//                   </View>
+//                   <View>
+//                     <Text style={styles.draftHeadText}>የተቀመጠ ረቂቅ ({draftEntries.length} እቃዎች)</Text>
+//                     <Text style={styles.draftSubText}>ድምር: {draftTotalPrice.toLocaleString()} ብር</Text>
+//                   </View>
+//                 </View>
+
+//                 <View style={styles.draftToggleArrow}>
+//                   <Text style={styles.draftArrowSymbol}>{draftExpanded ? '▲ ዝጋ' : '▼ ክፈት'}</Text>
+//                 </View>
+//               </TouchableOpacity>
+
+//               {draftExpanded && (
+//                 <View style={styles.draftExpandedBody}>
+//                   <View style={styles.draftItemsDivider} />
+//                   {draftEntries.map(([dKey, dItem]) => (
+//                     <View key={dKey} style={styles.draftRowSingle}>
+//                       <Text style={styles.draftItemName} numberOfLines={1}>• {dItem.name}</Text>
+//                       <Text style={styles.draftItemSpec}>
+//                         {dItem.quantity} {dItem.unit} · {(Number(dItem.price) * Number(dItem.quantity)).toLocaleString()} ብር
+//                       </Text>
+//                     </View>
+//                   ))}
+
+//                   <View style={styles.draftControlButtons}>
+//                     <TouchableOpacity
+//                       style={styles.draftDiscardBtn}
+//                       onPress={handleDiscardDraft}
+//                       activeOpacity={0.75}
+//                     >
+//                       <Text style={styles.draftDiscardBtnText}>ሰርዝ</Text>
+//                     </TouchableOpacity>
+
+//                     <TouchableOpacity
+//                       style={styles.draftApplyBtn}
+//                       onPress={handleApplyDraftToCart}
+//                       activeOpacity={0.8}
+//                     >
+//                       <Text style={styles.draftApplyBtnText}>ወደ ዝርዝር ጫን ›</Text>
+//                     </TouchableOpacity>
+//                   </View>
+//                 </View>
+//               )}
+//             </View>
+//           )}
 
 //           {cartEntries.length === 0 ? (
 //             <View style={styles.emptyContainer}>
@@ -248,7 +512,6 @@
 //               contentContainerStyle={[styles.scrollContent, dyn.scrollContent]}
 //               showsVerticalScrollIndicator={false}
 //             >
-//               {/* ---------- Cart Items List ---------- */}
 //               {cartEntries.map(([key, item]) => {
 //                 const isImageFile =
 //                   item.imageUrl &&
@@ -284,34 +547,44 @@
 //                       </View>
 //                     </View>
 
-//                     <View style={[styles.stepperContainer, dyn.stepperContainer]}>
-//                       <TouchableOpacity
-//                         style={[styles.stepBtn, dyn.stepBtn]}
-//                         onPress={() => updateQuantity(key, -1)}
-//                         activeOpacity={0.6}
-//                       >
-//                         <Text style={[styles.stepBtnText, dyn.stepBtnText]}>−</Text>
-//                       </TouchableOpacity>
+//                     <View style={styles.actionGroupRight}>
+//                       <View style={[styles.stepperContainer, dyn.stepperContainer]}>
+//                         <TouchableOpacity
+//                           style={[styles.stepBtn, dyn.stepBtn]}
+//                           onPress={() => updateQuantity(key, -1)}
+//                           activeOpacity={0.6}
+//                         >
+//                           <Text style={[styles.stepBtnText, dyn.stepBtnText]}>−</Text>
+//                         </TouchableOpacity>
 
-//                       <View style={[styles.stepQtyBox, dyn.stepQtyBox]}>
-//                         <Text style={[styles.stepQtyText, dyn.stepQtyText]}>
-//                           {item.quantity}
-//                         </Text>
+//                         <View style={[styles.stepQtyBox, dyn.stepQtyBox]}>
+//                           <Text style={[styles.stepQtyText, dyn.stepQtyText]}>
+//                             {item.quantity}
+//                           </Text>
+//                         </View>
+
+//                         <TouchableOpacity
+//                           style={[styles.stepBtnPlus, dyn.stepBtn]}
+//                           onPress={() => updateQuantity(key, 1)}
+//                           activeOpacity={0.6}
+//                         >
+//                           <Text style={[styles.stepBtnTextPlus, dyn.stepBtnText]}>+</Text>
+//                         </TouchableOpacity>
 //                       </View>
 
 //                       <TouchableOpacity
-//                         style={[styles.stepBtnPlus, dyn.stepBtn]}
-//                         onPress={() => updateQuantity(key, 1)}
-//                         activeOpacity={0.6}
+//                         style={styles.deleteItemBtn}
+//                         onPress={() => removeItem(key)}
+//                         activeOpacity={0.75}
+//                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 //                       >
-//                         <Text style={[styles.stepBtnTextPlus, dyn.stepBtnText]}>+</Text>
+//                         <Text style={styles.deleteItemText}>✕</Text>
 //                       </TouchableOpacity>
 //                     </View>
 //                   </View>
 //                 );
 //               })}
 
-//               {/* ---------- Delivery Slot Selection ---------- */}
 //               <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
 //                 <View style={styles.sectionAccent} />
 //                 <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
@@ -363,51 +636,54 @@
 //                 </TouchableOpacity>
 //               </View>
 
-//               {/* ---------- Credit Request Option ---------- */}
-//               <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
-//                 <View style={styles.sectionAccent} />
-//                 <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
-//                   የክፍያ አማራጭ
-//                 </Text>
-//               </View>
+//               {/* RETAILER CREDIT CHECKBOX */}
+//               {canOrderOnCredit && (
+//                 <>
+//                   <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
+//                     <View style={styles.sectionAccent} />
+//                     <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
+//                       የክፍያ አማራጭ
+//                     </Text>
+//                   </View>
 
-//               <TouchableOpacity
-//                 style={[
-//                   styles.creditOptionBox,
-//                   dyn.creditOptionBox,
-//                   isCredit && styles.creditOptionBoxActive,
-//                 ]}
-//                 onPress={() => setIsCredit(!isCredit)}
-//                 activeOpacity={0.85}
-//               >
-//                 <View
-//                   style={[
-//                     styles.checkbox,
-//                     dyn.checkbox,
-//                     isCredit && styles.checkboxActive,
-//                   ]}
-//                 >
-//                   {isCredit && <Text style={[styles.checkMark, dyn.checkMark]}>✓</Text>}
-//                 </View>
+//                   <TouchableOpacity
+//                     style={[
+//                       styles.creditOptionBox,
+//                       dyn.creditOptionBox,
+//                       isCredit && styles.creditOptionBoxActive,
+//                     ]}
+//                     onPress={() => setIsCredit(!isCredit)}
+//                     activeOpacity={0.85}
+//                   >
+//                     <View
+//                       style={[
+//                         styles.checkbox,
+//                         dyn.checkbox,
+//                         isCredit && styles.checkboxActive,
+//                       ]}
+//                     >
+//                       {isCredit && <Text style={[styles.checkMark, dyn.checkMark]}>✓</Text>}
+//                     </View>
 
-//                 <View style={styles.creditTextWrap}>
-//                   <Text style={[styles.creditTitle, dyn.creditTitle]}>
-//                     በብድር ይሁን (Request on Credit)
-//                   </Text>
-//                   <Text style={[styles.creditSubtitle, dyn.creditSubtitle]}>
-//                     ይህ ትእዛዝ በቀጥታ ወደ ሂሳብ መዝገብ ይላካል፤ ከአስተዳዳሪው ፈቃድ እስኪሰጥ ድረስ ይጠብቃል።
-//                   </Text>
-//                 </View>
+//                     <View style={styles.creditTextWrap}>
+//                       <Text style={[styles.creditTitle, dyn.creditTitle]}>
+//                         በብድር ይሁን (Request on Credit)
+//                       </Text>
+//                       <Text style={[styles.creditSubtitle, dyn.creditSubtitle]}>
+//                         ይህ ትእዛዝ በቀጥታ ወደ ሂሳብ መዝገብ ይላካል፤ ከአስተዳዳሪው ፈቃድ እስኪሰጥ ድረስ ይጠብቃል።
+//                       </Text>
+//                     </View>
 
-//                 {isCredit && <View pointerEvents="none" style={styles.creditGlow} />}
-//               </TouchableOpacity>
+//                     {isCredit && <View pointerEvents="none" style={styles.creditGlow} />}
+//                   </TouchableOpacity>
+//                 </>
+//               )}
 
 //               <View style={styles.scrollTailSpacer} />
 //             </ScrollView>
 //           )}
 //         </View>
 
-//         {/* ---------- STICKY SUMMARY FOOTER ---------- */}
 //         {cartEntries.length > 0 && (
 //           <View style={[styles.footer, dyn.footer]}>
 //             <View pointerEvents="none" style={styles.footerTopLine} />
@@ -429,7 +705,7 @@
 //                 style={[
 //                   styles.submitOrderBtn,
 //                   dyn.submitOrderBtn,
-//                   isCredit && styles.submitOrderBtnCredit,
+//                   isCredit && canOrderOnCredit && styles.submitOrderBtnCredit,
 //                   submitting && styles.submitOrderBtnBusy,
 //                 ]}
 //                 onPress={handleSubmitOrder}
@@ -445,7 +721,7 @@
 //                     style={[styles.submitOrderBtnText, dyn.submitOrderBtnText]}
 //                     numberOfLines={1}
 //                   >
-//                     {isCredit
+//                     {isCredit && canOrderOnCredit
 //                       ? `የብድር ጥያቄ ላክ (${totalPrice.toLocaleString()} ብር)`
 //                       : `ትእዛዙን ላክ (${totalPrice.toLocaleString()} ብር)`}
 //                   </Text>
@@ -455,6 +731,47 @@
 //           </View>
 //         )}
 //       </View>
+
+//       {/* OFFLINE MODAL */}
+//       {offlinePromptVisible && (
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.offlineModalCard}>
+//             <View style={styles.offlineIconBox}>
+//               <Text style={styles.offlineModalEmoji}>📡</Text>
+//             </View>
+
+//             <Text style={styles.offlineModalTitle}>የኢንተርኔት ግንኙነት አልተገኘም</Text>
+//             <Text style={styles.offlineModalMessage}>
+//               ስልክዎ ከኢንተርኔት ውጭ ነው። ትእዛዝዎን ለማጠናቀቅ ከታች ካሉት አማራጮች አንዱን ይምረጡ፡
+//             </Text>
+
+//             <View style={styles.offlineActionRow}>
+//               <TouchableOpacity
+//                 style={styles.mobileDataBtn}
+//                 onPress={handleOpenMobileDataSettings}
+//                 activeOpacity={0.85}
+//               >
+//                 <Text style={styles.mobileDataBtnText}>📶 ዳታ ክፈት (Mobile Data)</Text>
+//               </TouchableOpacity>
+
+//               <TouchableOpacity
+//                 style={styles.smsDirectBtn}
+//                 onPress={() => openSmsApplicationWithPayload(pendingSmsPayload)}
+//                 activeOpacity={0.85}
+//               >
+//                 <Text style={styles.smsDirectBtnText}>✉️ በ SMS ላክ</Text>
+//               </TouchableOpacity>
+//             </View>
+
+//             <TouchableOpacity
+//               style={styles.cancelOfflineBtn}
+//               onPress={() => setOfflinePromptVisible(false)}
+//             >
+//               <Text style={styles.cancelOfflineBtnText}>ተመለስ</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       )}
 
 //       <CustomAlert
 //         visible={alertConfig.visible}
@@ -486,7 +803,6 @@
 //   elevation: 2,
 // };
 
-// /* Adaptive metrics — scales spacing/type with the device width */
 // const buildDynamic = (s, isTablet) =>
 //   StyleSheet.create({
 //     container: {
@@ -500,7 +816,7 @@
 //     },
 //     scrollContent: {
 //       paddingTop: 2,
-//       paddingBottom: 18,
+//       paddingBottom: 25,
 //     },
 //     backChip: {
 //       paddingHorizontal: 11 * s,
@@ -513,8 +829,6 @@
 //       marginTop: 11 * s,
 //       marginBottom: 6 * s,
 //     },
-
-//     /* Empty state */
 //     emptyIconWrap: {
 //       width: 62 * s,
 //       height: 62 * s,
@@ -529,11 +843,7 @@
 //       borderRadius: 13 * s,
 //     },
 //     goShopBtnText: { fontSize: 13.5 * s },
-
-//     /* Section headers */
 //     sectionHeader: { fontSize: 13 * s },
-
-//     /* Cart item rows */
 //     itemCard: {
 //       borderRadius: 16 * s,
 //       padding: 11 * s,
@@ -554,16 +864,12 @@
 //     stepBtnText: { fontSize: 16 * s },
 //     stepQtyBox: { minWidth: 28 * s },
 //     stepQtyText: { fontSize: 13 * s },
-
-//     /* Slots */
 //     slotRow: { gap: 9 * s, marginBottom: 4 },
 //     slotPill: {
 //       paddingVertical: 12 * s,
 //       borderRadius: 13 * s,
 //     },
 //     slotPillText: { fontSize: 12.5 * s },
-
-//     /* Credit option */
 //     creditOptionBox: {
 //       borderRadius: 15 * s,
 //       padding: 13 * s,
@@ -577,8 +883,6 @@
 //     checkMark: { fontSize: 14 * s, lineHeight: 17 * s },
 //     creditTitle: { fontSize: 13.5 * s },
 //     creditSubtitle: { fontSize: 11 * s, lineHeight: 15.5 * s, marginTop: 3 * s },
-
-//     /* Footer summary */
 //     footer: {
 //       paddingTop: 11 * s,
 //       paddingBottom: Platform.OS === 'ios' ? 12 * s : 13 * s,
@@ -620,8 +924,6 @@
 //     alignItems: 'center',
 //     ...CARD_SHADOW,
 //   },
-
-//   /* ---------- Ambient glow ---------- */
 //   glowOrbA: {
 //     position: 'absolute',
 //     top: -80,
@@ -640,15 +942,12 @@
 //     borderRadius: 120,
 //     backgroundColor: 'rgba(242, 183, 5, 0.09)',
 //   },
-
 //   container: {
 //     flex: 1,
 //   },
 //   contentWrap: {
 //     flex: 1,
 //   },
-
-//   /* ---------- Header ---------- */
 //   headerRow: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -671,7 +970,6 @@
 //     color: INK,
 //     letterSpacing: 0.2,
 //   },
-
 //   scroll: {
 //     flex: 1,
 //   },
@@ -679,10 +977,124 @@
 //     paddingTop: 2,
 //   },
 //   scrollTailSpacer: {
-//     height: 8,
+//     height: 12,
 //   },
-
-//   /* ---------- Empty state ---------- */
+//   draftCardMaster: {
+//     backgroundColor: '#FFFBEB',
+//     borderRadius: 16,
+//     borderWidth: 1.2,
+//     borderColor: '#FDE68A',
+//     marginBottom: 12,
+//     overflow: 'hidden',
+//     ...CARD_SHADOW,
+//   },
+//   draftToggleHeader: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     paddingHorizontal: 13,
+//     paddingVertical: 10,
+//   },
+//   draftLeftTitle: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 9,
+//     flex: 1,
+//   },
+//   draftIconTag: {
+//     width: 32,
+//     height: 32,
+//     borderRadius: 10,
+//     backgroundColor: '#FEF3C7',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   draftIconEmoji: {
+//     fontSize: 16,
+//   },
+//   draftHeadText: {
+//     fontSize: 12.5,
+//     fontWeight: '900',
+//     color: '#92400E',
+//   },
+//   draftSubText: {
+//     fontSize: 10.5,
+//     fontWeight: '700',
+//     color: '#B45309',
+//   },
+//   draftToggleArrow: {
+//     backgroundColor: '#FEF3C7',
+//     paddingHorizontal: 9,
+//     paddingVertical: 4.5,
+//     borderRadius: 8,
+//     borderWidth: 1,
+//     borderColor: '#FDE68A',
+//   },
+//   draftArrowSymbol: {
+//     fontSize: 10.5,
+//     fontWeight: '900',
+//     color: '#92400E',
+//   },
+//   draftExpandedBody: {
+//     paddingHorizontal: 13,
+//     paddingBottom: 11,
+//   },
+//   draftItemsDivider: {
+//     height: 1,
+//     backgroundColor: '#FDE68A',
+//     marginBottom: 8,
+//   },
+//   draftRowSingle: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 4,
+//   },
+//   draftItemName: {
+//     fontSize: 11.5,
+//     fontWeight: '700',
+//     color: '#78350F',
+//     flex: 1,
+//   },
+//   draftItemSpec: {
+//     fontSize: 11,
+//     fontWeight: '800',
+//     color: '#92400E',
+//     marginLeft: 6,
+//   },
+//   draftControlButtons: {
+//     flexDirection: 'row',
+//     gap: 8,
+//     marginTop: 10,
+//   },
+//   draftDiscardBtn: {
+//     paddingHorizontal: 12,
+//     paddingVertical: 7,
+//     borderRadius: 9,
+//     backgroundColor: '#FEE2E2',
+//     borderWidth: 1,
+//     borderColor: '#FCA5A5',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   draftDiscardBtnText: {
+//     color: '#DC2626',
+//     fontSize: 11,
+//     fontWeight: '900',
+//   },
+//   draftApplyBtn: {
+//     flex: 1,
+//     paddingVertical: 7,
+//     borderRadius: 9,
+//     backgroundColor: '#D97706',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   draftApplyBtnText: {
+//     color: '#FFFFFF',
+//     fontSize: 11.5,
+//     fontWeight: '900',
+//   },
 //   emptyContainer: {
 //     flex: 1,
 //     justifyContent: 'center',
@@ -726,8 +1138,6 @@
 //     height: '50%',
 //     backgroundColor: 'rgba(255, 255, 255, 0.14)',
 //   },
-
-//   /* ---------- Section headers ---------- */
 //   sectionHeaderRow: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -749,8 +1159,6 @@
 //     letterSpacing: 0.2,
 //     flexShrink: 1,
 //   },
-
-//   /* ---------- Cart item rows ---------- */
 //   itemCard: {
 //     backgroundColor: '#FFFFFF',
 //     flexDirection: 'row',
@@ -801,6 +1209,11 @@
 //     color: MUTED,
 //     fontWeight: '600',
 //   },
+//   actionGroupRight: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 7,
+//   },
 //   stepperContainer: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -843,8 +1256,21 @@
 //     fontWeight: '900',
 //     color: INK,
 //   },
-
-//   /* ---------- Delivery slots ---------- */
+//   deleteItemBtn: {
+//     width: 27,
+//     height: 27,
+//     borderRadius: 14,
+//     backgroundColor: '#FEE2E2',
+//     borderWidth: 1,
+//     borderColor: '#FCA5A5',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   deleteItemText: {
+//     color: '#EF4444',
+//     fontSize: 12,
+//     fontWeight: '900',
+//   },
 //   slotRow: {
 //     flexDirection: 'row',
 //     flexWrap: 'wrap',
@@ -878,8 +1304,6 @@
 //     color: GREEN,
 //     fontWeight: '900',
 //   },
-
-//   /* ---------- Credit option ---------- */
 //   creditOptionBox: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -935,8 +1359,6 @@
 //     color: MUTED,
 //     fontWeight: '600',
 //   },
-
-//   /* ---------- Sticky footer summary ---------- */
 //   footer: {
 //     backgroundColor: 'rgba(255, 255, 255, 0.96)',
 //     borderTopWidth: 1,
@@ -1010,6 +1432,103 @@
 //     letterSpacing: 0.2,
 //     textAlign: 'center',
 //   },
+//   modalOverlay: {
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     bottom: 0,
+//     backgroundColor: 'rgba(11, 31, 20, 0.55)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     zIndex: 99999,
+//     paddingHorizontal: 20,
+//   },
+//   offlineModalCard: {
+//     width: '100%',
+//     maxWidth: 360,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 24,
+//     padding: 22,
+//     alignItems: 'center',
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 8 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 16,
+//     elevation: 12,
+//   },
+//   offlineIconBox: {
+//     width: 60,
+//     height: 60,
+//     borderRadius: 30,
+//     backgroundColor: '#FEF3C7',
+//     borderWidth: 1,
+//     borderColor: '#FDE68A',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//   },
+//   offlineModalEmoji: {
+//     fontSize: 28,
+//   },
+//   offlineModalTitle: {
+//     fontSize: 16,
+//     fontWeight: '900',
+//     color: '#12241A',
+//     textAlign: 'center',
+//     marginBottom: 6,
+//   },
+//   offlineModalMessage: {
+//     fontSize: 12.5,
+//     fontWeight: '600',
+//     color: '#62726A',
+//     textAlign: 'center',
+//     lineHeight: 18,
+//     marginBottom: 18,
+//   },
+//   offlineActionRow: {
+//     width: '100%',
+//     gap: 9,
+//   },
+//   mobileDataBtn: {
+//     backgroundColor: GREEN,
+//     paddingVertical: 12,
+//     borderRadius: 13,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     shadowColor: GREEN,
+//     shadowOffset: { width: 0, height: 3 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 6,
+//     elevation: 3,
+//   },
+//   mobileDataBtnText: {
+//     color: '#FFFFFF',
+//     fontSize: 13,
+//     fontWeight: '900',
+//   },
+//   smsDirectBtn: {
+//     backgroundColor: '#F59E0B',
+//     paddingVertical: 12,
+//     borderRadius: 13,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   smsDirectBtnText: {
+//     color: '#FFFFFF',
+//     fontSize: 13,
+//     fontWeight: '900',
+//   },
+//   cancelOfflineBtn: {
+//     marginTop: 12,
+//     paddingVertical: 6,
+//     paddingHorizontal: 16,
+//   },
+//   cancelOfflineBtnText: {
+//     color: '#94A3B8',
+//     fontSize: 12,
+//     fontWeight: '700',
+//   },
 // });
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -1025,14 +1544,14 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 import { apiRequest } from '../lib/api';
 import { useSession } from '../context/SessionContext';
 import CustomAlert from '../components/CustomAlert';
 
-// Default central gateway phone for offline SMS orders (Adama Hub)
-const OFFLINE_GATEWAY_SMS_NUMBER = '8090'; // Or your dedicated AfroMessage inbound / direct number (e.g., '+251911000000')
+const ADMIN_DESTINATION_PHONE = '+251911000000';
 
 const UNIT_MAP = {
   'ካርቶን': 'CARTON',
@@ -1058,14 +1577,23 @@ const UNIT_MAP = {
 
 export default function CheckoutScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { token, lang } = useSession();
   const { width: SCREEN_W } = useWindowDimensions();
 
   const [cart, setCart] = useState({});
+  const [drafts, setDrafts] = useState({});
+  const [selectedDraftKeys, setSelectedDraftKeys] = useState({});
+  const [draftExpanded, setDraftExpanded] = useState(false);
+  const [canOrderOnCredit, setCanOrderOnCredit] = useState(false);
+
   const [slot, setSlot] = useState('BATCH_12PM');
   const [isCredit, setIsCredit] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingCart, setLoadingCart] = useState(true);
+
+  const [offlinePromptVisible, setOfflinePromptVisible] = useState(false);
+  const [pendingSmsPayload, setPendingSmsPayload] = useState('');
 
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
@@ -1079,17 +1607,62 @@ export default function CheckoutScreen() {
   const S = isSmall ? 0.9 : isTablet ? 1.12 : SCREEN_W >= 420 ? 1.06 : 1;
   const dyn = useMemo(() => buildDynamic(S, isTablet), [S, isTablet]);
 
-  const loadCartFromStorage = async () => {
+  const loadUserData = async () => {
     try {
-      const stored = await AsyncStorage.getItem('user_cart');
-      if (stored) {
-        setCart(JSON.parse(stored));
-      } else {
-        setCart({});
+      if (token) {
+        const res = await apiRequest('/auth/me', { token }).catch(() => null);
+        const userData = res?.user || res?.data;
+        if (userData && typeof userData.canOrderOnCredit !== 'undefined') {
+          const eligible = Boolean(userData.canOrderOnCredit);
+          setCanOrderOnCredit(eligible);
+          await AsyncStorage.setItem('user_credit_eligible', eligible ? '1' : '0');
+          return;
+        }
       }
-    } catch (err) {
-      console.log('Checkout loadCart error:', err);
+
+      const cachedEligible = await AsyncStorage.getItem('user_credit_eligible').catch(() => null);
+      if (cachedEligible !== null) {
+        setCanOrderOnCredit(cachedEligible === '1');
+        return;
+      }
+
+      const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        setCanOrderOnCredit(Boolean(parsed?.canOrderOnCredit));
+      }
+    } catch {
+      setCanOrderOnCredit(false);
+    }
+  };
+
+  const loadStorageCarts = async () => {
+    try {
+      const [storedCart, storedDrafts] = await Promise.all([
+        AsyncStorage.getItem('user_cart'),
+        AsyncStorage.getItem('user_draft_cart'),
+      ]);
+
+      const parsedCart = storedCart ? JSON.parse(storedCart) : {};
+      const parsedDrafts = storedDrafts ? JSON.parse(storedDrafts) : {};
+
+      setCart(parsedCart);
+      setDrafts(parsedDrafts);
+
+      // Initialize all draft items as unselected by default so user intentionally selects what to send
+      const initialSelected = {};
+      Object.keys(parsedDrafts).forEach((k) => {
+        initialSelected[k] = false;
+      });
+      setSelectedDraftKeys(initialSelected);
+
+      // Open draft accordion automatically if arriving from "ረቂቅ" action
+      if (params?.isDraft === 'true' || Object.keys(parsedCart).length === 0) {
+        setDraftExpanded(true);
+      }
+    } catch {
       setCart({});
+      setDrafts({});
     } finally {
       setLoadingCart(false);
     }
@@ -1097,8 +1670,9 @@ export default function CheckoutScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadCartFromStorage();
-    }, [])
+      loadStorageCarts();
+      loadUserData();
+    }, [token])
   );
 
   const updateQuantity = async (key, delta) => {
@@ -1120,12 +1694,116 @@ export default function CheckoutScreen() {
     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
   };
 
-  // 1-Tap Item Removal
   const removeItem = async (key) => {
     const updated = { ...cart };
     delete updated[key];
     setCart(updated);
     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
+  };
+
+  // Check / Uncheck draft row
+  const toggleDraftItemSelection = (key) => {
+    setSelectedDraftKeys((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Select all or deselect all drafts
+  const handleToggleAllDrafts = () => {
+    const allSelected = Object.keys(drafts).every((k) => selectedDraftKeys[k]);
+    const nextState = {};
+    Object.keys(drafts).forEach((k) => {
+      nextState[k] = !allSelected;
+    });
+    setSelectedDraftKeys(nextState);
+  };
+
+  // Move ONLY selected draft items into active order list (Unselected items stay in Draft)
+  const handleMoveSelectedToActiveOrder = async () => {
+    const keysToMove = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
+
+    if (keysToMove.length === 0) {
+      setAlertConfig({
+        visible: true,
+        title: 'እቃ አልተመረጠም',
+        message: 'እባክዎ ወደ ትእዛዝ ዝርዝር የሚዛወሩትን እቃዎች በሳጥኑ (checkbox) ላይ ይምረጡ',
+        type: 'error',
+      });
+      return;
+    }
+
+    const mergedCart = { ...cart };
+    const remainingDrafts = { ...drafts };
+
+    keysToMove.forEach((k) => {
+      const draftItem = drafts[k];
+      if (mergedCart[k]) {
+        mergedCart[k] = {
+          ...mergedCart[k],
+          quantity: (mergedCart[k].quantity || 0) + (draftItem.quantity || 1),
+        };
+      } else {
+        mergedCart[k] = { ...draftItem };
+      }
+      delete remainingDrafts[k];
+    });
+
+    setCart(mergedCart);
+    setDrafts(remainingDrafts);
+
+    await AsyncStorage.setItem('user_cart', JSON.stringify(mergedCart));
+    await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
+
+    // Clear selections for remaining items
+    const nextSelected = {};
+    Object.keys(remainingDrafts).forEach((k) => {
+      nextSelected[k] = false;
+    });
+    setSelectedDraftKeys(nextSelected);
+
+    setAlertConfig({
+      visible: true,
+      title: 'እቃዎች ተዛውረዋል',
+      message: `የተመረጡት ${keysToMove.length} እቃዎች ወደ ትእዛዝ ዝርዝር ገብተዋል። ያልተመረጡት በረቂቅ ውስጥ ቀርተዋል።`,
+      type: 'success',
+    });
+  };
+
+  // Permanently delete ONLY selected draft items
+  const handleDeleteSelectedDrafts = async () => {
+    const keysToDelete = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
+
+    if (keysToDelete.length === 0) {
+      setAlertConfig({
+        visible: true,
+        title: 'እቃ አልተመረጠም',
+        message: 'እባክዎ የሚሰረዙትን የረቂቅ እቃዎች ይምረጡ',
+        type: 'error',
+      });
+      return;
+    }
+
+    const remainingDrafts = { ...drafts };
+    keysToDelete.forEach((k) => {
+      delete remainingDrafts[k];
+    });
+
+    setDrafts(remainingDrafts);
+    await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
+
+    const nextSelected = {};
+    Object.keys(remainingDrafts).forEach((k) => {
+      nextSelected[k] = false;
+    });
+    setSelectedDraftKeys(nextSelected);
+
+    setAlertConfig({
+      visible: true,
+      title: 'ተሰርዟል',
+      message: `${keysToDelete.length} እቃዎች ከረቂቅ ተሰርዘዋል`,
+      type: 'success',
+    });
   };
 
   const handleSafeBack = () => {
@@ -1137,6 +1815,7 @@ export default function CheckoutScreen() {
   };
 
   const cartEntries = Object.entries(cart);
+  const draftEntries = Object.entries(drafts);
 
   const totalPrice = cartEntries.reduce(
     (sum, [_, item]) =>
@@ -1144,8 +1823,15 @@ export default function CheckoutScreen() {
     0
   );
 
-  // Compile the standard offline order protocol payload: ORD#PROD_ID:QTY:UNIT#SLOT#IS_CREDIT
-  const generateSmsPayload = () => {
+  const draftTotalPrice = draftEntries.reduce(
+    (sum, [_, item]) =>
+      sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
+    0
+  );
+
+  const selectedDraftCount = Object.keys(drafts).filter((k) => selectedDraftKeys[k]).length;
+
+  const generateSmsOrderText = (loc) => {
     if (cartEntries.length === 0) return '';
     const itemChunks = cartEntries.map(([_, it]) => {
       const pId = it.productId || 'PROD';
@@ -1153,42 +1839,99 @@ export default function CheckoutScreen() {
       const u = UNIT_MAP[it.unit] || 'CARTON';
       return `${pId}:${qty}:${u}`;
     });
-    const creditFlag = isCredit ? '1' : '0';
-    return `ORD#${itemChunks.join('|')}#${slot}#${creditFlag}`;
+    const creditFlag = isCredit && canOrderOnCredit ? '1' : '0';
+    const locPart = loc?.latitude ? `#LOC:${loc.latitude},${loc.longitude}` : '';
+    return `ORD#${itemChunks.join('|')}#${slot}#${creditFlag}${locPart}`;
   };
 
-  // Direct 1-Tap Native SMS Opener
-  const handleTriggerSmsOrder = async () => {
-    if (cartEntries.length === 0) {
-      setAlertConfig({
-        visible: true,
-        title: 'ቅርጫት ባዶ ነው',
-        message: 'እባክዎ መጀመሪያ እቃ ይምረጡ',
-        type: 'error',
-      });
-      return;
-    }
-
-    const payload = generateSmsPayload();
-    const separator = Platform.OS === 'ios' ? '&' : '?';
-    const smsUrl = `sms:${OFFLINE_GATEWAY_SMS_NUMBER}${separator}body=${encodeURIComponent(payload)}`;
-
+  const acquireAccurateGps = async () => {
     try {
-      const canOpen = await Linking.canOpenURL(smsUrl);
-      if (canOpen) {
-        await Linking.openURL(smsUrl);
-      } else {
-        // If native SMS link is unavailable (e.g. web/tablet without SMS), route to profile with prefilled params
-        router.push({
-          pathname: '/(tabs)/profile',
-          params: { smsPayload: payload },
+      if (Platform.OS === 'web') {
+        return new Promise((resolve) => {
+          if (typeof navigator !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+              () => resolve({ latitude: null, longitude: null }),
+              { timeout: 5000 }
+            );
+          } else {
+            resolve({ latitude: null, longitude: null });
+          }
         });
       }
-    } catch (e) {
-      router.push({
-        pathname: '/(tabs)/profile',
-        params: { smsPayload: payload },
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return { latitude: null, longitude: null };
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
       });
+
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } catch {
+      return { latitude: null, longitude: null };
+    }
+  };
+
+  const checkIsDeviceOnline = async () => {
+    if (Platform.OS === 'web') {
+      return typeof navigator !== 'undefined' ? navigator.onLine : true;
+    }
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      await fetch('https://clients3.google.com/generate_204', {
+        method: 'HEAD',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const openSmsApplicationWithPayload = async (payload) => {
+    setOfflinePromptVisible(false);
+    const separator = Platform.OS === 'ios' ? '&' : '?';
+    const smsUrl = `sms:${ADMIN_DESTINATION_PHONE}${separator}body=${encodeURIComponent(payload)}`;
+
+    try {
+      const supported = await Linking.canOpenURL(smsUrl);
+      if (supported) {
+        await Linking.openURL(smsUrl);
+      } else {
+        await Linking.openURL(`sms:${ADMIN_DESTINATION_PHONE}`);
+      }
+    } catch {
+      setAlertConfig({
+        visible: true,
+        title: 'መልእክት ስህተት',
+        message: 'የ SMS መተግበሪያውን በስልኮ ላይ መክፈት አልተቻለም',
+        type: 'error',
+      });
+    }
+  };
+
+  const handleOpenMobileDataSettings = async () => {
+    setOfflinePromptVisible(false);
+    try {
+      if (Platform.OS === 'android') {
+        await Linking.sendIntent('android.settings.DATA_ROAMING_SETTINGS').catch(async () => {
+          await Linking.openSettings();
+        });
+      } else if (Platform.OS === 'ios') {
+        await Linking.openURL('App-Prefs:root=MOBILE_DATA_SETTINGS_ID').catch(async () => {
+          await Linking.openSettings();
+        });
+      } else {
+        await Linking.openSettings();
+      }
+    } catch {
+      await Linking.openSettings();
     }
   };
 
@@ -1197,13 +1940,24 @@ export default function CheckoutScreen() {
       setAlertConfig({
         visible: true,
         title: 'ቅርጫት ባዶ ነው',
-        message: 'እባክዎ መጀመሪያ እቃ ይምረጡ',
+        message: 'እባክዎ መጀመሪያ እቃ ይምረጡ ወይም ከረቂቅ ወደ ትእዛዝ ያዛውሩ',
         type: 'error',
       });
       return;
     }
 
     setSubmitting(true);
+
+    const isOnline = await checkIsDeviceOnline();
+    const gpsLocation = await acquireAccurateGps();
+
+    if (!isOnline) {
+      setSubmitting(false);
+      const offlineSmsString = generateSmsOrderText(gpsLocation);
+      setPendingSmsPayload(offlineSmsString);
+      setOfflinePromptVisible(true);
+      return;
+    }
 
     try {
       const payload = cartEntries.map(([_, item]) => ({
@@ -1218,7 +1972,9 @@ export default function CheckoutScreen() {
         token,
         body: {
           deliverySlot: slot,
-          isCreditOrder: isCredit,
+          isCreditOrder: Boolean(isCredit && canOrderOnCredit),
+          latitude: gpsLocation.latitude,
+          longitude: gpsLocation.longitude,
           items: payload,
         },
       });
@@ -1232,10 +1988,11 @@ export default function CheckoutScreen() {
           ? 'ጠዋት 6:00 ሰዓት'
           : 'ቀትር 12:00 ሰዓት';
 
+      // Clear only the submitted cart. Unselected drafts stay untouched!
       await AsyncStorage.removeItem('user_cart');
       setCart({});
 
-      if (isCredit) {
+      if (isCredit && canOrderOnCredit) {
         router.replace('/(tabs)/ledger');
       } else {
         router.replace({
@@ -1278,7 +2035,6 @@ export default function CheckoutScreen() {
 
       <View style={[styles.container, dyn.container]}>
         <View style={[styles.contentWrap, dyn.contentWrap]}>
-          {/* ---------- HEADER ---------- */}
           <View style={styles.headerRow}>
             <TouchableOpacity
               style={[styles.backLink, dyn.backChip]}
@@ -1291,6 +2047,92 @@ export default function CheckoutScreen() {
 
           <Text style={[styles.pageTitle, dyn.pageTitle]}>ትእዛዙን ላክ</Text>
 
+          {/* DRAFT ACCORDION PANEL */}
+          {draftEntries.length > 0 && (
+            <View style={styles.draftCardMaster}>
+              <TouchableOpacity
+                style={styles.draftToggleHeader}
+                activeOpacity={0.8}
+                onPress={() => setDraftExpanded(!draftExpanded)}
+              >
+                <View style={styles.draftLeftTitle}>
+                  <View style={styles.draftIconTag}>
+                    <Text style={styles.draftIconEmoji}>📁</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.draftHeadText}>የተቀመጡ ረቂቆች ({draftEntries.length} እቃዎች)</Text>
+                    <Text style={styles.draftSubText}>ጠቅላላ ዋጋ: {draftTotalPrice.toLocaleString()} ብር</Text>
+                  </View>
+                </View>
+
+                <View style={styles.draftToggleArrow}>
+                  <Text style={styles.draftArrowSymbol}>{draftExpanded ? '▲ ዝጋ' : '▼ ክፈት'}</Text>
+                </View>
+              </TouchableOpacity>
+
+              {draftExpanded && (
+                <View style={styles.draftExpandedBody}>
+                  <View style={styles.draftItemsDivider} />
+
+                  <View style={styles.draftSelectAllRow}>
+                    <TouchableOpacity onPress={handleToggleAllDrafts} style={styles.selectAllBtn}>
+                      <Text style={styles.selectAllBtnText}>
+                        {selectedDraftCount === draftEntries.length ? 'ምርጫ ሰርዝ ✕' : 'ሁሉንም ምረጥ ✓'}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.draftCountSelectedText}>የተመረጡ: {selectedDraftCount}/{draftEntries.length}</Text>
+                  </View>
+
+                  {draftEntries.map(([dKey, dItem]) => {
+                    const isSelected = Boolean(selectedDraftKeys[dKey]);
+
+                    return (
+                      <TouchableOpacity
+                        key={dKey}
+                        style={[styles.draftRowSingle, isSelected && styles.draftRowSelected]}
+                        activeOpacity={0.8}
+                        onPress={() => toggleDraftItemSelection(dKey)}
+                      >
+                        <View style={[styles.draftCheckbox, isSelected && styles.draftCheckboxActive]}>
+                          {isSelected && <Text style={styles.draftCheckmark}>✓</Text>}
+                        </View>
+
+                        <View style={styles.draftItemDetails}>
+                          <Text style={styles.draftItemName} numberOfLines={1}>{dItem.name}</Text>
+                          <Text style={styles.draftItemSpec}>
+                            {dItem.quantity} {dItem.unit} · {(Number(dItem.price) * Number(dItem.quantity)).toLocaleString()} ብር
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  <View style={styles.draftControlButtons}>
+                    <TouchableOpacity
+                      style={[styles.draftDiscardBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
+                      onPress={handleDeleteSelectedDrafts}
+                      activeOpacity={0.75}
+                      disabled={selectedDraftCount === 0}
+                    >
+                      <Text style={styles.draftDiscardBtnText}>የተመረጡትን ሰርዝ 🗑️</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.draftApplyBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
+                      onPress={handleMoveSelectedToActiveOrder}
+                      activeOpacity={0.8}
+                      disabled={selectedDraftCount === 0}
+                    >
+                      <Text style={styles.draftApplyBtnText}>
+                        ወደ ትእዛዝ ላክ ({selectedDraftCount}) ›
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
           {cartEntries.length === 0 ? (
             <View style={styles.emptyContainer}>
               <View style={[styles.emptyIconWrap, dyn.emptyIconWrap]}>
@@ -1298,7 +2140,9 @@ export default function CheckoutScreen() {
               </View>
 
               <Text style={[styles.emptyTitle, dyn.emptyTitle]}>
-                ቅርጫትዎ ውስጥ ምንም እቃ የለም
+                {draftEntries.length > 0
+                  ? 'እቃዎች በረቂቅ ውስጥ ተቀምጠዋል። ወደ ትእዛዝ ለማዛወር ከላይ ያለውን ረቂቅ ይክፈቱ።'
+                  : 'ቅርጫትዎ ውስጥ ምንም እቃ የለም'}
               </Text>
 
               <TouchableOpacity
@@ -1318,7 +2162,6 @@ export default function CheckoutScreen() {
               contentContainerStyle={[styles.scrollContent, dyn.scrollContent]}
               showsVerticalScrollIndicator={false}
             >
-              {/* ---------- Cart Items List ---------- */}
               {cartEntries.map(([key, item]) => {
                 const isImageFile =
                   item.imageUrl &&
@@ -1354,7 +2197,6 @@ export default function CheckoutScreen() {
                       </View>
                     </View>
 
-                    {/* Stepper + Red Cancel (✕) Button */}
                     <View style={styles.actionGroupRight}>
                       <View style={[styles.stepperContainer, dyn.stepperContainer]}>
                         <TouchableOpacity
@@ -1380,7 +2222,6 @@ export default function CheckoutScreen() {
                         </TouchableOpacity>
                       </View>
 
-                      {/* Red ✕ Cancel Button */}
                       <TouchableOpacity
                         style={styles.deleteItemBtn}
                         onPress={() => removeItem(key)}
@@ -1394,7 +2235,6 @@ export default function CheckoutScreen() {
                 );
               })}
 
-              {/* ---------- Delivery Slot Selection ---------- */}
               <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
                 <View style={styles.sectionAccent} />
                 <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
@@ -1446,79 +2286,54 @@ export default function CheckoutScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* ---------- Credit Request Option ---------- */}
-              <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
-                <View style={styles.sectionAccent} />
-                <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
-                  የክፍያ አማራጭ
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.creditOptionBox,
-                  dyn.creditOptionBox,
-                  isCredit && styles.creditOptionBoxActive,
-                ]}
-                onPress={() => setIsCredit(!isCredit)}
-                activeOpacity={0.85}
-              >
-                <View
-                  style={[
-                    styles.checkbox,
-                    dyn.checkbox,
-                    isCredit && styles.checkboxActive,
-                  ]}
-                >
-                  {isCredit && <Text style={[styles.checkMark, dyn.checkMark]}>✓</Text>}
-                </View>
-
-                <View style={styles.creditTextWrap}>
-                  <Text style={[styles.creditTitle, dyn.creditTitle]}>
-                    በብድር ይሁን (Request on Credit)
-                  </Text>
-                  <Text style={[styles.creditSubtitle, dyn.creditSubtitle]}>
-                    ይህ ትእዛዝ በቀጥታ ወደ ሂሳብ መዝገብ ይላካል፤ ከአስተዳዳሪው ፈቃድ እስኪሰጥ ድረስ ይጠብቃል።
-                  </Text>
-                </View>
-
-                {isCredit && <View pointerEvents="none" style={styles.creditGlow} />}
-              </TouchableOpacity>
-
-              {/* ---------- Direct Offline SMS Trigger Panel ---------- */}
-              <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
-                <View style={[styles.sectionAccent, { backgroundColor: '#F59E0B' }]} />
-                <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
-                  ኢንተርኔት የለም? (Offline Order)
-                </Text>
-              </View>
-
-              <View style={styles.offlineSmsCard}>
-                <View style={styles.offlineSmsHeaderRow}>
-                  <Text style={styles.offlineSmsIcon}>📱</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.offlineSmsTitle}>የትእዛዝ መልእክት (SMS Payload):</Text>
-                    <Text style={styles.offlineSmsPayloadText} numberOfLines={2}>
-                      {generateSmsPayload() || 'ORD#PROD_SAMPLE:2:CARTON#BATCH_6AM#0'}
+              {/* RETAILER CREDIT CHECKBOX */}
+              {canOrderOnCredit && (
+                <>
+                  <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
+                    <View style={styles.sectionAccent} />
+                    <Text style={[styles.sectionHeader, dyn.sectionHeader]}>
+                      የክፍያ አማራጭ
                     </Text>
                   </View>
-                </View>
 
-                <TouchableOpacity
-                  style={styles.offlineSmsBtn}
-                  onPress={handleTriggerSmsOrder}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.offlineSmsBtnText}>በ SMS መተግበሪያ ክፈትና ላክ ✉️</Text>
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.creditOptionBox,
+                      dyn.creditOptionBox,
+                      isCredit && styles.creditOptionBoxActive,
+                    ]}
+                    onPress={() => setIsCredit(!isCredit)}
+                    activeOpacity={0.85}
+                  >
+                    <View
+                      style={[
+                        styles.checkbox,
+                        dyn.checkbox,
+                        isCredit && styles.checkboxActive,
+                      ]}
+                    >
+                      {isCredit && <Text style={[styles.checkMark, dyn.checkMark]}>✓</Text>}
+                    </View>
+
+                    <View style={styles.creditTextWrap}>
+                      <Text style={[styles.creditTitle, dyn.creditTitle]}>
+                        በብድር ይሁን (Request on Credit)
+                      </Text>
+                      <Text style={[styles.creditSubtitle, dyn.creditSubtitle]}>
+                        ይህ ትእዛዝ በቀጥታ ወደ ሂሳብ መዝገብ ይላካል፤ ከአስተዳዳሪው ፈቃድ እስኪሰጥ ድረስ ይጠብቃል።
+                      </Text>
+                    </View>
+
+                    {isCredit && <View pointerEvents="none" style={styles.creditGlow} />}
+                  </TouchableOpacity>
+                </>
+              )}
 
               <View style={styles.scrollTailSpacer} />
             </ScrollView>
           )}
         </View>
 
-        {/* ---------- STICKY SUMMARY FOOTER ---------- */}
         {cartEntries.length > 0 && (
           <View style={[styles.footer, dyn.footer]}>
             <View pointerEvents="none" style={styles.footerTopLine} />
@@ -1540,7 +2355,7 @@ export default function CheckoutScreen() {
                 style={[
                   styles.submitOrderBtn,
                   dyn.submitOrderBtn,
-                  isCredit && styles.submitOrderBtnCredit,
+                  isCredit && canOrderOnCredit && styles.submitOrderBtnCredit,
                   submitting && styles.submitOrderBtnBusy,
                 ]}
                 onPress={handleSubmitOrder}
@@ -1556,7 +2371,7 @@ export default function CheckoutScreen() {
                     style={[styles.submitOrderBtnText, dyn.submitOrderBtnText]}
                     numberOfLines={1}
                   >
-                    {isCredit
+                    {isCredit && canOrderOnCredit
                       ? `የብድር ጥያቄ ላክ (${totalPrice.toLocaleString()} ብር)`
                       : `ትእዛዙን ላክ (${totalPrice.toLocaleString()} ብር)`}
                   </Text>
@@ -1566,6 +2381,47 @@ export default function CheckoutScreen() {
           </View>
         )}
       </View>
+
+      {/* OFFLINE PROMPT MODAL */}
+      {offlinePromptVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.offlineModalCard}>
+            <View style={styles.offlineIconBox}>
+              <Text style={styles.offlineModalEmoji}>📡</Text>
+            </View>
+
+            <Text style={styles.offlineModalTitle}>የኢንተርኔት ግንኙነት አልተገኘም</Text>
+            <Text style={styles.offlineModalMessage}>
+              ስልክዎ ከኢንተርኔት ውጭ ነው። ትእዛዝዎን ለማጠናቀቅ ከታች ካሉት አማራጮች አንዱን ይምረጡ፡
+            </Text>
+
+            <View style={styles.offlineActionRow}>
+              <TouchableOpacity
+                style={styles.mobileDataBtn}
+                onPress={handleOpenMobileDataSettings}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.mobileDataBtnText}>📶 ዳታ ክፈት (Mobile Data)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.smsDirectBtn}
+                onPress={() => openSmsApplicationWithPayload(pendingSmsPayload)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.smsDirectBtnText}>✉️ በ SMS ላክ</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.cancelOfflineBtn}
+              onPress={() => setOfflinePromptVisible(false)}
+            >
+              <Text style={styles.cancelOfflineBtnText}>ተመለስ</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <CustomAlert
         visible={alertConfig.visible}
@@ -1623,7 +2479,6 @@ const buildDynamic = (s, isTablet) =>
       marginTop: 11 * s,
       marginBottom: 6 * s,
     },
-
     emptyIconWrap: {
       width: 62 * s,
       height: 62 * s,
@@ -1638,9 +2493,7 @@ const buildDynamic = (s, isTablet) =>
       borderRadius: 13 * s,
     },
     goShopBtnText: { fontSize: 13.5 * s },
-
     sectionHeader: { fontSize: 13 * s },
-
     itemCard: {
       borderRadius: 16 * s,
       padding: 11 * s,
@@ -1661,14 +2514,12 @@ const buildDynamic = (s, isTablet) =>
     stepBtnText: { fontSize: 16 * s },
     stepQtyBox: { minWidth: 28 * s },
     stepQtyText: { fontSize: 13 * s },
-
     slotRow: { gap: 9 * s, marginBottom: 4 },
     slotPill: {
       paddingVertical: 12 * s,
       borderRadius: 13 * s,
     },
     slotPillText: { fontSize: 12.5 * s },
-
     creditOptionBox: {
       borderRadius: 15 * s,
       padding: 13 * s,
@@ -1682,7 +2533,6 @@ const buildDynamic = (s, isTablet) =>
     checkMark: { fontSize: 14 * s, lineHeight: 17 * s },
     creditTitle: { fontSize: 13.5 * s },
     creditSubtitle: { fontSize: 11 * s, lineHeight: 15.5 * s, marginTop: 3 * s },
-
     footer: {
       paddingTop: 11 * s,
       paddingBottom: Platform.OS === 'ios' ? 12 * s : 13 * s,
@@ -1724,7 +2574,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...CARD_SHADOW,
   },
-
   glowOrbA: {
     position: 'absolute',
     top: -80,
@@ -1743,14 +2592,12 @@ const styles = StyleSheet.create({
     borderRadius: 120,
     backgroundColor: 'rgba(242, 183, 5, 0.09)',
   },
-
   container: {
     flex: 1,
   },
   contentWrap: {
     flex: 1,
   },
-
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1773,7 +2620,6 @@ const styles = StyleSheet.create({
     color: INK,
     letterSpacing: 0.2,
   },
-
   scroll: {
     flex: 1,
   },
@@ -1782,6 +2628,184 @@ const styles = StyleSheet.create({
   },
   scrollTailSpacer: {
     height: 12,
+  },
+
+  /* Draft Stored Master Card */
+  draftCardMaster: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 16,
+    borderWidth: 1.2,
+    borderColor: '#FDE68A',
+    marginBottom: 12,
+    overflow: 'hidden',
+    ...CARD_SHADOW,
+  },
+  draftToggleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+  },
+  draftLeftTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    flex: 1,
+  },
+  draftIconTag: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  draftIconEmoji: {
+    fontSize: 16,
+  },
+  draftHeadText: {
+    fontSize: 12.5,
+    fontWeight: '900',
+    color: '#92400E',
+  },
+  draftSubText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#B45309',
+  },
+  draftToggleArrow: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  draftArrowSymbol: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#92400E',
+  },
+  draftExpandedBody: {
+    paddingHorizontal: 13,
+    paddingBottom: 11,
+  },
+  draftItemsDivider: {
+    height: 1,
+    backgroundColor: '#FDE68A',
+    marginBottom: 8,
+  },
+  draftSelectAllRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  selectAllBtn: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  selectAllBtnText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  draftCountSelectedText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#B45309',
+  },
+  draftRowSingle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    marginBottom: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  draftRowSelected: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#F59E0B',
+  },
+  draftCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1.8,
+    borderColor: '#D97706',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 9,
+  },
+  draftCheckboxActive: {
+    backgroundColor: '#D97706',
+    borderColor: '#D97706',
+  },
+  draftCheckmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    lineHeight: 14,
+  },
+  draftItemDetails: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  draftItemName: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#78350F',
+    flex: 1,
+  },
+  draftItemSpec: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#92400E',
+    marginLeft: 6,
+  },
+  draftControlButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  draftDiscardBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 9,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  draftDiscardBtnText: {
+    color: '#DC2626',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  draftApplyBtn: {
+    flex: 1,
+    paddingVertical: 7,
+    borderRadius: 9,
+    backgroundColor: '#D97706',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  draftApplyBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '900',
   },
 
   emptyContainer: {
@@ -1827,7 +2851,6 @@ const styles = StyleSheet.create({
     height: '50%',
     backgroundColor: 'rgba(255, 255, 255, 0.14)',
   },
-
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1849,7 +2872,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     flexShrink: 1,
   },
-
   itemCard: {
     backgroundColor: '#FFFFFF',
     flexDirection: 'row',
@@ -1900,7 +2922,6 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontWeight: '600',
   },
-
   actionGroupRight: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1948,8 +2969,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: INK,
   },
-
-  /* Red ✕ Cancel Item Button */
   deleteItemBtn: {
     width: 27,
     height: 27,
@@ -1965,7 +2984,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-
   slotRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1999,7 +3017,6 @@ const styles = StyleSheet.create({
     color: GREEN,
     fontWeight: '900',
   },
-
   creditOptionBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2055,50 +3072,6 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontWeight: '600',
   },
-
-  /* Direct Offline SMS Panel */
-  offlineSmsCard: {
-    backgroundColor: '#FFFBEB',
-    borderRadius: 16,
-    borderWidth: 1.2,
-    borderColor: '#FDE68A',
-    padding: 12,
-    gap: 10,
-    ...CARD_SHADOW,
-  },
-  offlineSmsHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-  },
-  offlineSmsIcon: {
-    fontSize: 24,
-  },
-  offlineSmsTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#92400E',
-  },
-  offlineSmsPayloadText: {
-    fontSize: 11.5,
-    fontWeight: '900',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    color: '#B45309',
-    marginTop: 2,
-  },
-  offlineSmsBtn: {
-    backgroundColor: '#D97706',
-    borderRadius: 11,
-    paddingVertical: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  offlineSmsBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-
   footer: {
     backgroundColor: 'rgba(255, 255, 255, 0.96)',
     borderTopWidth: 1,
@@ -2171,5 +3144,102 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.2,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(11, 31, 20, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 99999,
+    paddingHorizontal: 20,
+  },
+  offlineModalCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 22,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  offlineIconBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  offlineModalEmoji: {
+    fontSize: 28,
+  },
+  offlineModalTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#12241A',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  offlineModalMessage: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: '#62726A',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 18,
+  },
+  offlineActionRow: {
+    width: '100%',
+    gap: 9,
+  },
+  mobileDataBtn: {
+    backgroundColor: GREEN,
+    paddingVertical: 12,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: GREEN,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  mobileDataBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  smsDirectBtn: {
+    backgroundColor: '#F59E0B',
+    paddingVertical: 12,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  smsDirectBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  cancelOfflineBtn: {
+    marginTop: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+  },
+  cancelOfflineBtnText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

@@ -567,6 +567,7 @@ export class AuthService {
         shopName: true,
         preferredLanguage: true,
         approvalStatus: true,
+        canOrderOnCredit: true,
         gpsLatitude: true,
         gpsLongitude: true,
         createdAt: true,

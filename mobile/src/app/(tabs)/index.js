@@ -2,7 +2,9 @@
 // import React, { useCallback, useEffect, useRef, useState } from 'react';
 // import {
 //   ActivityIndicator,
+//   Alert,
 //   Image,
+//   Platform,
 //   RefreshControl,
 //   ScrollView,
 //   StyleSheet,
@@ -10,7 +12,6 @@
 //   TextInput,
 //   TouchableOpacity,
 //   View,
-//   Platform,
 //   useWindowDimensions,
 // } from 'react-native';
 // import { useFocusEffect, useRouter } from 'expo-router';
@@ -40,7 +41,6 @@
 //   elevation: 3,
 // };
 
-// /* Normalize text for forgiving, case-insensitive product matching */
 // const normalize = (value) => String(value ?? '').trim().toLowerCase();
 
 // export default function ShopScreen() {
@@ -56,15 +56,22 @@
 //   const [selectedUnits, setSelectedUnits] = useState({});
 //   const [cart, setCart] = useState({});
 
-//   // ---- Product search (UI filter only) ----
+//   // Search filter
 //   const [searchQuery, setSearchQuery] = useState('');
 //   const [searchFocused, setSearchFocused] = useState(false);
 
-//   // Single latest pushed advertisement
-//   const [activeAd, setActiveAd] = useState(null);
+//   // Consecutive Video / Media Playlist State
+//   const [adPlaylist, setAdPlaylist] = useState([]);
+//   const [currentAdIndex, setCurrentAdIndex] = useState(0);
 //   const videoPlayerRef = useRef(null);
+//   const webVideoRef = useRef(null);
+//   const imageTimerRef = useRef(null);
 
-//   // ---- Adaptive layout metrics (search bar only) ----
+//   // 1-Tap Repeat Last Order State
+//   const [lastOrder, setLastOrder] = useState(null);
+//   const [reordering, setReordering] = useState(false);
+
+//   // Adaptive scale
 //   const isTiny = SCREEN_W < 330;
 //   const isSmall = SCREEN_W < 370;
 //   const isTablet = SCREEN_W >= 680;
@@ -97,10 +104,26 @@
 //   useFocusEffect(
 //     useCallback(() => {
 //       syncCart();
-//     }, [])
+//       fetchLastOrder();
+//     }, [token])
 //   );
 
-//   const loadCatalog = useCallback(async () => {
+//   const fetchLastOrder = useCallback(async () => {
+//     if (!token) return;
+//     try {
+//       const res = await apiRequest('/orders/my-orders', { token }).catch(() => null);
+//       const ordersList = res?.orders || (Array.isArray(res) ? res : []);
+//       if (ordersList.length > 0) {
+//         setLastOrder(ordersList[0]);
+//       } else {
+//         setLastOrder(null);
+//       }
+//     } catch (e) {
+//       setLastOrder(null);
+//     }
+//   }, [token]);
+
+//   const loadCatalog = useCallback(async (silent = false) => {
 //     try {
 //       const [catRes, prodRes] = await Promise.all([
 //         apiRequest('/catalog/categories', { token }).catch(() => null),
@@ -124,75 +147,165 @@
 //     } catch (err) {
 //       console.log('Catalog load error:', err);
 //     } finally {
-//       setLoading(false);
-//       setRefreshing(false);
+//       if (!silent) {
+//         setLoading(false);
+//         setRefreshing(false);
+//       }
 //     }
 //   }, [token, lang]);
 
-//   const loadAd = useCallback(async () => {
+//   const loadAds = useCallback(async () => {
 //     try {
 //       let res = await apiRequest('/catalog/ads', { token }).catch(() => null);
 //       if (!res?.ads) {
 //         res = await apiRequest('/admin/banners', { token }).catch(() => null);
 //       }
 
-//       const list = res?.ads || (Array.isArray(res) ? res : null);
+//       const adsList = res?.ads || (Array.isArray(res) ? res : []);
 
-//       if (Array.isArray(list) && list.length > 0) {
-//         const latest = list[0];
-//         const rawUri = latest.mediaUrl || latest.videoUrl || latest.imageUrl || null;
-//         const isVideo =
-//           latest.mediaType === 'VIDEO' ||
-//           latest.type === 'video' ||
-//           /\.(mp4|mov|m4v|webm)(\?.*)?$/i.test(rawUri || '');
+//       if (adsList.length > 0) {
+//         const latest = adsList[0];
 
-//         setActiveAd({
-//           id: latest.id,
-//           type: isVideo ? 'video' : 'image',
-//           uri: rawUri,
-//           title: latest.title || 'ልዩ ማስታወቂያ',
-//           subtitle: latest.actionLink ? 'ለመመልከት ይጫኑ' : 'ቅናሽ ገበያ',
+//         let urls = [];
+//         if (Array.isArray(latest.mediaUrls) && latest.mediaUrls.length > 0) {
+//           urls = latest.mediaUrls.filter((u) => typeof u === 'string' && u.trim().length > 0);
+//         } else if (latest.mediaUrl) {
+//           urls = [latest.mediaUrl];
+//         }
+
+//         const types = Array.isArray(latest.mediaTypes) ? latest.mediaTypes : [];
+
+//         const playlist = urls.slice(0, 3).map((url, idx) => {
+//           const typeStr = types[idx] || latest.mediaType || 'VIDEO';
+//           const isVideo =
+//             typeStr === 'VIDEO' ||
+//             /\.(mp4|mov|m4v|webm)(\?.*)?$/i.test(url);
+
+//           return {
+//             id: `${latest.id}_slot_${idx}`,
+//             title: latest.title || 'ልዩ ማስታወቂያ',
+//             subtitle: latest.actionLink ? 'ለመመልከት ይጫኑ' : 'ቅናሽ ገበያ',
+//             uri: url,
+//             type: isVideo ? 'video' : 'image',
+//           };
 //         });
-//       } else {
-//         setActiveAd({
-//           id: 'default_ad',
-//           type: 'text',
-//           uri: null,
+
+//         if (playlist.length > 0) {
+//           setAdPlaylist(playlist);
+//           return;
+//         }
+//       }
+
+//       setAdPlaylist([
+//         {
+//           id: 'default_static',
 //           title: 'ፈጣን ማድረስ ወደ በርዎ',
 //           subtitle: 'ትእዛዝዎን ዛሬ ይስጡ',
-//         });
-//       }
+//           uri: null,
+//           type: 'text',
+//         },
+//       ]);
 //     } catch (err) {
 //       console.log('Ad load error:', err);
 //     }
 //   }, [token]);
 
+//   const advanceToNextMedia = useCallback(() => {
+//     setAdPlaylist((currentList) => {
+//       if (currentList.length > 1) {
+//         setCurrentAdIndex((prev) => (prev + 1) % currentList.length);
+//       }
+//       return currentList;
+//     });
+//   }, []);
+
+//   useEffect(() => {
+//     if (imageTimerRef.current) clearTimeout(imageTimerRef.current);
+
+//     const currentMedia = adPlaylist[currentAdIndex];
+//     if (currentMedia && currentMedia.type === 'image' && adPlaylist.length > 1) {
+//       imageTimerRef.current = setTimeout(() => {
+//         advanceToNextMedia();
+//       }, 5000);
+//     }
+
+//     return () => {
+//       if (imageTimerRef.current) clearTimeout(imageTimerRef.current);
+//     };
+//   }, [currentAdIndex, adPlaylist, advanceToNextMedia]);
+
+//   const handleVideoPlaybackStatus = (status) => {
+//     if (status?.isLoaded && status?.didJustFinish) {
+//       advanceToNextMedia();
+//     }
+//   };
+
+//   useEffect(() => {
+//     if (Platform.OS === 'web' && webVideoRef.current) {
+//       webVideoRef.current.currentTime = 0;
+//       webVideoRef.current.play().catch(() => {});
+//     }
+//   }, [currentAdIndex]);
+
 //   useEffect(() => {
 //     setLoading(true);
 //     syncCart();
-//     Promise.all([loadCatalog(), loadAd()]);
-//   }, [loadCatalog, loadAd]);
+//     Promise.all([loadCatalog(false), loadAds(), fetchLastOrder()]);
+//   }, [loadCatalog, loadAds, fetchLastOrder]);
+
+//   useEffect(() => {
+//     const timer = setInterval(() => {
+//       loadCatalog(true);
+//       fetchLastOrder();
+//     }, 6000);
+
+//     return () => clearInterval(timer);
+//   }, [loadCatalog, fetchLastOrder]);
 
 //   const onRefresh = () => {
 //     setRefreshing(true);
 //     syncCart();
-//     Promise.all([loadCatalog(), loadAd()]);
+//     Promise.all([loadCatalog(false), loadAds(), fetchLastOrder()]);
 //   };
 
 //   const computeUnitPrice = (product, unit) => {
-//     const base = Number(product.pricePerUnit || product.price || 480);
+//     const base = Number(product.pricePerUnit || product.price || 0);
 //     switch (unit) {
 //       case 'ግማሽ ካርቶን':
-//       case 'ግማሽ':
-//         return product.priceHalfCarton ? Number(product.priceHalfCarton) : Math.round(base * 0.52);
-//       case 'ፓኬት': {
-//         const pcs = product.unitsPerCarton || 12;
-//         return Math.round((base / pcs) * 1.1);
-//       }
+//         return product.priceHalfCarton !== null && product.priceHalfCarton !== undefined
+//           ? Number(product.priceHalfCarton)
+//           : Math.round(base * 0.52);
+
+//       case 'ግማሽ ደርዘን':
+//         return product.priceHalfDozen !== null && product.priceHalfDozen !== undefined
+//           ? Number(product.priceHalfDozen)
+//           : Math.round(base * 0.5);
+
+//       case 'ፓኬት':
+//         return product.pricePacket !== null && product.pricePacket !== undefined
+//           ? Number(product.pricePacket)
+//           : Math.round((base / 12) * 1.08);
+
+//       case 'ደርዘን':
 //       case 'ካርቶን':
 //       default:
 //         return base;
 //     }
+//   };
+
+//   const getAvailableUnitsForProduct = (product) => {
+//     const baseUnit = product.unitType === 'DOZEN' ? 'ደርዘን' : 'ካርቶን';
+//     const units = [baseUnit];
+
+//     if (product.allowsHalfCarton) units.push('ግማሽ ካርቶን');
+//     if (product.allowsHalfDozen) units.push('ግማሽ ደርዘን');
+//     if (product.allowsPacket) units.push('ፓኬት');
+
+//     if (units.length === 1 && !product.allowsHalfCarton && !product.allowsHalfDozen && !product.allowsPacket) {
+//       units.push('ግማሽ ካርቶን', 'ፓኬት');
+//     }
+
+//     return units;
 //   };
 
 //   const handleUnitSelect = (productId, unitName) => {
@@ -203,7 +316,8 @@
 //   };
 
 //   const handleAdd = (product) => {
-//     const unit = selectedUnits[product.id] || 'ካርቶን';
+//     const defaultUnit = product.unitType === 'DOZEN' ? 'ደርዘን' : 'ካርቶን';
+//     const unit = selectedUnits[product.id] || defaultUnit;
 //     const price = computeUnitPrice(product, unit);
 //     const key = `${product.id}_${unit}`;
 
@@ -224,6 +338,105 @@
 //     });
 //   };
 
+//   const handleClearCart = async () => {
+//     const confirmMessage = 'በቅርጫቱ ውስጥ ያሉ እቃዎችን በሙሉ መሰረዝ ይፈልጋሉ?';
+//     if (Platform.OS === 'web') {
+//       if (window.confirm(confirmMessage)) {
+//         setCart({});
+//         await AsyncStorage.removeItem('user_cart').catch(() => {});
+//       }
+//       return;
+//     }
+
+//     Alert.alert('ቅርጫቱን አጽዳ', confirmMessage, [
+//       { text: 'ይቅር', style: 'cancel' },
+//       {
+//         text: 'አጽዳ',
+//         style: 'destructive',
+//         onPress: async () => {
+//           setCart({});
+//           await AsyncStorage.removeItem('user_cart').catch(() => {});
+//         },
+//       },
+//     ]);
+//   };
+
+//   // 1. REPEAT LAST ORDER: Populates cart instead of instantly placing order
+//   const handleExecuteReorder = async () => {
+//     if (!lastOrder || reordering) return;
+//     const rawItems = lastOrder.items || lastOrder.orderItems || [];
+//     if (rawItems.length === 0) {
+//       const msg = 'ያለፈው ትእዛዝ ምንም እቃዎች አልያዘም';
+//       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('ማስታወቂያ', msg);
+//       return;
+//     }
+
+//     setReordering(true);
+//     try {
+//       const newCart = { ...cart };
+
+//       rawItems.forEach((it) => {
+//         const pId = it.productId || it.product?.id;
+//         if (!pId) return;
+
+//         // Map backend unit to Amharic UI labels
+//         let unit = it.selectedUnit || 'ካርቶን';
+//         if (unit === 'HALF_CARTON') unit = 'ግማሽ ካርቶን';
+//         if (unit === 'HALF_DOZEN') unit = 'ግማሽ ደርዘን';
+//         if (unit === 'PACK' || unit === 'PACKET') unit = 'ፓኬት';
+//         if (unit === 'DOZEN') unit = 'ደርዘን';
+//         if (unit === 'CARTON') unit = 'ካርቶን';
+
+//         const key = `${pId}_${unit}`;
+//         const existingQty = newCart[key]?.quantity || 0;
+//         const addQty = Number(it.quantity) || 1;
+
+//         // Derive price from product or previous line item
+//         const matchingProduct = products.find((p) => p.id === pId);
+//         const resolvedPrice = matchingProduct
+//           ? computeUnitPrice(matchingProduct, unit)
+//           : Number(it.unitPrice || 0);
+
+//         newCart[key] = {
+//           productId: pId,
+//           name: it.product?.nameAm || it.product?.nameOm || newCart[key]?.name || 'ምርት',
+//           unit,
+//           price: Number(resolvedPrice),
+//           quantity: existingQty + addQty,
+//         };
+//       });
+
+//       setCart(newCart);
+//       await AsyncStorage.setItem('user_cart', JSON.stringify(newCart));
+
+//       const successMsg = 'ያለፈው ትእዛዝ እቃዎች በቅርጫቱ ውስጥ ተሞልተዋል! ተጨማሪ እቃዎችን ማከል ወይም ማስተካከል ይችላሉ።';
+//       if (Platform.OS === 'web') {
+//         window.alert(successMsg);
+//       } else {
+//         Alert.alert('ተሳክቷል', successMsg);
+//       }
+//     } catch (err) {
+//       console.error('Reorder load error:', err);
+//       const msg = 'እቃዎችን መጫን አልተቻለም፤ እባክዎ እንደገና ይሞክሩ።';
+//       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('ስህተት', msg);
+//     } finally {
+//       setReordering(false);
+//     }
+//   };
+
+//   // 2. SAVE DRAFT ACTION: Stores current cart as draft and navigates
+//   const handleSaveToDraft = async () => {
+//     try {
+//       await AsyncStorage.setItem('user_draft_cart', JSON.stringify(cart));
+//       router.push({
+//         pathname: '/checkout',
+//         params: { isDraft: 'true' },
+//       });
+//     } catch (e) {
+//       router.push('/checkout');
+//     }
+//   };
+
 //   const totalCount = Object.values(cart).reduce(
 //     (sum, item) => sum + (Number(item?.quantity) || 0),
 //     0
@@ -240,7 +453,6 @@
 //       )
 //     : products;
 
-//   // ---- Search narrows the category-filtered list by Amharic / Oromo name ----
 //   const query = normalize(searchQuery);
 //   const isSearching = query.length > 0;
 
@@ -253,6 +465,8 @@
 //     : filteredProducts;
 
 //   const clearSearch = () => setSearchQuery('');
+
+//   const activeMedia = adPlaylist[currentAdIndex] || null;
 
 //   return (
 //     <View style={styles.screen}>
@@ -272,7 +486,7 @@
 //           />
 //         }
 //       >
-//         {/* ---------- SLIM GLOW SEARCH BAR ---------- */}
+//         {/* ---------- SEARCH BAR ---------- */}
 //         <View
 //           style={[
 //             styles.searchGlow,
@@ -287,8 +501,16 @@
 //               <Text style={[styles.searchIcon, dynSearch.searchIcon]}>🔍</Text>
 //             </View>
 
-//             {/* <TextInput
-//               style={[styles.searchInput, dynSearch.searchInput]}
+//             <TextInput
+//               style={[
+//                 styles.searchInput,
+//                 dynSearch.searchInput,
+//                 {
+//                   borderWidth: 0,
+//                   borderColor: 'transparent',
+//                   backgroundColor: 'transparent',
+//                 },
+//               ]}
 //               value={searchQuery}
 //               onChangeText={setSearchQuery}
 //               onFocus={() => setSearchFocused(true)}
@@ -301,34 +523,7 @@
 //               clearButtonMode="never"
 //               underlineColorAndroid="transparent"
 //               numberOfLines={1}
-//             /> */}
-           
-// <TextInput
-//   style={[
-//     styles.searchInput,
-//     dynSearch.searchInput,
-//     {
-//       borderWidth: 0,
-//       borderColor: 'transparent',
-//       outlineStyle: 'none',
-//       backgroundColor: 'transparent',
-//       elevation: 0,
-//     },
-//   ]}
-//   value={searchQuery}
-//   onChangeText={setSearchQuery}
-//   onFocus={() => setSearchFocused(true)}
-//   onBlur={() => setSearchFocused(false)}
-//   placeholder="ምርት ይፈልጉ..."
-//   placeholderTextColor="#9CAEA4"
-//   returnKeyType="search"
-//   autoCorrect={false}
-//   autoCapitalize="none"
-//   clearButtonMode="never"
-//   underlineColorAndroid="transparent"
-//   numberOfLines={1}
-// />
-
+//             />
 
 //             {isSearching && (
 //               <TouchableOpacity
@@ -337,16 +532,42 @@
 //                 activeOpacity={0.7}
 //                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
 //               >
-//                 <Text style={[styles.searchClearText, dynSearch.searchClearText]}>
-//                   ✕
-//                 </Text>
+//                 <Text style={[styles.searchClearText, dynSearch.searchClearText]}>✕</Text>
 //               </TouchableOpacity>
 //             )}
 //           </View>
 //         </View>
 
-//         {/* SINGLE PUSHED ADVERTISEMENT (Video or Image) */}
-//         {activeAd && (
+//         {/* ---------- 1-TAP POPULATE CART BANNER ---------- */}
+//         {lastOrder && (
+//           <TouchableOpacity
+//             style={styles.reorderBannerSlim}
+//             onPress={handleExecuteReorder}
+//             activeOpacity={0.85}
+//             disabled={reordering}
+//           >
+//             <View pointerEvents="none" style={styles.reorderShine} />
+//             <View style={styles.reorderLeftSlim}>
+//               <View style={styles.reorderBadgeSlim}>
+//                 <Text style={styles.reorderBadgeTextSlim}>🔄 1-Tap</Text>
+//               </View>
+//               <Text style={styles.reorderTitleSlim} numberOfLines={1}>
+//                 ያለፈውን ድገም: <Text style={styles.reorderAmountSlim}>{Number(lastOrder.totalAmount).toLocaleString()} ብር</Text> ({((lastOrder.items || []).length)} እቃዎች)
+//               </Text>
+//             </View>
+
+//             <View style={styles.reorderActionBtnSlim}>
+//               {reordering ? (
+//                 <ActivityIndicator size="small" color="#0F7B4A" />
+//               ) : (
+//                 <Text style={styles.reorderActionTextSlim}>ቅርጫት ሙላ ›</Text>
+//               )}
+//             </View>
+//           </TouchableOpacity>
+//         )}
+
+//         {/* ---------- ADVERTISEMENT CAROUSEL ---------- */}
+//         {activeMedia && (
 //           <View style={styles.adGlow}>
 //             <View style={styles.adFrame}>
 //               <View style={styles.adBase}>
@@ -354,15 +575,16 @@
 //                 <View style={styles.adOrbSmall} />
 //               </View>
 
-//               {/* VIDEO AD */}
-//               {activeAd.uri && activeAd.type === 'video' && (
+//               {activeMedia.uri && activeMedia.type === 'video' && (
 //                 Platform.OS === 'web' ? (
 //                   <video
-//                     src={activeAd.uri}
+//                     key={`web_vid_${currentAdIndex}_${activeMedia.uri}`}
+//                     ref={webVideoRef}
+//                     src={activeMedia.uri}
 //                     autoPlay
-//                     loop
 //                     muted
 //                     playsInline
+//                     onEnded={advanceToNextMedia}
 //                     style={{
 //                       width: '100%',
 //                       height: '100%',
@@ -374,50 +596,46 @@
 //                   />
 //                 ) : (
 //                   <Video
+//                     key={`mobile_vid_${currentAdIndex}_${activeMedia.uri}`}
 //                     ref={videoPlayerRef}
 //                     style={styles.adMedia}
-//                     source={{ uri: activeAd.uri }}
+//                     source={{ uri: activeMedia.uri }}
 //                     resizeMode={ResizeMode.COVER}
-//                     shouldPlay
-//                     isLooping
-//                     isMuted
+//                     shouldPlay={true}
+//                     isLooping={false}
+//                     isMuted={true}
 //                     useNativeControls={false}
-//                     onLoad={async () => {
-//                       try {
-//                         await videoPlayerRef.current?.playAsync();
-//                       } catch (e) {}
-//                     }}
+//                     onPlaybackStatusUpdate={handleVideoPlaybackStatus}
 //                   />
 //                 )
 //               )}
 
-//               {/* IMAGE AD */}
-//               {activeAd.uri && activeAd.type === 'image' && (
+//               {activeMedia.uri && activeMedia.type === 'image' && (
 //                 <Image
+//                   key={`img_${currentAdIndex}_${activeMedia.uri}`}
 //                   style={styles.adMedia}
-//                   source={{ uri: activeAd.uri }}
+//                   source={{ uri: activeMedia.uri }}
 //                   resizeMode="cover"
 //                 />
 //               )}
 
-//               {/* OVERLAY TEXT */}
-//               {activeAd.uri ? (
+//               {activeMedia.uri ? (
 //                 <View style={styles.adShade}>
 //                   <Text style={styles.adTitle} numberOfLines={1}>
-//                     {activeAd.title}
+//                     {activeMedia.title}
 //                   </Text>
 //                   <Text style={styles.adSubtitle} numberOfLines={1}>
-//                     {activeAd.subtitle}
+//                     {activeMedia.subtitle}
 //                   </Text>
 //                 </View>
 //               ) : (
 //                 <View style={styles.adTextRow}>
 //                   <View style={styles.adTextCol}>
 //                     <Text style={styles.adTitleBig} numberOfLines={2}>
-//                       {activeAd.title}
+//                       {activeMedia.title}
 //                     </Text>
 //                     <Text style={styles.adSubtitle} numberOfLines={2}>
-//                       {activeAd.subtitle}
+//                       {activeMedia.subtitle}
 //                     </Text>
 //                   </View>
 //                   <View style={styles.adIconBubble}>
@@ -430,12 +648,26 @@
 //                 <Text style={styles.adBadgeText}>ማስታወቂያ</Text>
 //               </View>
 
+//               {adPlaylist.length > 1 && (
+//                 <View style={styles.adPaginationDots}>
+//                   {adPlaylist.map((_, idx) => (
+//                     <View
+//                       key={idx}
+//                       style={[
+//                         styles.dotItem,
+//                         currentAdIndex === idx && styles.dotItemActive,
+//                       ]}
+//                     />
+//                   ))}
+//                 </View>
+//               )}
+
 //               <View pointerEvents="none" style={styles.adShine} />
 //             </View>
 //           </View>
 //         )}
 
-//         {/* CATEGORIES GRID */}
+//         {/* ---------- CATEGORIES GRID ---------- */}
 //         <View style={styles.categoryGrid}>
 //           {categories.map((cat) => {
 //             const active = selectedCatId === cat.id;
@@ -472,7 +704,7 @@
 //           })}
 //         </View>
 
-//         {/* SECTION HEADER */}
+//         {/* ---------- SECTION HEADER ---------- */}
 //         <View style={styles.sectionHeaderRow}>
 //           <View style={styles.sectionTitleWrap}>
 //             <View style={styles.sectionAccent} />
@@ -490,7 +722,7 @@
 //           )}
 //         </View>
 
-//         {/* PRODUCT CARDS — compact two-tier rows */}
+//         {/* ---------- PRODUCT CARDS ---------- */}
 //         {loading && products.length === 0 ? (
 //           <View style={styles.loaderWrap}>
 //             <ActivityIndicator size="large" color="#0F7B4A" />
@@ -498,15 +730,12 @@
 //         ) : visibleProducts.length === 0 && isSearching ? (
 //           <View style={styles.noResultCard}>
 //             <View pointerEvents="none" style={styles.noResultGlow} />
-
 //             <View style={styles.noResultIconWrap}>
 //               <Text style={styles.noResultIcon}>🔍</Text>
 //             </View>
-
 //             <Text style={styles.noResultTitle} numberOfLines={2}>
 //               ለፍለጋው ምንም ምርት አልተገኘም
 //             </Text>
-
 //             <TouchableOpacity
 //               style={styles.noResultBtn}
 //               onPress={clearSearch}
@@ -519,15 +748,16 @@
 //         ) : (
 //           <View style={styles.productStack}>
 //             {visibleProducts.map((item) => {
-//               const currentUnit = selectedUnits[item.id] || 'ካርቶን';
+//               const defaultUnit = item.unitType === 'DOZEN' ? 'ደርዘን' : 'ካርቶን';
+//               const currentUnit = selectedUnits[item.id] || defaultUnit;
 //               const dynamicPrice = computeUnitPrice(item, currentUnit);
 //               const isImageFile = item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('/'));
+//               const availableUnits = getAvailableUnitsForProduct(item);
 
 //               return (
 //                 <View style={styles.productCard} key={item.id}>
 //                   <View pointerEvents="none" style={styles.cardShine} />
 
-//                   {/* TIER 1 — identity, price, stock, chevron (taps to detail) */}
 //                   <TouchableOpacity
 //                     style={styles.cardHeaderArea}
 //                     activeOpacity={0.75}
@@ -564,7 +794,7 @@
 //                         <View style={styles.stockPill}>
 //                           <View style={styles.stockDot} />
 //                           <Text style={styles.stockText} numberOfLines={1}>
-//                             ክምችት: {item.currentStock ?? 50} ካርቶን
+//                             ክምችት: {item.currentStock ?? 50}
 //                           </Text>
 //                         </View>
 //                       </View>
@@ -575,10 +805,9 @@
 //                     </View>
 //                   </TouchableOpacity>
 
-//                   {/* TIER 2 — unit selector + add to cart */}
 //                   <View style={styles.cardActionRow}>
 //                     <View style={styles.unitPillsRow}>
-//                       {['ካርቶን', 'ግማሽ ካርቶን', 'ፓኬት'].map((u) => {
+//                       {availableUnits.map((u) => {
 //                         const isSel = currentUnit === u;
 //                         return (
 //                           <TouchableOpacity
@@ -614,18 +843,23 @@
 //         )}
 //       </ScrollView>
 
-//       {/* FLOATING CART BAR: Perfectly proportioned and pinned directly above bottom navigation */}
+//       {/* ---------- FLOATING CART BAR WITH DRAFT & SEND ACTIONS ---------- */}
 //       {totalCount > 0 && (
 //         <View style={styles.floatingCartContainer} pointerEvents="box-none">
-//           <TouchableOpacity
-//             style={styles.floatingCartBar}
-//             onPress={() => router.push('/checkout')}
-//             activeOpacity={0.88}
-//           >
+//           <View style={styles.floatingCartBar}>
 //             <View pointerEvents="none" style={styles.floatingShine} />
 
-//             {/* Left section: Counter badge + Total amount */}
 //             <View style={styles.floatingCartLeft}>
+//               <TouchableOpacity
+//                 style={styles.floatingCancelBtn}
+//                 onPress={handleClearCart}
+//                 activeOpacity={0.75}
+//                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+//                 title="አጽዳ"
+//               >
+//                 <Text style={styles.floatingCancelText}>✕</Text>
+//               </TouchableOpacity>
+
 //               <View style={styles.floatingCountBadge}>
 //                 <Text style={styles.floatingCountText}>{totalCount}</Text>
 //               </View>
@@ -638,11 +872,25 @@
 //               </View>
 //             </View>
 
-//             {/* Right section: Action button */}
-//             <View style={styles.floatingActionPill}>
-//               <Text style={styles.floatingActionText}>ትእዛዝ ይመልከቱ ›</Text>
+//             {/* 2 ACTIONS: SEND TO DRAFT & SEND ORDER */}
+//             <View style={styles.floatingActionsGroup}>
+//               <TouchableOpacity
+//                 style={styles.floatingDraftBtn}
+//                 onPress={handleSaveToDraft}
+//                 activeOpacity={0.85}
+//               >
+//                 <Text style={styles.floatingDraftText}>ረቂቅ</Text>
+//               </TouchableOpacity>
+
+//               <TouchableOpacity
+//                 style={styles.floatingActionPill}
+//                 onPress={() => router.push('/checkout')}
+//                 activeOpacity={0.85}
+//               >
+//                 <Text style={styles.floatingActionText}>ትእዛዝ ላክ ›</Text>
+//               </TouchableOpacity>
 //             </View>
-//           </TouchableOpacity>
+//           </View>
 //         </View>
 //       )}
 //     </View>
@@ -652,100 +900,71 @@
 // const GREEN = '#0F7B4A';
 // const GREEN_SOFT = '#E4F2EA';
 // const AMBER = '#F5A623';
-// const AMBER_BRIGHT = '#F2B705';
 // const INK = '#12241A';
 // const MUTED = '#62726A';
 
-// /* Adaptive metrics for the search bar — scales with device width */
 // const buildSearchDynamic = (s, isTablet) =>
 //   StyleSheet.create({
-   
-// searchGlow: {
-//   marginBottom: 12 * s,
-//   borderRadius: 18 * s,
-//   width: '100%',
-//   alignSelf: 'center',
-//   backgroundColor: 'transparent',
-// },
-
-// searchBar: {
-//   height: 44 * s,
-//   borderRadius: 15 * s,
-//   paddingHorizontal: 12 * s,
-//   flexDirection: 'row',
-//   alignItems: 'center',
-//   gap: 9 * s,
-//   maxWidth: isTablet ? 620 : '100%',
-//   width: '100%',
-//   alignSelf: 'center',
-
-//   backgroundColor: '#F8FAFC',
-//   borderWidth: 1 * s,
-//   borderColor: '#E2E8F0',
-
-//   shadowColor: '#64748B',
-//   shadowOffset: { width: 0, height: 2 * s },
-//   shadowOpacity: 0.035,
-//   shadowRadius: 5 * s,
-//   elevation: 0,
-// },
-
-// // Apply this style when the search bar is focused.
-// searchBarFocused: {
-//   borderColor: '#93C5FD',
-//   backgroundColor: '#FFFFFF',
-
-//   shadowColor: '#3B82F6',
-//   shadowOffset: { width: 0, height: 2 * s },
-//   shadowOpacity: 0.10,
-//   shadowRadius: 7 * s,
-//   elevation: 0,
-// },
-
-// searchIconWrap: {
-//   width: 27 * s,
-//   height: 27 * s,
-//   borderRadius: 9 * s,
-//   alignItems: 'center',
-//   justifyContent: 'center',
-//   backgroundColor: '#EAF2FF',
-// },
-
-// searchIcon: {
-//   fontSize: 13 * s,
-//   color: '#64748B',
-// },
-
-// searchInput: {
-//   flex: 1,
-//   minWidth: 0,
-//   height: 42 * s,
-//   paddingHorizontal: 0,
-//   paddingVertical: 0,
-//   fontSize: 13 * s,
-//   fontWeight: '400',
-//   color: '#0F172A',
-//   backgroundColor: 'transparent',
-//   borderWidth: 0,
-//   includeFontPadding: false,
-// },
-
-// searchClearBtn: {
-//   width: 23 * s,
-//   height: 23 * s,
-//   borderRadius: 12 * s,
-//   alignItems: 'center',
-//   justifyContent: 'center',
-//   backgroundColor: '#E9EEF5',
-// },
-
-// searchClearText: {
-//   fontSize: 10 * s,
-//   lineHeight: 12 * s,
-//   fontWeight: '600',
-//   color: '#64748B',
-// },
-
+//     searchGlow: {
+//       marginBottom: 10 * s,
+//       borderRadius: 18 * s,
+//       width: '100%',
+//       alignSelf: 'center',
+//       backgroundColor: 'transparent',
+//     },
+//     searchBar: {
+//       height: 44 * s,
+//       borderRadius: 15 * s,
+//       paddingHorizontal: 12 * s,
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       gap: 9 * s,
+//       maxWidth: isTablet ? 620 : '100%',
+//       width: '100%',
+//       alignSelf: 'center',
+//       backgroundColor: '#F8FAFC',
+//       borderWidth: 1 * s,
+//       borderColor: '#E2E8F0',
+//       elevation: 0,
+//     },
+//     searchIconWrap: {
+//       width: 27 * s,
+//       height: 27 * s,
+//       borderRadius: 9 * s,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       backgroundColor: '#EAF2FF',
+//     },
+//     searchIcon: {
+//       fontSize: 13 * s,
+//       color: '#64748B',
+//     },
+//     searchInput: {
+//       flex: 1,
+//       minWidth: 0,
+//       height: 42 * s,
+//       paddingHorizontal: 0,
+//       paddingVertical: 0,
+//       fontSize: 13 * s,
+//       fontWeight: '400',
+//       color: '#0F172A',
+//       backgroundColor: 'transparent',
+//       borderWidth: 0,
+//     },
+//     searchClearBtn: {
+//       width: 23 * s,
+//       height: 23 * s,
+//       borderRadius: 12 * s,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       backgroundColor: '#E9EEF5',
+//     },
+//     searchClearText: {
+//       fontSize: 10 * s,
+//       lineHeight: 12 * s,
+//       fontWeight: '600',
+//       color: '#64748B',
+//     },
 //   });
 
 // const styles = StyleSheet.create({
@@ -777,7 +996,7 @@
 //     paddingBottom: 205,
 //   },
 
-//   /* ---------- SLIM GLOW SEARCH BAR ---------- */
+//   /* Search */
 //   searchGlow: {
 //     backgroundColor: '#FFFFFF',
 //     shadowColor: '#0F7B4A',
@@ -837,7 +1056,77 @@
 //     fontWeight: '900',
 //   },
 
-//   /* ---------- AD BANNER ---------- */
+//   /* SLIM 1-Tap Reorder Banner */
+//   reorderBannerSlim: {
+//     backgroundColor: '#0F7B4A',
+//     borderRadius: 12,
+//     paddingHorizontal: 10,
+//     paddingVertical: 7,
+//     marginBottom: 10,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'space-between',
+//     borderWidth: 1,
+//     borderColor: '#3FD08A',
+//     overflow: 'hidden',
+//     shadowColor: '#0F7B4A',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.18,
+//     shadowRadius: 5,
+//     elevation: 4,
+//   },
+//   reorderShine: {
+//     position: 'absolute',
+//     top: 0,
+//     left: 0,
+//     right: 0,
+//     height: '40%',
+//     backgroundColor: 'rgba(255, 255, 255, 0.10)',
+//   },
+//   reorderLeftSlim: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 7,
+//     flex: 1,
+//   },
+//   reorderBadgeSlim: {
+//     backgroundColor: '#F2B705',
+//     paddingHorizontal: 6,
+//     paddingVertical: 2.5,
+//     borderRadius: 6,
+//   },
+//   reorderBadgeTextSlim: {
+//     color: '#12241A',
+//     fontSize: 9.5,
+//     fontWeight: '900',
+//   },
+//   reorderTitleSlim: {
+//     color: '#FFFFFF',
+//     fontSize: 11.5,
+//     fontWeight: '700',
+//     flex: 1,
+//   },
+//   reorderAmountSlim: {
+//     color: '#FDE047',
+//     fontWeight: '900',
+//   },
+//   reorderActionBtnSlim: {
+//     backgroundColor: '#FFFFFF',
+//     paddingHorizontal: 9,
+//     paddingVertical: 4.5,
+//     borderRadius: 7,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginLeft: 6,
+//     flexShrink: 0,
+//   },
+//   reorderActionTextSlim: {
+//     color: '#0F7B4A',
+//     fontSize: 10.5,
+//     fontWeight: '900',
+//   },
+
+//   /* Ad Banner & Sequential Media */
 //   adGlow: {
 //     marginBottom: 15,
 //     borderRadius: 21,
@@ -958,8 +1247,30 @@
 //     fontSize: 10,
 //     fontWeight: '900',
 //   },
+//   adPaginationDots: {
+//     position: 'absolute',
+//     top: 10,
+//     right: 12,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 4,
+//     backgroundColor: 'rgba(0, 0, 0, 0.35)',
+//     paddingHorizontal: 6,
+//     paddingVertical: 3,
+//     borderRadius: 8,
+//   },
+//   dotItem: {
+//     width: 5,
+//     height: 5,
+//     borderRadius: 2.5,
+//     backgroundColor: 'rgba(255, 255, 255, 0.4)',
+//   },
+//   dotItemActive: {
+//     width: 12,
+//     backgroundColor: '#FFFFFF',
+//   },
 
-//   /* ---------- CATEGORIES ---------- */
+//   /* Categories */
 //   categoryGrid: {
 //     flexDirection: 'row',
 //     flexWrap: 'wrap',
@@ -1016,7 +1327,7 @@
 //     fontWeight: '800',
 //   },
 
-//   /* ---------- SECTION HEADER ---------- */
+//   /* Section Header */
 //   sectionHeaderRow: {
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
@@ -1060,7 +1371,7 @@
 //     alignItems: 'center',
 //   },
 
-//   /* ---------- NO SEARCH RESULT ---------- */
+//   /* Empty Search */
 //   noResultCard: {
 //     backgroundColor: '#FFFFFF',
 //     borderRadius: 18,
@@ -1123,7 +1434,7 @@
 //     fontWeight: '900',
 //   },
 
-//   /* ---------- COMPACT PRODUCT CARD ---------- */
+//   /* Product Cards */
 //   productStack: {
 //     flexDirection: 'column',
 //     gap: 10,
@@ -1147,8 +1458,6 @@
 //     borderRadius: 2,
 //     backgroundColor: 'rgba(63, 208, 138, 0.5)',
 //   },
-
-//   /* Tier 1 */
 //   cardHeaderArea: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -1229,8 +1538,6 @@
 //     color: '#A9BCB0',
 //     lineHeight: 24,
 //   },
-
-//   /* Tier 2 */
 //   cardActionRow: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -1299,16 +1606,7 @@
 //     fontWeight: '900',
 //   },
 
-//   /* ---------- ELEVATED FLOATING CART BAR ---------- */
-//   // floatingCartContainer: {
-//   //   position: 'absolute',
-//   //   left: 12,
-//   //   right: 12,
-//   //   bottom: Platform.OS === 'web' ? 68 : 82,
-//   //   zIndex: 99999,
-//   //   elevation: 20,
-//   //   alignItems: 'center',
-//   // },
+//   /* Floating Cart Bar */
 //   floatingCartContainer: {
 //     position: 'absolute',
 //     left: 12,
@@ -1319,10 +1617,10 @@
 //   },
 //   floatingCartBar: {
 //     width: '100%',
-//     height: 60,
+//     height: 62,
 //     backgroundColor: '#0F7B4A',
-//     borderRadius: 17,
-//     paddingHorizontal: 15,
+//     borderRadius: 18,
+//     paddingHorizontal: 12,
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
 //     alignItems: 'center',
@@ -1345,21 +1643,41 @@
 //   floatingCartLeft: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
-//     gap: 11,
+//     gap: 7,
 //     flexShrink: 1,
+//   },
+//   floatingCancelBtn: {
+//     width: 26,
+//     height: 26,
+//     borderRadius: 13,
+//     backgroundColor: '#EF4444',
+//     borderWidth: 1.2,
+//     borderColor: '#FFFFFF',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 3,
+//     elevation: 3,
+//   },
+//   floatingCancelText: {
+//     color: '#FFFFFF',
+//     fontSize: 11,
+//     fontWeight: '900',
 //   },
 //   floatingCountBadge: {
 //     backgroundColor: '#F2B705',
-//     minWidth: 30,
-//     height: 30,
-//     paddingHorizontal: 6,
-//     borderRadius: 15,
+//     minWidth: 26,
+//     height: 26,
+//     paddingHorizontal: 5,
+//     borderRadius: 13,
 //     justifyContent: 'center',
 //     alignItems: 'center',
 //   },
 //   floatingCountText: {
 //     color: '#12241A',
-//     fontSize: 13.5,
+//     fontSize: 12,
 //     fontWeight: '900',
 //   },
 //   floatingTotalGroup: {
@@ -1367,42 +1685,67 @@
 //   },
 //   floatingTotalLabel: {
 //     color: 'rgba(255, 255, 255, 0.75)',
-//     fontSize: 9.5,
+//     fontSize: 9,
 //     fontWeight: '700',
-//     lineHeight: 12,
+//     lineHeight: 11,
 //   },
 //   floatingTotalText: {
 //     color: '#FFFFFF',
-//     fontSize: 15.5,
+//     fontSize: 14,
 //     fontWeight: '900',
-//     lineHeight: 19,
+//     lineHeight: 18,
 //   },
 //   floatingBirr: {
-//     fontSize: 11.5,
+//     fontSize: 10.5,
 //     fontWeight: '700',
 //   },
-//   floatingActionPill: {
-//     backgroundColor: 'rgba(255, 255, 255, 0.22)',
-//     paddingHorizontal: 13,
-//     paddingVertical: 8,
+//   floatingActionsGroup: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 7,
+//     flexShrink: 0,
+//   },
+//   floatingDraftBtn: {
+//     backgroundColor: '#F59E0B',
+//     paddingHorizontal: 11,
+//     paddingVertical: 7.5,
 //     borderRadius: 11,
 //     borderWidth: 1,
-//     borderColor: 'rgba(255, 255, 255, 0.35)',
+//     borderColor: '#FDE68A',
 //     justifyContent: 'center',
 //     alignItems: 'center',
-//     flexShrink: 0,
+//     shadowColor: '#F59E0B',
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.35,
+//     shadowRadius: 4,
+//     elevation: 3,
+//   },
+//   floatingDraftText: {
+//     color: '#12241A',
+//     fontSize: 11.5,
+//     fontWeight: '900',
+//   },
+//   floatingActionPill: {
+//     backgroundColor: 'rgba(255, 255, 255, 0.25)',
+//     paddingHorizontal: 12,
+//     paddingVertical: 7.5,
+//     borderRadius: 11,
+//     borderWidth: 1,
+//     borderColor: 'rgba(255, 255, 255, 0.45)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
 //   },
 //   floatingActionText: {
 //     color: '#FFFFFF',
-//     fontSize: 12.5,
-//     fontWeight: '800',
+//     fontSize: 12,
+//     fontWeight: '900',
 //   },
 // });
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
+  Modal,
   Platform,
   RefreshControl,
   ScrollView,
@@ -1466,9 +1809,17 @@ export default function ShopScreen() {
   const webVideoRef = useRef(null);
   const imageTimerRef = useRef(null);
 
-  // Module 3: 1-Tap Repeat Last Order State
+  // 1-Tap Repeat Last Order State
   const [lastOrder, setLastOrder] = useState(null);
   const [reordering, setReordering] = useState(false);
+
+  // Pure In-App Amharic Modal State (No "localhost says..." popups)
+  const [clearModalVisible, setClearModalVisible] = useState(false);
+  const [notificationModal, setNotificationModal] = useState({
+    visible: false,
+    title: '',
+    message: '',
+  });
 
   // Adaptive scale
   const isTiny = SCREEN_W < 330;
@@ -1495,7 +1846,7 @@ export default function ShopScreen() {
       } else {
         setCart({});
       }
-    } catch (e) {
+    } catch {
       setCart({});
     }
   };
@@ -1517,7 +1868,7 @@ export default function ShopScreen() {
       } else {
         setLastOrder(null);
       }
-    } catch (e) {
+    } catch {
       setLastOrder(null);
     }
   }, [token]);
@@ -1543,8 +1894,8 @@ export default function ShopScreen() {
       if (prodRes?.products) {
         setProducts(prodRes.products);
       }
-    } catch (err) {
-      console.log('Catalog load error:', err);
+    } catch {
+      // Silent error handling
     } finally {
       if (!silent) {
         setLoading(false);
@@ -1553,7 +1904,6 @@ export default function ShopScreen() {
     }
   }, [token, lang]);
 
-  // Load ONLY the latest banner campaign and build the 3-slot consecutive playlist
   const loadAds = useCallback(async () => {
     try {
       let res = await apiRequest('/catalog/ads', { token }).catch(() => null);
@@ -1605,12 +1955,11 @@ export default function ShopScreen() {
           type: 'text',
         },
       ]);
-    } catch (err) {
-      console.log('Ad load error:', err);
+    } catch {
+      // Silent error handling
     }
   }, [token]);
 
-  // Advance consecutively through the playlist
   const advanceToNextMedia = useCallback(() => {
     setAdPlaylist((currentList) => {
       if (currentList.length > 1) {
@@ -1620,7 +1969,6 @@ export default function ShopScreen() {
     });
   }, []);
 
-  // Timer for static images: 5 seconds per image
   useEffect(() => {
     if (imageTimerRef.current) clearTimeout(imageTimerRef.current);
 
@@ -1636,14 +1984,12 @@ export default function ShopScreen() {
     };
   }, [currentAdIndex, adPlaylist, advanceToNextMedia]);
 
-  // Video playback status callback for Expo AV
   const handleVideoPlaybackStatus = (status) => {
     if (status?.isLoaded && status?.didJustFinish) {
       advanceToNextMedia();
     }
   };
 
-  // Web Video Autoplay enforcement
   useEffect(() => {
     if (Platform.OS === 'web' && webVideoRef.current) {
       webVideoRef.current.currentTime = 0;
@@ -1651,14 +1997,12 @@ export default function ShopScreen() {
     }
   }, [currentAdIndex]);
 
-  // Initial load
   useEffect(() => {
     setLoading(true);
     syncCart();
     Promise.all([loadCatalog(false), loadAds(), fetchLastOrder()]);
   }, [loadCatalog, loadAds, fetchLastOrder]);
 
-  // Silent background polling every 6 seconds without browser reload
   useEffect(() => {
     const timer = setInterval(() => {
       loadCatalog(true);
@@ -1744,99 +2088,97 @@ export default function ShopScreen() {
     });
   };
 
-  const handleClearCart = async () => {
-    const confirmMessage = 'በቅርጫቱ ውስጥ ያሉ እቃዎችን በሙሉ መሰረዝ ይፈልጋሉ?';
-    if (Platform.OS === 'web') {
-      if (window.confirm(confirmMessage)) {
-        setCart({});
-        await AsyncStorage.removeItem('user_cart').catch(() => {});
-      }
-      return;
-    }
-
-    Alert.alert('ቅርጫቱን አጽዳ', confirmMessage, [
-      { text: 'ይቅር', style: 'cancel' },
-      {
-        text: 'አጽዳ',
-        style: 'destructive',
-        onPress: async () => {
-          setCart({});
-          await AsyncStorage.removeItem('user_cart').catch(() => {});
-        },
-      },
-    ]);
+  // Triggers the custom in-app Amharic clear modal
+  const handleTriggerClearCart = () => {
+    setClearModalVisible(true);
   };
 
-  // 1-Tap Repeat Last Order Dispatcher
+  // Confirms and clears immediately
+  const handleConfirmClearCart = async () => {
+    setClearModalVisible(false);
+    setCart({});
+    await AsyncStorage.removeItem('user_cart').catch(() => {});
+  };
+
+  const handleCancelClearCart = () => {
+    setClearModalVisible(false);
+  };
+
+  // 1. REPEAT LAST ORDER: Populates cart instead of instantly placing order
   const handleExecuteReorder = async () => {
     if (!lastOrder || reordering) return;
     const rawItems = lastOrder.items || lastOrder.orderItems || [];
     if (rawItems.length === 0) {
-      const msg = 'ያለፈው ትእዛዝ ምንም እቃዎች አልያዘም';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('ማስታወቂያ', msg);
+      setNotificationModal({
+        visible: true,
+        title: 'ማስታወቂያ',
+        message: 'ያለፈው ትእዛዝ ምንም እቃዎች አልያዘም',
+      });
       return;
     }
 
     setReordering(true);
     try {
-      const formattedItems = rawItems.map((it) => {
-        let pId = it.productId || it.product?.id;
-        let selectedUnit = it.selectedUnit || 'CARTON';
+      const newCart = { ...cart };
 
-        if (selectedUnit === 'ግማሽ ካርቶን') selectedUnit = 'HALF_CARTON';
-        if (selectedUnit === 'ግማሽ ደርዘን') selectedUnit = 'HALF_DOZEN';
-        if (selectedUnit === 'ፓኬት') selectedUnit = 'PACK';
-        if (selectedUnit === 'ደርዘን') selectedUnit = 'DOZEN';
+      rawItems.forEach((it) => {
+        const pId = it.productId || it.product?.id;
+        if (!pId) return;
 
-        return {
+        let unit = it.selectedUnit || 'ካርቶን';
+        if (unit === 'HALF_CARTON') unit = 'ግማሽ ካርቶን';
+        if (unit === 'HALF_DOZEN') unit = 'ግማሽ ደርዘን';
+        if (unit === 'PACK' || unit === 'PACKET') unit = 'ፓኬት';
+        if (unit === 'DOZEN') unit = 'ደርዘን';
+        if (unit === 'CARTON') unit = 'ካርቶን';
+
+        const key = `${pId}_${unit}`;
+        const existingQty = newCart[key]?.quantity || 0;
+        const addQty = Number(it.quantity) || 1;
+
+        const matchingProduct = products.find((p) => p.id === pId);
+        const resolvedPrice = matchingProduct
+          ? computeUnitPrice(matchingProduct, unit)
+          : Number(it.unitPrice || 0);
+
+        newCart[key] = {
           productId: pId,
-          quantity: Number(it.quantity) || 1,
-          selectedUnit: selectedUnit,
+          name: it.product?.nameAm || it.product?.nameOm || newCart[key]?.name || 'ምርት',
+          unit,
+          price: Number(resolvedPrice),
+          quantity: existingQty + addQty,
         };
       });
 
-      const orderPayload = {
-        items: formattedItems,
-        deliverySlot: lastOrder.deliverySlot || 'BATCH_6AM',
-        isCreditOrder: Boolean(lastOrder.isCreditOrder),
-      };
+      setCart(newCart);
+      await AsyncStorage.setItem('user_cart', JSON.stringify(newCart));
 
-      // Pass plain object to avoid double stringification
-      const res = await apiRequest('/orders', {
-        method: 'POST',
-        token,
-        body: orderPayload,
+      setNotificationModal({
+        visible: true,
+        title: 'ተሳክቷል',
+        message: 'ያለፈው ትእዛዝ እቃዎች በቅርጫቱ ውስጥ ተሞልተዋል! ተጨማሪ እቃዎችን ማከል ወይም ማስተካከል ይችላሉ።',
       });
-
-      const createdOrder = res?.order || res;
-      const orderId = createdOrder?.id || res?.orderId || lastOrder.id;
-
-      if (orderId) {
-        setCart({});
-        await AsyncStorage.removeItem('user_cart').catch(() => {});
-
-        router.push({
-          pathname: '/confirmation',
-          params: {
-            orderId: String(orderId),
-            totalAmount: String(createdOrder?.totalAmount || lastOrder.totalAmount),
-            deliverySlot: String(createdOrder?.deliverySlot || lastOrder.deliverySlot || 'BATCH_6AM'),
-            isCredit: String(Boolean(lastOrder.isCreditOrder)),
-          },
-        });
-      } else {
-        throw new Error(res?.error || 'ትእዛዝ ማስተላለፍ አልተቻለም');
-      }
-    } catch (err) {
-      console.error('1-Tap Reorder error:', err);
-      const msg = err.message || 'ትእዛዙን መድገም አልተቻለም፤ እባክዎ እንደገና ይሞክሩ።';
-      if (Platform.OS === 'web') {
-        window.alert(msg);
-      } else {
-        Alert.alert('ስህተት', msg);
-      }
+    } catch {
+      setNotificationModal({
+        visible: true,
+        title: 'ስህተት',
+        message: 'እቃዎችን መጫን አልተቻለም፤ እባክዎ እንደገና ይሞክሩ።',
+      });
     } finally {
       setReordering(false);
+    }
+  };
+
+  // 2. SAVE DRAFT ACTION: Stores current cart as draft and navigates
+  const handleSaveToDraft = async () => {
+    try {
+      await AsyncStorage.setItem('user_draft_cart', JSON.stringify(cart));
+      router.push({
+        pathname: '/checkout',
+        params: { isDraft: 'true' },
+      });
+    } catch {
+      router.push('/checkout');
     }
   };
 
@@ -1941,7 +2283,7 @@ export default function ShopScreen() {
           </View>
         </View>
 
-        {/* ---------- SLIM COMPACT 1-TAP REORDER BANNER ---------- */}
+        {/* ---------- 1-TAP POPULATE CART BANNER ---------- */}
         {lastOrder && (
           <TouchableOpacity
             style={styles.reorderBannerSlim}
@@ -1963,13 +2305,13 @@ export default function ShopScreen() {
               {reordering ? (
                 <ActivityIndicator size="small" color="#0F7B4A" />
               ) : (
-                <Text style={styles.reorderActionTextSlim}>እዘዝ ›</Text>
+                <Text style={styles.reorderActionTextSlim}>ቅርጫት ሙላ ›</Text>
               )}
             </View>
           </TouchableOpacity>
         )}
 
-        {/* ---------- CONSECUTIVE 3-VIDEO/IMAGE ADVERTISEMENT CAROUSEL ---------- */}
+        {/* ---------- ADVERTISEMENT CAROUSEL ---------- */}
         {activeMedia && (
           <View style={styles.adGlow}>
             <View style={styles.adFrame}>
@@ -1978,7 +2320,6 @@ export default function ShopScreen() {
                 <View style={styles.adOrbSmall} />
               </View>
 
-              {/* VIDEO AD (Advances consecutively upon finish) */}
               {activeMedia.uri && activeMedia.type === 'video' && (
                 Platform.OS === 'web' ? (
                   <video
@@ -2014,7 +2355,6 @@ export default function ShopScreen() {
                 )
               )}
 
-              {/* IMAGE AD (Shows for 5 seconds before advancing) */}
               {activeMedia.uri && activeMedia.type === 'image' && (
                 <Image
                   key={`img_${currentAdIndex}_${activeMedia.uri}`}
@@ -2024,7 +2364,6 @@ export default function ShopScreen() {
                 />
               )}
 
-              {/* OVERLAY TEXT */}
               {activeMedia.uri ? (
                 <View style={styles.adShade}>
                   <Text style={styles.adTitle} numberOfLines={1}>
@@ -2054,7 +2393,6 @@ export default function ShopScreen() {
                 <Text style={styles.adBadgeText}>ማስታወቂያ</Text>
               </View>
 
-              {/* Pagination Dots indicating active slot (1/3, 2/3, 3/3) */}
               {adPlaylist.length > 1 && (
                 <View style={styles.adPaginationDots}>
                   {adPlaylist.map((_, idx) => (
@@ -2165,7 +2503,6 @@ export default function ShopScreen() {
                 <View style={styles.productCard} key={item.id}>
                   <View pointerEvents="none" style={styles.cardShine} />
 
-                  {/* TIER 1 — identity, price, stock */}
                   <TouchableOpacity
                     style={styles.cardHeaderArea}
                     activeOpacity={0.75}
@@ -2213,7 +2550,6 @@ export default function ShopScreen() {
                     </View>
                   </TouchableOpacity>
 
-                  {/* TIER 2 — dynamic unit selector + add to cart */}
                   <View style={styles.cardActionRow}>
                     <View style={styles.unitPillsRow}>
                       {availableUnits.map((u) => {
@@ -2252,18 +2588,19 @@ export default function ShopScreen() {
         )}
       </ScrollView>
 
-      {/* ---------- FLOATING CART BAR WITH RED QUICK-CLEAR BUTTON ---------- */}
+      {/* ---------- FLOATING CART BAR WITH DRAFT & SEND ACTIONS ---------- */}
       {totalCount > 0 && (
         <View style={styles.floatingCartContainer} pointerEvents="box-none">
           <View style={styles.floatingCartBar}>
             <View pointerEvents="none" style={styles.floatingShine} />
 
             <View style={styles.floatingCartLeft}>
+              {/* Red Circular ✕ Button triggering in-app Amharic dialog */}
               <TouchableOpacity
                 style={styles.floatingCancelBtn}
-                onPress={handleClearCart}
+                onPress={handleTriggerClearCart}
                 activeOpacity={0.75}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 title="አጽዳ"
               >
                 <Text style={styles.floatingCancelText}>✕</Text>
@@ -2281,16 +2618,93 @@ export default function ShopScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.floatingActionPill}
-              onPress={() => router.push('/checkout')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.floatingActionText}>ትእዛዝ ይመልከቱ ›</Text>
-            </TouchableOpacity>
+            {/* 2 ACTIONS: SEND TO DRAFT & SEND ORDER */}
+            <View style={styles.floatingActionsGroup}>
+              <TouchableOpacity
+                style={styles.floatingDraftBtn}
+                onPress={handleSaveToDraft}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.floatingDraftText}>ረቂቅ</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.floatingActionPill}
+                onPress={() => router.push('/checkout')}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.floatingActionText}>ትእዛዝ ላክ ›</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}
+
+      {/* ---------- PURE IN-APP AMHARIC CONFIRMATION MODAL ---------- */}
+      <Modal
+        visible={clearModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelClearCart}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconBox}>
+              <Text style={styles.modalIconEmoji}>🗑️</Text>
+            </View>
+
+            <Text style={styles.modalTitle}>ቅርጫቱን ማጽዳት</Text>
+            <Text style={styles.modalMessage}>
+              በቅርጫቱ ውስጥ ያሉ እቃዎችን በሙሉ መሰረዝ ይፈልጋሉ?
+            </Text>
+
+            <View style={styles.modalActionsRow}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={handleCancelClearCart}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalCancelBtnText}>ይቅር</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalConfirmBtn}
+                onPress={handleConfirmClearCart}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalConfirmBtnText}>አጽዳ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ---------- PURE IN-APP AMHARIC NOTIFICATION MODAL ---------- */}
+      <Modal
+        visible={notificationModal.visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setNotificationModal((prev) => ({ ...prev, visible: false }))}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={[styles.modalIconBox, { backgroundColor: '#E4F2EA', borderColor: '#CFE7D9' }]}>
+              <Text style={styles.modalIconEmoji}>ℹ️</Text>
+            </View>
+
+            <Text style={styles.modalTitle}>{notificationModal.title}</Text>
+            <Text style={styles.modalMessage}>{notificationModal.message}</Text>
+
+            <TouchableOpacity
+              style={[styles.modalConfirmBtn, { width: '100%', backgroundColor: GREEN }]}
+              onPress={() => setNotificationModal((prev) => ({ ...prev, visible: false }))}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modalConfirmBtnText}>እሺ</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -3015,10 +3429,10 @@ const styles = StyleSheet.create({
   },
   floatingCartBar: {
     width: '100%',
-    height: 60,
+    height: 62,
     backgroundColor: '#0F7B4A',
-    borderRadius: 17,
-    paddingHorizontal: 13,
+    borderRadius: 18,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -3041,15 +3455,15 @@ const styles = StyleSheet.create({
   floatingCartLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 7,
     flexShrink: 1,
   },
   floatingCancelBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#EF4444',
-    borderWidth: 1.5,
+    borderWidth: 1.2,
     borderColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
@@ -3061,21 +3475,21 @@ const styles = StyleSheet.create({
   },
   floatingCancelText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
   },
   floatingCountBadge: {
     backgroundColor: '#F2B705',
-    minWidth: 28,
-    height: 28,
-    paddingHorizontal: 6,
-    borderRadius: 14,
+    minWidth: 26,
+    height: 26,
+    paddingHorizontal: 5,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
   },
   floatingCountText: {
     color: '#12241A',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '900',
   },
   floatingTotalGroup: {
@@ -3083,34 +3497,149 @@ const styles = StyleSheet.create({
   },
   floatingTotalLabel: {
     color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: '700',
-    lineHeight: 12,
+    lineHeight: 11,
   },
   floatingTotalText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '900',
-    lineHeight: 19,
+    lineHeight: 18,
   },
   floatingBirr: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
   },
-  floatingActionPill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    paddingHorizontal: 13,
-    paddingVertical: 8,
+  floatingActionsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    flexShrink: 0,
+  },
+  floatingDraftBtn: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 11,
+    paddingVertical: 7.5,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderColor: '#FDE68A',
     justifyContent: 'center',
     alignItems: 'center',
-    flexShrink: 0,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  floatingDraftText: {
+    color: '#12241A',
+    fontSize: 11.5,
+    fontWeight: '900',
+  },
+  floatingActionPill: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 7.5,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   floatingActionText: {
     color: '#FFFFFF',
-    fontSize: 12.5,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+
+  /* PURE IN-APP AMHARIC MODALS */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(11, 31, 20, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    zIndex: 99999,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 22,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E6ECE7',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 15,
+  },
+  modalIconBox: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  modalIconEmoji: {
+    fontSize: 24,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: INK,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 13,
+    color: MUTED,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  modalActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelBtnText: {
+    color: MUTED,
+    fontSize: 13,
     fontWeight: '800',
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  modalConfirmBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '900',
   },
 });

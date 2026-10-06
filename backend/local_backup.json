@@ -1,0 +1,1608 @@
+{
+  "users": [
+    {
+      "id": "43d2c0e1-c74a-4d2a-966a-75dce5c94f0e",
+      "phoneNumber": "+251912345678",
+      "password": null,
+      "shopName": "Test Kiosk",
+      "role": "RETAILER",
+      "approvalStatus": "APPROVED",
+      "creditLimit": "20000",
+      "usedCredit": "0",
+      "canOrderOnCredit": false,
+      "preferredLanguage": "am",
+      "gpsLatitude": "8.54",
+      "gpsLongitude": "39.27",
+      "isActive": true,
+      "allowedTabs": [
+        "orders",
+        "products",
+        "credit",
+        "categories",
+        "ads"
+      ],
+      "createdAt": "2026-09-29T12:51:25.319Z",
+      "updatedAt": "2026-09-29T12:51:25.319Z"
+    },
+    {
+      "id": "b24e3da1-51fd-48cd-a6a0-6f2069856b7a",
+      "phoneNumber": "+251901072272",
+      "password": null,
+      "shopName": "letif shope",
+      "role": "RETAILER",
+      "approvalStatus": "APPROVED",
+      "creditLimit": "20000",
+      "usedCredit": "0",
+      "canOrderOnCredit": false,
+      "preferredLanguage": "am",
+      "gpsLatitude": "8.5658899",
+      "gpsLongitude": "39.2894743",
+      "isActive": true,
+      "allowedTabs": [
+        "orders",
+        "products",
+        "credit",
+        "categories",
+        "ads"
+      ],
+      "createdAt": "2026-09-30T05:37:32.299Z",
+      "updatedAt": "2026-09-30T08:11:52.550Z"
+    },
+    {
+      "id": "b652c622-bdd5-485a-b2c3-8450dcc4d2d0",
+      "phoneNumber": "0911000000",
+      "password": "$2b$10$nB6c8UhF76b5WeRl8ql07eEiapk9wcwPshf2ykoHMFbfcGQ/w9alC",
+      "shopName": "Qinash Gebeya Central HQ",
+      "role": "SUPERADMIN",
+      "approvalStatus": "APPROVED",
+      "creditLimit": "20000",
+      "usedCredit": "0",
+      "canOrderOnCredit": false,
+      "preferredLanguage": "am",
+      "gpsLatitude": null,
+      "gpsLongitude": null,
+      "isActive": true,
+      "allowedTabs": [
+        "orders",
+        "credit",
+        "products",
+        "categories",
+        "ads",
+        "users"
+      ],
+      "createdAt": "2026-10-02T06:12:47.809Z",
+      "updatedAt": "2026-10-03T06:12:59.584Z"
+    },
+    {
+      "id": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "phoneNumber": "+251900460680",
+      "password": null,
+      "shopName": "ሱቅ",
+      "role": "RETAILER",
+      "approvalStatus": "APPROVED",
+      "creditLimit": "50000",
+      "usedCredit": "960",
+      "canOrderOnCredit": true,
+      "preferredLanguage": "am",
+      "gpsLatitude": "8.5624845",
+      "gpsLongitude": "39.2878973",
+      "isActive": true,
+      "allowedTabs": [
+        "orders",
+        "products",
+        "credit",
+        "categories",
+        "ads"
+      ],
+      "createdAt": "2026-10-01T05:21:08.666Z",
+      "updatedAt": "2026-10-06T10:52:46.414Z"
+    },
+    {
+      "id": "278470a7-59cc-4314-8814-4cc6c2d15ea4",
+      "phoneNumber": "0967686893",
+      "password": "$2b$10$Z9wwl9gTGa/tKLGh34Ca7OP5.ZV8WZ7L1yQHyd17.HlHOOLRyU9fK",
+      "shopName": "letfaw",
+      "role": "ADMIN",
+      "approvalStatus": "APPROVED",
+      "creditLimit": "20000",
+      "usedCredit": "0",
+      "canOrderOnCredit": false,
+      "preferredLanguage": "am",
+      "gpsLatitude": null,
+      "gpsLongitude": null,
+      "isActive": true,
+      "allowedTabs": [
+        "orders",
+        "categories",
+        "credit"
+      ],
+      "createdAt": "2026-10-02T13:10:32.165Z",
+      "updatedAt": "2026-10-06T10:54:06.814Z"
+    },
+    {
+      "id": "7a5a3ad1-93a4-4c86-a79e-8d77aca73fbd",
+      "phoneNumber": "0973274465",
+      "password": "$2b$10$uTSKE2mbm10LdgWglXIfKe0K.eUG.Bzulbz5Ww0jVllL/xBCw2M/W",
+      "shopName": "hayat",
+      "role": "ADMIN",
+      "approvalStatus": "APPROVED",
+      "creditLimit": "20000",
+      "usedCredit": "0",
+      "canOrderOnCredit": false,
+      "preferredLanguage": "am",
+      "gpsLatitude": null,
+      "gpsLongitude": null,
+      "isActive": true,
+      "allowedTabs": [
+        "orders"
+      ],
+      "createdAt": "2026-10-02T12:41:17.103Z",
+      "updatedAt": "2026-10-03T08:05:48.875Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "1f777bd4-d7ca-4763-a8fe-1a24eadd00ff",
+      "nameAm": "ግሮሰሪ እና የባልትና ውጤቶች",
+      "nameOm": "Giroosarii fi Oomishaalee Baltinaa",
+      "iconUrl": "🛒",
+      "displayOrder": 1,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "3d4a1ebf-fbd9-4d81-bf8e-e2be6f5d52f0",
+      "nameAm": "የጽዳት እና የግል እንክብካቤ እቃዎች",
+      "nameOm": "Qulqullinaa fi Meeshaalee Eegumsaa",
+      "iconUrl": "🧽",
+      "displayOrder": 2,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "7ccfa181-b95d-4db9-91e0-bb11f8f8ebe2",
+      "nameAm": "መጠጦች",
+      "nameOm": "Dhugaatiiwwan",
+      "iconUrl": "🥤",
+      "displayOrder": 3,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "548b872c-71a3-46eb-9fc8-4a97ad94e678",
+      "nameAm": "መክሰስ እና ጣፋጮች",
+      "nameOm": "Makkasii fi Mi'aawaa",
+      "iconUrl": "🍬",
+      "displayOrder": 4,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "bdc7abcb-d5c6-4fdd-a480-48ad54a07478",
+      "nameAm": "የጽህፈት መሳሪያዎች",
+      "nameOm": "Meeshaalee Barreeffamaa",
+      "iconUrl": "✏️",
+      "displayOrder": 5,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "76ec6712-4ad4-4c88-894f-dd8d0f20f27b",
+      "nameAm": "የግብርና ምርቶች እና አትክልት",
+      "nameOm": "Oomishaalee Qonnaa fi Kuduraa",
+      "iconUrl": "🥔",
+      "displayOrder": 6,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "93d620a3-ddb9-4bb6-9018-e8e784b202aa",
+      "nameAm": "የማሸጊያ እቃዎች እና ሻማ",
+      "nameOm": "Meeshaalee Qoricpaa fi Xoofoo",
+      "iconUrl": "📦",
+      "displayOrder": 7,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    },
+    {
+      "id": "bc7f5053-bb1f-42d2-8b93-2a8cde547504",
+      "nameAm": "የትምባሆ ምርቶች",
+      "nameOm": "Oomishaalee Tamboo",
+      "iconUrl": "🚬",
+      "displayOrder": 8,
+      "isActive": true,
+      "createdAt": "2026-10-01T23:08:50.952Z",
+      "updatedAt": "2026-10-01T23:08:50.952Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "66044765-d935-4167-ad1c-7be5196c37ee",
+      "categoryId": "7ccfa181-b95d-4db9-91e0-bb11f8f8ebe2",
+      "nameAm": "የታሸገ ውሃ 1ሊ (Bottled Water)",
+      "nameOm": "Bishaan 1L",
+      "imageUrl": "http://localhost:5000/uploads/1790940652519-51513288.avif",
+      "unitType": "CARTON",
+      "pricePerUnit": "485",
+      "allowsHalfCarton": false,
+      "priceHalfCarton": null,
+      "allowsHalfDozen": false,
+      "priceHalfDozen": null,
+      "allowsPacket": false,
+      "pricePacket": null,
+      "minimumOrderQty": 1,
+      "isFastMoving": true,
+      "hasReturnGuarantee": true,
+      "actualStock": 35,
+      "postedStock": 44,
+      "currentStock": 44,
+      "brand": "ቀጥታ ከአምራች ፋብሪካ",
+      "expiryDate": "ታኅሣሥ 2027",
+      "isActive": true,
+      "createdAt": "2026-09-29T12:50:21.605Z",
+      "updatedAt": "2026-10-06T10:55:20.269Z"
+    },
+    {
+      "id": "af7ca270-85e8-4b42-aead-7819b3192749",
+      "categoryId": "1f777bd4-d7ca-4763-a8fe-1a24eadd00ff",
+      "nameAm": "ዱቄት 25ኪግ (Flour)",
+      "nameOm": "Daakuu 25kg",
+      "imageUrl": "🌾",
+      "unitType": "CARTON",
+      "pricePerUnit": "3200",
+      "allowsHalfCarton": true,
+      "priceHalfCarton": "1650",
+      "allowsHalfDozen": false,
+      "priceHalfDozen": null,
+      "allowsPacket": false,
+      "pricePacket": null,
+      "minimumOrderQty": 1,
+      "isFastMoving": true,
+      "hasReturnGuarantee": true,
+      "actualStock": 50,
+      "postedStock": 50,
+      "currentStock": 48,
+      "brand": "ቀጥታ ከአምራች ፋብሪካ",
+      "expiryDate": "ታኅሣሥ 2027",
+      "isActive": true,
+      "createdAt": "2026-09-29T12:50:21.507Z",
+      "updatedAt": "2026-10-01T23:08:50.961Z"
+    },
+    {
+      "id": "1236f336-58ac-43f5-84ba-8f057e7a45e6",
+      "categoryId": "1f777bd4-d7ca-4763-a8fe-1a24eadd00ff",
+      "nameAm": "ዘይት 5ሊ (Oil 5L)",
+      "nameOm": "Zayita 5L",
+      "imageUrl": "🛢️",
+      "unitType": "CARTON",
+      "pricePerUnit": "2800",
+      "allowsHalfCarton": true,
+      "priceHalfCarton": "1450",
+      "allowsHalfDozen": false,
+      "priceHalfDozen": null,
+      "allowsPacket": false,
+      "pricePacket": null,
+      "minimumOrderQty": 1,
+      "isFastMoving": true,
+      "hasReturnGuarantee": true,
+      "actualStock": 50,
+      "postedStock": 50,
+      "currentStock": 47,
+      "brand": "ቀጥታ ከአምራች ፋብሪካ",
+      "expiryDate": "ታኅሣሥ 2027",
+      "isActive": true,
+      "createdAt": "2026-09-29T12:50:21.457Z",
+      "updatedAt": "2026-10-02T06:37:36.776Z"
+    },
+    {
+      "id": "0fe1e252-5a43-4745-8040-712fad2f1972",
+      "categoryId": "1f777bd4-d7ca-4763-a8fe-1a24eadd00ff",
+      "nameAm": "ፓስታ (Pasta)",
+      "nameOm": "Paastaa",
+      "imageUrl": "http://localhost:5000/uploads/1790944695441-892040628.jpg",
+      "unitType": "CARTON",
+      "pricePerUnit": "1500",
+      "allowsHalfCarton": true,
+      "priceHalfCarton": "780",
+      "allowsHalfDozen": true,
+      "priceHalfDozen": "400",
+      "allowsPacket": true,
+      "pricePacket": "29",
+      "minimumOrderQty": 1,
+      "isFastMoving": true,
+      "hasReturnGuarantee": true,
+      "actualStock": 50,
+      "postedStock": 50,
+      "currentStock": 50,
+      "brand": "ቀጥታ ከአምራች ፋብሪካ",
+      "expiryDate": "ታኅሣሥ 2027",
+      "isActive": true,
+      "createdAt": "2026-09-29T12:50:21.532Z",
+      "updatedAt": "2026-10-05T06:01:11.099Z"
+    },
+    {
+      "id": "99117155-1d56-4892-b3f8-ccb1ba784021",
+      "categoryId": "3d4a1ebf-fbd9-4d81-bf8e-e2be6f5d52f0",
+      "nameAm": "ቢ 29 ሳሙና (Soap B29)",
+      "nameOm": "Saamunaa B29",
+      "imageUrl": "🧼",
+      "unitType": "CARTON",
+      "pricePerUnit": "1900",
+      "allowsHalfCarton": false,
+      "priceHalfCarton": null,
+      "allowsHalfDozen": false,
+      "priceHalfDozen": null,
+      "allowsPacket": false,
+      "pricePacket": null,
+      "minimumOrderQty": 1,
+      "isFastMoving": true,
+      "hasReturnGuarantee": true,
+      "actualStock": 45,
+      "postedStock": 45,
+      "currentStock": 45,
+      "brand": "ቀጥታ ከአምራች ፋብሪካ",
+      "expiryDate": "ታኅሣሥ 2027",
+      "isActive": true,
+      "createdAt": "2026-09-29T12:50:21.572Z",
+      "updatedAt": "2026-10-06T09:52:47.143Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "6fadbc14-2def-4924-a89e-46bed604dae3",
+      "userId": "b24e3da1-51fd-48cd-a6a0-6f2069856b7a",
+      "totalAmount": "1500",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-09-30T06:26:09.734Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "d8ee2453-b161-47b8-96fa-ac4c59b2461f",
+          "orderId": "6fadbc14-2def-4924-a89e-46bed604dae3",
+          "productId": "0fe1e252-5a43-4745-8040-712fad2f1972",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1500"
+        }
+      ]
+    },
+    {
+      "id": "c4f0a74d-8737-4790-8b2a-4c638a96df44",
+      "userId": "b24e3da1-51fd-48cd-a6a0-6f2069856b7a",
+      "totalAmount": "1500",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-09-30T06:26:38.552Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "086b26e6-4930-44e6-88db-0f3f3e3c745e",
+          "orderId": "c4f0a74d-8737-4790-8b2a-4c638a96df44",
+          "productId": "0fe1e252-5a43-4745-8040-712fad2f1972",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1500"
+        }
+      ]
+    },
+    {
+      "id": "0b9db147-37a1-4511-a50c-eb093294c06c",
+      "userId": "b24e3da1-51fd-48cd-a6a0-6f2069856b7a",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-09-30T06:30:18.311Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "9d42e386-3701-4032-b30e-c755287f1408",
+          "orderId": "0b9db147-37a1-4511-a50c-eb093294c06c",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "ef8453dc-29ec-4e03-b67e-741d027dc549",
+      "userId": "b24e3da1-51fd-48cd-a6a0-6f2069856b7a",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-09-30T06:30:48.519Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "42fe559f-d56b-4b3a-aa16-962eaa937dbf",
+          "orderId": "ef8453dc-29ec-4e03-b67e-741d027dc549",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "79477729-8492-4ab6-8fb2-8b5aa4e52e50",
+      "userId": "b24e3da1-51fd-48cd-a6a0-6f2069856b7a",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-09-30T07:32:49.156Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "78624ccf-d1e3-49be-8522-2e7e3784be2f",
+          "orderId": "79477729-8492-4ab6-8fb2-8b5aa4e52e50",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "e663cb73-a087-486f-a062-011a9d1703c1",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "3000",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T05:21:36.128Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "660045e4-4b36-4b2f-b9ec-338027f90bac",
+          "orderId": "e663cb73-a087-486f-a062-011a9d1703c1",
+          "productId": "0fe1e252-5a43-4745-8040-712fad2f1972",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1500"
+        }
+      ]
+    },
+    {
+      "id": "5f4b2591-3cb6-4cf9-b48c-69f91b3dc130",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T09:46:05.490Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "3b950e2f-967a-47d9-8be1-c7bcb1f8e969",
+          "orderId": "5f4b2591-3cb6-4cf9-b48c-69f91b3dc130",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "18e54ee4-3784-470f-96c2-5b0dcb5bb0a0",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "960",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:15:14.404Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "830e4ec4-05dd-4c2a-87b3-536046b58c00",
+          "orderId": "18e54ee4-3784-470f-96c2-5b0dcb5bb0a0",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "6624fe10-9ab5-497b-bad0-9516de3c3366",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1440",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:16:29.329Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "d0df3176-bb4d-49e3-a681-674d0613143f",
+          "orderId": "6624fe10-9ab5-497b-bad0-9516de3c3366",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 3,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "08dc85e6-aa73-4403-ab75-0e209f4c85e7",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1440",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:38:15.047Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "83b88958-63b3-4950-8aba-6cb9ab626a06",
+          "orderId": "08dc85e6-aa73-4403-ab75-0e209f4c85e7",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 3,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "381caf71-51ba-4d7b-b838-135603af8059",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "2800",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:39:12.818Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "a9496127-f02f-44c5-88cc-231a096a44ac",
+          "orderId": "381caf71-51ba-4d7b-b838-135603af8059",
+          "productId": "1236f336-58ac-43f5-84ba-8f057e7a45e6",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "2800"
+        }
+      ]
+    },
+    {
+      "id": "2e8cff20-b02a-4978-9e10-011d50191919",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:44:03.589Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "ecaca297-d76b-495d-96d6-4b00af696866",
+          "orderId": "2e8cff20-b02a-4978-9e10-011d50191919",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "0ca483cb-d8cb-451c-9199-ea0d05e91a70",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:53:32.253Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "68a429ad-e64b-4004-95a1-8e110d63ca60",
+          "orderId": "0ca483cb-d8cb-451c-9199-ea0d05e91a70",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "57849f57-ed9e-4df2-8ea2-18b16813bd92",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T10:54:07.807Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "669ee206-b457-44b4-98cf-1ad365f81cf1",
+          "orderId": "57849f57-ed9e-4df2-8ea2-18b16813bd92",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "050f0f81-0784-48d3-80d0-39468fa78dc9",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "9400",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T11:46:26.400Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "dd3dcc47-1ab2-432c-a40c-87d666b8eb2a",
+          "orderId": "050f0f81-0784-48d3-80d0-39468fa78dc9",
+          "productId": "0fe1e252-5a43-4745-8040-712fad2f1972",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1500"
+        },
+        {
+          "id": "4209fc08-d231-4c7c-bd46-93eeb1777e22",
+          "orderId": "050f0f81-0784-48d3-80d0-39468fa78dc9",
+          "productId": "af7ca270-85e8-4b42-aead-7819b3192749",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "3200"
+        }
+      ]
+    },
+    {
+      "id": "273beae8-626c-408f-99cb-2fa1694c653a",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "960",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-01T12:22:40.379Z",
+      "updatedAt": "2026-10-01T23:08:50.960Z",
+      "items": [
+        {
+          "id": "f2537e27-b767-46de-ab9e-06d3edaa314e",
+          "orderId": "273beae8-626c-408f-99cb-2fa1694c653a",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "4fc3291f-dac3-485f-980a-59ae88494006",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "7100",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T06:37:36.720Z",
+      "updatedAt": "2026-10-02T06:37:36.720Z",
+      "items": [
+        {
+          "id": "aefe6326-e5b8-4c46-8576-07774783cfd9",
+          "orderId": "4fc3291f-dac3-485f-980a-59ae88494006",
+          "productId": "1236f336-58ac-43f5-84ba-8f057e7a45e6",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "2800"
+        },
+        {
+          "id": "c06a5e9e-50be-4deb-8f2a-273d7de541aa",
+          "orderId": "4fc3291f-dac3-485f-980a-59ae88494006",
+          "productId": "0fe1e252-5a43-4745-8040-712fad2f1972",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1500"
+        }
+      ]
+    },
+    {
+      "id": "decc1a2d-80ba-4c41-9c8a-1d4da263538d",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "960",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CONFIRMED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T11:06:00.626Z",
+      "updatedAt": "2026-10-02T11:11:00.793Z",
+      "items": [
+        {
+          "id": "54327df4-a7d9-4bce-8d8c-1ec39382ccb5",
+          "orderId": "decc1a2d-80ba-4c41-9c8a-1d4da263538d",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 2,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "b22e375b-c6e8-4f07-a750-0c701a5c30a7",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CANCELLED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T07:49:40.475Z",
+      "updatedAt": "2026-10-02T11:11:32.101Z",
+      "items": [
+        {
+          "id": "b4bf8373-a52b-4684-8e58-d32eb5ebb11c",
+          "orderId": "b22e375b-c6e8-4f07-a750-0c701a5c30a7",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "b8258d85-340a-4506-a013-6909c88a4277",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T11:18:14.195Z",
+      "updatedAt": "2026-10-02T11:18:14.195Z",
+      "items": [
+        {
+          "id": "3627e910-1e06-4613-8f07-1094d83ea454",
+          "orderId": "b8258d85-340a-4506-a013-6909c88a4277",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "8d6f9e49-fe59-418f-bead-37635b07fe0a",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "17760",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CONFIRMED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T11:31:33.220Z",
+      "updatedAt": "2026-10-02T11:32:44.018Z",
+      "items": [
+        {
+          "id": "0ae1fb73-223c-4f37-be42-1c3f10e398f2",
+          "orderId": "8d6f9e49-fe59-418f-bead-37635b07fe0a",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 37,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "b6c3cc60-610f-4f46-b417-1182a5133cb1",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CANCELLED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T12:29:25.972Z",
+      "updatedAt": "2026-10-02T12:29:44.829Z",
+      "items": [
+        {
+          "id": "c56ba6e7-5584-4ec5-b4aa-cad28416c4df",
+          "orderId": "b6c3cc60-610f-4f46-b417-1182a5133cb1",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "09f9fa8f-9cfe-4d55-b347-01ccd2f58d80",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CANCELLED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": false,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T12:30:17.424Z",
+      "updatedAt": "2026-10-02T12:30:30.084Z",
+      "items": [
+        {
+          "id": "6a53cb0a-3b54-48fc-ad38-3832d37e69cf",
+          "orderId": "09f9fa8f-9cfe-4d55-b347-01ccd2f58d80",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "1d08aa8d-81b8-4144-916c-0d7cf6a810d5",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "DELIVERED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": true,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-03T07:08:56.080Z",
+      "updatedAt": "2026-10-03T07:09:36.302Z",
+      "items": [
+        {
+          "id": "3d38b9d5-0187-4b96-9968-8e2162999555",
+          "orderId": "1d08aa8d-81b8-4144-916c-0d7cf6a810d5",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "8672df97-b8e0-487a-a2ef-05d695605921",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "DELIVERED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": true,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-03T07:22:00.865Z",
+      "updatedAt": "2026-10-03T07:22:42.148Z",
+      "items": [
+        {
+          "id": "f00662ab-284d-41b9-bb16-74d06e635d33",
+          "orderId": "8672df97-b8e0-487a-a2ef-05d695605921",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "b134f627-9195-436e-be25-384e1e3b447b",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CONFIRMED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-03T07:24:45.321Z",
+      "updatedAt": "2026-10-03T07:24:56.714Z",
+      "items": [
+        {
+          "id": "d9cc5890-7473-4ec6-beed-811bc28b2634",
+          "orderId": "b134f627-9195-436e-be25-384e1e3b447b",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "b4aa017c-0a9e-4639-bfde-93807ff115f5",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_6AM",
+      "status": "DELIVERED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": true,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-02T12:27:18.739Z",
+      "updatedAt": "2026-10-03T07:49:14.049Z",
+      "items": [
+        {
+          "id": "e77c49a5-7f2f-4874-a4a1-4ab3c77d1704",
+          "orderId": "b4aa017c-0a9e-4639-bfde-93807ff115f5",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "94c140ca-1f00-4719-88e4-1281892af613",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "10560",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-03T08:06:48.578Z",
+      "updatedAt": "2026-10-03T08:06:48.578Z",
+      "items": [
+        {
+          "id": "d11f7e6f-568a-4298-a7e5-db60e35a874d",
+          "orderId": "94c140ca-1f00-4719-88e4-1281892af613",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 22,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "bf31547d-efd7-4605-8803-c45bc141553d",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "14000",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CANCELLED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-04T07:15:34.054Z",
+      "updatedAt": "2026-10-04T07:16:19.449Z",
+      "items": []
+    },
+    {
+      "id": "dda86717-3377-478c-aaac-09cc5eff6eb4",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_6AM",
+      "status": "DELIVERED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": true,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-04T07:17:21.417Z",
+      "updatedAt": "2026-10-04T07:18:21.449Z",
+      "items": [
+        {
+          "id": "8505c3df-4598-40c8-ba2f-356725753e87",
+          "orderId": "dda86717-3377-478c-aaac-09cc5eff6eb4",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "93f9fd15-c30d-484b-bac1-4330757bdb60",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_6AM",
+      "status": "CONFIRMED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-05T06:18:55.703Z",
+      "updatedAt": "2026-10-05T06:20:09.967Z",
+      "items": [
+        {
+          "id": "0590c599-d49b-4105-a334-13a4e35a672f",
+          "orderId": "93f9fd15-c30d-484b-bac1-4330757bdb60",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "feef9163-369b-4e3e-93e9-c92975ca8a18",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-05T06:20:45.048Z",
+      "updatedAt": "2026-10-05T06:20:45.048Z",
+      "items": [
+        {
+          "id": "9f4cdb15-ec33-44ad-bd19-ad9c381b1ec0",
+          "orderId": "feef9163-369b-4e3e-93e9-c92975ca8a18",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "d6630289-1faa-40ff-998a-7f0a726d8226",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CONFIRMED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-05T06:21:02.426Z",
+      "updatedAt": "2026-10-05T06:21:23.410Z",
+      "items": [
+        {
+          "id": "3c06330d-000e-4788-b7fa-508bd53c1a89",
+          "orderId": "d6630289-1faa-40ff-998a-7f0a726d8226",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "20669011-68a0-4664-a8bd-84d872ae1ab5",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "480",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-05T06:52:09.985Z",
+      "updatedAt": "2026-10-05T06:52:09.985Z",
+      "items": [
+        {
+          "id": "90bf3a8b-cddc-4f51-be81-96ff03d9234f",
+          "orderId": "20669011-68a0-4664-a8bd-84d872ae1ab5",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "480"
+        }
+      ]
+    },
+    {
+      "id": "a104d894-5648-4f08-bac4-4064eef48315",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "485",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-06T06:43:53.525Z",
+      "updatedAt": "2026-10-06T06:43:53.525Z",
+      "items": [
+        {
+          "id": "2ef512ed-5f4d-4b52-8f19-92d98236b932",
+          "orderId": "a104d894-5648-4f08-bac4-4064eef48315",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "485"
+        }
+      ]
+    },
+    {
+      "id": "d2584b54-d19e-4018-aaa1-668752ef2917",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1900",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CONFIRMED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-06T06:45:22.296Z",
+      "updatedAt": "2026-10-06T06:58:55.554Z",
+      "items": [
+        {
+          "id": "06ecd746-178b-40b6-982c-796bd3b2644e",
+          "orderId": "d2584b54-d19e-4018-aaa1-668752ef2917",
+          "productId": "99117155-1d56-4892-b3f8-ccb1ba784021",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1900"
+        }
+      ]
+    },
+    {
+      "id": "87fd21f1-9ee2-4b83-8dd0-ff94439f95e8",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1900",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CANCELLED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": null,
+      "longitude": null,
+      "locationName": null,
+      "createdAt": "2026-10-06T06:59:15.517Z",
+      "updatedAt": "2026-10-06T06:59:46.522Z",
+      "items": [
+        {
+          "id": "88ea0ed2-c5d7-4735-ba88-010b04ae7c26",
+          "orderId": "87fd21f1-9ee2-4b83-8dd0-ff94439f95e8",
+          "productId": "99117155-1d56-4892-b3f8-ccb1ba784021",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1900"
+        }
+      ]
+    },
+    {
+      "id": "cc442f14-4107-43ab-9d4a-0cd221ed0295",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1900",
+      "deliverySlot": "BATCH_6AM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "8.5491712",
+      "longitude": "39.2658944",
+      "locationName": null,
+      "createdAt": "2026-10-06T07:44:22.376Z",
+      "updatedAt": "2026-10-06T07:44:22.376Z",
+      "items": [
+        {
+          "id": "b5335219-c8d9-4a30-98e3-d9b6aeee3b2a",
+          "orderId": "cc442f14-4107-43ab-9d4a-0cd221ed0295",
+          "productId": "99117155-1d56-4892-b3f8-ccb1ba784021",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1900"
+        }
+      ]
+    },
+    {
+      "id": "4427c6f0-4c44-438b-a738-431c3607de62",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "485",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "8.5491712",
+      "longitude": "39.2658944",
+      "locationName": null,
+      "createdAt": "2026-10-06T07:58:36.409Z",
+      "updatedAt": "2026-10-06T07:58:36.409Z",
+      "items": [
+        {
+          "id": "5ea04c6b-b01d-41f4-8c38-97f5d9c60863",
+          "orderId": "4427c6f0-4c44-438b-a738-431c3607de62",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "485"
+        }
+      ]
+    },
+    {
+      "id": "45416e1c-0683-46cf-9e0b-fe936d1b1c1a",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "485",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "9.0079232",
+      "longitude": "38.7678208",
+      "locationName": null,
+      "createdAt": "2026-10-06T09:48:24.414Z",
+      "updatedAt": "2026-10-06T09:48:24.414Z",
+      "items": [
+        {
+          "id": "4f2fba75-0c87-4102-9862-3cb15584c4ce",
+          "orderId": "45416e1c-0683-46cf-9e0b-fe936d1b1c1a",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "485"
+        }
+      ]
+    },
+    {
+      "id": "57bd894d-059b-4555-a2d2-9369acfd58fb",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "485",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "9.0079232",
+      "longitude": "38.7678208",
+      "locationName": null,
+      "createdAt": "2026-10-06T09:49:20.577Z",
+      "updatedAt": "2026-10-06T09:49:20.577Z",
+      "items": [
+        {
+          "id": "ca3e6481-6daa-455d-a6ab-7a1c585dc270",
+          "orderId": "57bd894d-059b-4555-a2d2-9369acfd58fb",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "485"
+        }
+      ]
+    },
+    {
+      "id": "0c1ee048-8171-4813-9a5d-c342db98e55b",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1900",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "9.0079232",
+      "longitude": "38.7678208",
+      "locationName": null,
+      "createdAt": "2026-10-06T09:52:19.053Z",
+      "updatedAt": "2026-10-06T09:52:19.053Z",
+      "items": [
+        {
+          "id": "712f434d-9c87-415c-8aad-e04ae0e3eaff",
+          "orderId": "0c1ee048-8171-4813-9a5d-c342db98e55b",
+          "productId": "99117155-1d56-4892-b3f8-ccb1ba784021",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1900"
+        }
+      ]
+    },
+    {
+      "id": "b1d5b598-e0bf-49bf-889c-00fd8163f20b",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1900",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "9.0079232",
+      "longitude": "38.7678208",
+      "locationName": null,
+      "createdAt": "2026-10-06T09:52:47.134Z",
+      "updatedAt": "2026-10-06T09:52:47.134Z",
+      "items": [
+        {
+          "id": "72e7c4a1-ae64-4fad-8799-8eaa0698cbd3",
+          "orderId": "b1d5b598-e0bf-49bf-889c-00fd8163f20b",
+          "productId": "99117155-1d56-4892-b3f8-ccb1ba784021",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1900"
+        }
+      ]
+    },
+    {
+      "id": "8f120680-eaed-4d24-9d11-070c7ae7fb0b",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "1900",
+      "deliverySlot": "BATCH_12PM",
+      "status": "DELIVERED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": true,
+      "creditApproved": true,
+      "isCreditSettled": true,
+      "latitude": "8.5491712",
+      "longitude": "39.2658944",
+      "locationName": null,
+      "createdAt": "2026-10-06T08:09:25.813Z",
+      "updatedAt": "2026-10-06T10:08:52.732Z",
+      "items": [
+        {
+          "id": "1aedc2bd-fcf2-41cf-97f4-c7d1f5d662bc",
+          "orderId": "8f120680-eaed-4d24-9d11-070c7ae7fb0b",
+          "productId": "99117155-1d56-4892-b3f8-ccb1ba784021",
+          "quantity": 1,
+          "selectedUnit": "CARTON",
+          "unitPrice": "1900"
+        }
+      ]
+    },
+    {
+      "id": "7c5a8133-ca89-4fca-920c-8b229590e84b",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "14550",
+      "deliverySlot": "BATCH_12PM",
+      "status": "PENDING",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "9.0079232",
+      "longitude": "38.7678208",
+      "locationName": null,
+      "createdAt": "2026-10-06T10:47:29.714Z",
+      "updatedAt": "2026-10-06T10:47:29.714Z",
+      "items": [
+        {
+          "id": "3cf692eb-3dfc-4097-943f-56ab961bf0e5",
+          "orderId": "7c5a8133-ca89-4fca-920c-8b229590e84b",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 30,
+          "selectedUnit": "CARTON",
+          "unitPrice": "485"
+        }
+      ]
+    },
+    {
+      "id": "4fca7b25-35be-4209-9fbe-ba2a2e1aa846",
+      "userId": "ac211e34-a699-49f3-8869-e8147e3a799f",
+      "totalAmount": "14550",
+      "deliverySlot": "BATCH_12PM",
+      "status": "CANCELLED",
+      "orderSource": "APP_DATA",
+      "voiceNoteUrl": null,
+      "isCreditOrder": false,
+      "creditApproved": null,
+      "isCreditSettled": false,
+      "latitude": "9.0079232",
+      "longitude": "38.7678208",
+      "locationName": null,
+      "createdAt": "2026-10-06T10:54:46.681Z",
+      "updatedAt": "2026-10-06T10:55:20.274Z",
+      "items": [
+        {
+          "id": "da3a23d1-fe6b-4e55-b6b4-36468b81967f",
+          "orderId": "4fca7b25-35be-4209-9fbe-ba2a2e1aa846",
+          "productId": "66044765-d935-4167-ad1c-7be5196c37ee",
+          "quantity": 30,
+          "selectedUnit": "CARTON",
+          "unitPrice": "485"
+        }
+      ]
+    }
+  ]
+}

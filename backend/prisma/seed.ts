@@ -149,9 +149,9 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-//   datasource db {
+// datasource db {
 //   provider = "postgresql"
-
+  
 // }
 
 // generator client {
@@ -181,6 +181,7 @@ main()
 //   CARTON
 //   HALF_CARTON
 //   DOZEN
+//   HALF_DOZEN
 //   PACK
 //   KG
 //   QUINTAL
@@ -256,8 +257,15 @@ main()
 //   imageUrl            String       @map("image_url")
 //   unitType            UnitType     @default(CARTON) @map("unit_type")
 //   pricePerUnit        Decimal      @map("price_per_unit") @db.Decimal(10, 2)
+
+//   // --- Multi-tier Breakdown Pricing (Carton / Half-Carton / Half-Dozen / Packet) ---
 //   allowsHalfCarton    Boolean      @default(false) @map("allows_half_carton")
 //   priceHalfCarton     Decimal?     @map("price_half_carton") @db.Decimal(10, 2)
+//   allowsHalfDozen     Boolean      @default(false) @map("allows_half_dozen")
+//   priceHalfDozen      Decimal?     @map("price_half_dozen") @db.Decimal(10, 2)
+//   allowsPacket        Boolean      @default(false) @map("allows_packet")
+//   pricePacket         Decimal?     @map("price_packet") @db.Decimal(10, 2)
+
 //   minimumOrderQty     Int          @default(1) @map("minimum_order_qty")
 //   isFastMoving        Boolean      @default(false) @map("is_fast_moving")
 //   hasReturnGuarantee  Boolean      @default(true) @map("has_return_guarantee")
@@ -280,7 +288,6 @@ main()
 //   @@index([isFastMoving])
 //   @@map("products")
 // }
-
 
 // model User {
 //   id                 String         @id @default(uuid()) @map("user_id")
@@ -335,19 +342,22 @@ main()
 //   @@map("categories")
 // }
 
-
-
 // // ----------------------------------------------------
-// // HOMEPAGE ADS & BANNERS (Image & Video)
+// // HOMEPAGE ADS & BANNERS (Supports up to 3 Images/Videos)
 // // ----------------------------------------------------
 
 // model Banner {
 //   id           String    @id @default(uuid()) @map("banner_id")
 //   title        String    @db.VarChar(150)
 //   mediaType    MediaType @default(IMAGE) @map("media_type")
-//   mediaUrl     String    @map("media_url") // Cloudinary, S3, or local asset URL
+//   mediaUrl     String    @map("media_url") // Primary media asset URL
+  
+//   // Multi-item Carousel (up to 3 images or videos)
+//   mediaUrls    String[]  @default([]) @map("media_urls")
+//   mediaTypes   String[]  @default([]) @map("media_types") // Stores ["IMAGE", "VIDEO", ...] matching mediaUrls
+
 //   thumbnailUrl String?   @map("thumbnail_url")
-//   actionLink   String?   @map("action_link") // Optional: productId or deep link
+//   actionLink   String?   @map("action_link")
 //   displayOrder Int       @default(0) @map("display_order")
 //   isActive     Boolean   @default(true) @map("is_active")
 //   createdAt    DateTime  @default(now()) @map("created_at")
@@ -355,8 +365,6 @@ main()
 
 //   @@map("banners")
 // }
-
-
 
 // model OrderItem {
 //   id           String   @id @default(uuid()) @map("item_id")

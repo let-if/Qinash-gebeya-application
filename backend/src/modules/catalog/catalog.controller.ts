@@ -124,8 +124,114 @@
 //   }
 // });
 
+// // ====================================================
+// // DELETE /api/catalog/categories/:id (Safe Cascade Deletion)
+// // ====================================================
+// router.delete('/categories/:id', async (req, res: Response): Promise<any> => {
+//   try {
+//     const { id } = req.params;
+
+//     const category = await prisma.category.findUnique({
+//       where: { id },
+//       include: {
+//         products: {
+//           select: { id: true },
+//         },
+//       },
+//     });
+
+//     if (!category) {
+//       return res.status(404).json({ error: 'ምድቡ አልተገኘም (Category not found)' });
+//     }
+
+//     const productIds = category.products.map((p) => p.id);
+
+//     // Check if any product in this category has ever been ordered
+//     const orderItemsCount = await prisma.orderItem.count({
+//       where: {
+//         productId: { in: productIds },
+//       },
+//     });
+
+//     if (orderItemsCount > 0) {
+//       // Soft-delete to preserve historical orders & invoices
+//       await prisma.$transaction([
+//         prisma.product.updateMany({
+//           where: { categoryId: id },
+//           data: { isActive: false },
+//         }),
+//         prisma.category.update({
+//           where: { id },
+//           data: { isActive: false },
+//         }),
+//       ]);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'በዚህ ምድብ ውስጥ ያሉ ምርቶች ከዚህ ቀደም የታዘዙ በመሆናቸው ምድቡና ምርቶቹ ከገበያ ተሰውረዋል',
+//       });
+//     }
+
+//     // Never ordered: safe to wipe category and products
+//     await prisma.$transaction([
+//       prisma.product.deleteMany({
+//         where: { categoryId: id },
+//       }),
+//       prisma.category.delete({
+//         where: { id },
+//       }),
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: 'ምድቡና በውስጡ ያሉ ምርቶች በሙሉ ተሰርዘዋል',
+//     });
+//   } catch (err: any) {
+//     console.error('Delete category error:', err);
+//     return res.status(500).json({ error: err.message || 'ምድቡን መሰረዝ አልተቻለም' });
+//   }
+// });
+
+// // ====================================================
+// // DELETE /api/catalog/products/:id (Safe Soft/Hard Delete)
+// // ====================================================
+// router.delete('/products/:id', async (req, res: Response): Promise<any> => {
+//   try {
+//     const { id } = req.params;
+
+//     const existing = await prisma.product.findUnique({ where: { id } });
+//     if (!existing) {
+//       return res.status(404).json({ error: 'ምርቱ አልተገኘም (Product not found)' });
+//     }
+
+//     const orderItemCount = await prisma.orderItem.count({
+//       where: { productId: id },
+//     });
+
+//     if (orderItemCount > 0) {
+//       // Prevent foreign key constraint violation on order_items
+//       const updated = await prisma.product.update({
+//         where: { id },
+//         data: { isActive: false },
+//       });
+//       return res.status(200).json({
+//         success: true,
+//         message: 'ምርቱ ከዚህ ቀደም የታዘዘ በመሆኑ ከገበያ ተሰውሯል',
+//         product: updated,
+//       });
+//     }
+
+//     // If never ordered, safely delete completely
+//     await prisma.product.delete({ where: { id } });
+//     return res.status(200).json({ success: true, message: 'ምርቱ ሙሉ በሙሉ ተሰርዟል' });
+//   } catch (err: any) {
+//     console.error('Delete product error:', err);
+//     return res.status(500).json({ error: err.message || 'ምርቱን መሰረዝ አልተቻለም' });
+//   }
+// });
+
 // export default router;
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { CatalogService } from './catalog.service';
 import prisma from '../../config/db';
 
@@ -141,9 +247,8 @@ function mapToPublicProduct(product: any) {
 }
 
 // GET /api/catalog/ads (Active dynamic image & video banners including 3-slot media arrays)
-router.get('/ads', async (_req, res: Response): Promise<any> => {
+router.get('/ads', async (_req, res: Response): Promise => {
   try {
-    // Directly query with mediaUrls & mediaTypes to guarantee multi-video arrays are returned
     const ads = await prisma.banner.findMany({
       where: { isActive: true },
       orderBy: { displayOrder: 'asc' },
@@ -152,8 +257,8 @@ router.get('/ads', async (_req, res: Response): Promise<any> => {
         title: true,
         mediaType: true,
         mediaUrl: true,
-        mediaUrls: true,    // <-- CRITICAL: Exposes all 3 video links
-        mediaTypes: true,   // <-- CRITICAL: Exposes array of VIDEO / IMAGE types
+        mediaUrls: true,    // <-- Exposes all 3 video/image links
+        mediaTypes: true,   // <-- Exposes array of VIDEO / IMAGE types
         actionLink: true,
         displayOrder: true,
         isActive: true,
@@ -166,8 +271,22 @@ router.get('/ads', async (_req, res: Response): Promise<any> => {
   }
 });
 
+// GET /api/catalog/post-order-ad (Active 3-second skippable ad for post-order popup)
+router.get('/post-order-ad', async (_req, res: Response): Promise => {
+  try {
+    const ad = await prisma.interstitialAd.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.status(200).json({ ad: ad || null });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'ማስታወቂያውን ማግኘት አልተቻለም' });
+  }
+});
+
 // GET /api/catalog/categories
-router.get('/categories', async (_req, res: Response): Promise<any> => {
+router.get('/categories', async (_req, res: Response): Promise => {
   try {
     const categories = await CatalogService.listCategories();
     return res.status(200).json({ categories });
@@ -177,7 +296,7 @@ router.get('/categories', async (_req, res: Response): Promise<any> => {
 });
 
 // GET /api/catalog/products (Supports categoryId and fastMoving filters)
-router.get('/products', async (req, res: Response): Promise<any> => {
+router.get('/products', async (req: Request, res: Response): Promise => {
   try {
     const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : undefined;
     const fastMoving = req.query.fastMoving === 'true';
@@ -195,9 +314,9 @@ router.get('/products', async (req, res: Response): Promise<any> => {
 });
 
 // GET /api/catalog/products/:id (Single product detail)
-router.get('/products/:id', async (req, res: Response): Promise<any> => {
+router.get('/products/:id', async (req: Request, res: Response): Promise => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const rawProduct = await CatalogService.getProductById(id);
     if (!rawProduct) {
       return res.status(404).json({ error: 'ምርቱ አልተገኘም' });
@@ -211,9 +330,9 @@ router.get('/products/:id', async (req, res: Response): Promise<any> => {
 });
 
 // PATCH /api/catalog/products/:id (Quick inventory & price updates from Admin Portal)
-router.patch('/products/:id', async (req, res: Response): Promise<any> => {
+router.patch('/products/:id', async (req: Request, res: Response): Promise => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const {
       actualStock,
       postedStock,
@@ -253,9 +372,9 @@ router.patch('/products/:id', async (req, res: Response): Promise<any> => {
 // ====================================================
 // DELETE /api/catalog/categories/:id (Safe Cascade Deletion)
 // ====================================================
-router.delete('/categories/:id', async (req, res: Response): Promise<any> => {
+router.delete('/categories/:id', async (req: Request, res: Response): Promise => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -321,9 +440,9 @@ router.delete('/categories/:id', async (req, res: Response): Promise<any> => {
 // ====================================================
 // DELETE /api/catalog/products/:id (Safe Soft/Hard Delete)
 // ====================================================
-router.delete('/products/:id', async (req, res: Response): Promise<any> => {
+router.delete('/products/:id', async (req: Request, res: Response): Promise => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const existing = await prisma.product.findUnique({ where: { id } });
     if (!existing) {

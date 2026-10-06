@@ -7,14 +7,14 @@
 // const router = Router();
 
 // // ----------------------------------------------------
-// // 1. ADMIN & WEB PORTAL LOGIN
+// // 1. ADMIN & WEB PORTAL LOGIN (WITH DYNAMIC RBAC)
 // // ----------------------------------------------------
 // const adminLoginSchema = z.object({
 //   phone: z.string().min(9, 'ትክክለኛ ስልክ ቁጥር ያስገቡ'),
 //   password: z.string().min(1, 'የይለፍ ቃል ያስገቡ'),
 // });
 
-// router.post('/login', async (req, res: Response): Promise => {
+// router.post('/login', async (req, res: Response): Promise<any> => {
 //   try {
 //     const { phone, password } = adminLoginSchema.parse(req.body);
 //     const result = await AuthService.adminLogin(phone, password);
@@ -40,7 +40,7 @@
 //   gpsLongitude: z.number().optional(),
 // });
 
-// router.post('/send-otp', async (req, res: Response) => {
+// router.post('/send-otp', async (req, res: Response): Promise<any> => {
 //   try {
 //     const body = sendOtpSchema.parse(req.body);
 //     const result = await AuthService.sendOtp(body);
@@ -50,7 +50,7 @@
 //   }
 // });
 
-// router.post('/verify-otp', async (req, res: Response) => {
+// router.post('/verify-otp', async (req, res: Response): Promise<any> => {
 //   try {
 //     const body = verifyOtpSchema.parse(req.body);
 //     const result = await AuthService.verifyOtp(body);
@@ -65,7 +65,7 @@
 //   preferredLanguage: z.enum(['am', 'om']).optional(),
 // });
 
-// router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+// router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
 //   try {
 //     const profile = await AuthService.getProfile(req.user!.userId);
 //     return res.status(200).json(profile);
@@ -74,7 +74,7 @@
 //   }
 // });
 
-// router.patch('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+// router.patch('/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
 //   try {
 //     const body = updateProfileSchema.parse(req.body);
 //     const profile = await AuthService.updateProfile(req.user!.userId, body);
@@ -89,6 +89,7 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { AuthService } from './auth.service';
 import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth.middleware';
+import prisma from '../../config/db';
 
 const router = Router();
 
@@ -96,14 +97,18 @@ const router = Router();
 // 1. ADMIN & WEB PORTAL LOGIN (WITH DYNAMIC RBAC)
 // ----------------------------------------------------
 const adminLoginSchema = z.object({
-  phone: z.string().min(9, 'ትክክለኛ ስልክ ቁጥር ያስገቡ'),
+  phone: z.string().min(9).optional(),
+  phoneNumber: z.string().min(9).optional(),
   password: z.string().min(1, 'የይለፍ ቃል ያስገቡ'),
+}).refine((data) => data.phone || data.phoneNumber, {
+  message: 'ትክክለኛ ስልክ ቁጥር ያስገቡ',
 });
 
-router.post('/login', async (req, res: Response): Promise<any> => {
+router.post('/login', async (req, res: Response): Promise => {
   try {
-    const { phone, password } = adminLoginSchema.parse(req.body);
-    const result = await AuthService.adminLogin(phone, password);
+    const parsed = adminLoginSchema.parse(req.body);
+    const targetPhone = (parsed.phone || parsed.phoneNumber)!;
+    const result = await AuthService.adminLogin(targetPhone, parsed.password);
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(401).json({ error: err.message || 'መግባት አልተቻለም' });
@@ -111,7 +116,7 @@ router.post('/login', async (req, res: Response): Promise<any> => {
 });
 
 // ----------------------------------------------------
-// 2. MOBILE APP OTP & PROFILE ROUTES (ORIGINAL INTACT)
+// 2. MOBILE APP OTP & PROFILE ROUTES
 // ----------------------------------------------------
 const sendOtpSchema = z.object({
   phoneNumber: z.string().min(9, 'ትክክለኛ ስልክ ቁጥር ያስገቡ'),
@@ -126,7 +131,7 @@ const verifyOtpSchema = z.object({
   gpsLongitude: z.number().optional(),
 });
 
-router.post('/send-otp', async (req, res: Response): Promise<any> => {
+router.post('/send-otp', async (req, res: Response): Promise => {
   try {
     const body = sendOtpSchema.parse(req.body);
     const result = await AuthService.sendOtp(body);
@@ -136,10 +141,35 @@ router.post('/send-otp', async (req, res: Response): Promise<any> => {
   }
 });
 
-router.post('/verify-otp', async (req, res: Response): Promise<any> => {
+router.post('/verify-otp', async (req, res: Response): Promise => {
   try {
     const body = verifyOtpSchema.parse(req.body);
-    const result = await AuthService.verifyOtp(body);
+    const result: any = await AuthService.verifyOtp(body);
+
+    // Ensure the response delivers live credit permissions to mobile storage
+    const userId = result?.user?.id || result?.userId;
+    if (userId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          phoneNumber: true,
+          shopName: true,
+          role: true,
+          canOrderOnCredit: true,
+          creditLimit: true,
+          usedCredit: true,
+        },
+      });
+
+      if (dbUser) {
+        result.user = {
+          ...result.user,
+          ...dbUser,
+        };
+      }
+    }
+
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(400).json({ error: err.message || 'ማረጋገጥ አልተቻለም' });
@@ -151,16 +181,47 @@ const updateProfileSchema = z.object({
   preferredLanguage: z.enum(['am', 'om']).optional(),
 });
 
-router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+// ----------------------------------------------------
+// 3. GET /me (Delivers live credit permissions)
+// ----------------------------------------------------
+router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
-    const profile = await AuthService.getProfile(req.user!.userId);
-    return res.status(200).json(profile);
+    const userId = req.user!.userId;
+
+    // Fetch the database record directly to ensure real-time credit status
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        phoneNumber: true,
+        shopName: true,
+        role: true,
+        approvalStatus: true,
+        preferredLanguage: true,
+        canOrderOnCredit: true, // <-- Supplies credit permission
+        creditLimit: true,      // <-- Supplies dynamic credit limit
+        usedCredit: true,
+        gpsLatitude: true,
+        gpsLongitude: true,
+        createdAt: true,
+      },
+    });
+
+    if (!dbUser) {
+      return res.status(404).json({ error: 'ተጠቃሚው አልተገኘም' });
+    }
+
+    // Return both formats for frontend compatibility
+    return res.status(200).json({
+      ...dbUser,
+      user: dbUser,
+    });
   } catch (err: any) {
     return res.status(404).json({ error: err.message });
   }
 });
 
-router.patch('/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.patch('/me', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const body = updateProfileSchema.parse(req.body);
     const profile = await AuthService.updateProfile(req.user!.userId, body);

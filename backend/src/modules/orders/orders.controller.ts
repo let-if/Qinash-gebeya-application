@@ -1,8 +1,18 @@
 
-// import { Router, Response } from 'express';
+// import { Router, Request, Response } from 'express';
 // import { z } from 'zod';
 // import prisma from '../../config/db';
-// import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth.middleware';
+// import { requireAuth } from '../../middlewares/auth.middleware';
+
+// // Extended request interface ensuring role and properties are properly typed
+// export interface AuthenticatedRequest extends Request {
+//   user?: {
+//     userId: string;
+//     phoneNumber?: string;
+//     role?: string;
+//     [key: string]: any;
+//   };
+// }
 
 // const router = Router();
 
@@ -286,7 +296,7 @@
 //       return res.status(403).json({ error: 'የአስተዳዳሪ ፈቃድ ያስፈልጋል' });
 //     }
 
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     const { approved } = req.body;
 
 //     if (typeof approved !== 'boolean') {
@@ -324,7 +334,7 @@
 //         });
 //       } else {
 //         // Return dual inventory on rejection
-//         for (const item of order.items) {
+//         for (const item of (order.items as any[])) {
 //           let restoreCount = item.quantity;
 //           if (item.selectedUnit === 'HALF_CARTON' || item.selectedUnit === 'HALF_DOZEN') {
 //             restoreCount = Math.max(1, Math.ceil(item.quantity * 0.5));
@@ -380,7 +390,7 @@
 //       return res.status(403).json({ error: 'የአስተዳዳሪ ፈቃድ ያስፈልጋል' });
 //     }
 
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 
 //     const order = await prisma.order.findUnique({
 //       where: { id },
@@ -438,7 +448,7 @@
 //       return res.status(403).json({ error: 'የአስተዳዳሪ ፈቃድ ያስፈልጋል' });
 //     }
 
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     let { status } = req.body;
 
 //     let targetStatus: any = status;
@@ -457,7 +467,7 @@
 //       }
 
 //       if (targetStatus === 'CANCELLED' && existing.status !== 'CANCELLED') {
-//         for (const item of existing.items) {
+//         for (const item of (existing.items as any[])) {
 //           let restoreCount = item.quantity;
 //           if (item.selectedUnit === 'HALF_CARTON' || item.selectedUnit === 'HALF_DOZEN') {
 //             restoreCount = Math.max(1, Math.ceil(item.quantity * 0.5));
@@ -555,6 +565,9 @@ const unitEnum = z.preprocess((val) => {
 const createOrderSchema = z.object({
   deliverySlot: z.enum(['BATCH_6AM', 'BATCH_12PM']).default('BATCH_6AM'),
   isCreditOrder: z.boolean().default(false),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  locationName: z.string().optional().nullable(),
   items: z.array(
     z.object({
       productId: z.string(),
@@ -589,11 +602,12 @@ function resolveProductUnitPrice(product: any, selectedUnit: string): number {
 }
 
 // ----------------------------------------------------
-// 1. CREATE ORDER (Supports 1-Tap Reorder, Cash & Credit)
+// 1. CREATE ORDER (Supports 1-Tap Reorder, Cash, Credit & GPS Location)
 // ----------------------------------------------------
-router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
-    const { items, deliverySlot, isCreditOrder } = createOrderSchema.parse(req.body);
+    const { items, deliverySlot, isCreditOrder, latitude, longitude, locationName } =
+      createOrderSchema.parse(req.body);
     const userId = req.user!.userId;
 
     const user = await prisma.user.findUnique({
@@ -602,6 +616,13 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): 
 
     if (!user) {
       return res.status(404).json({ error: 'ተጠቃሚው አልተገኘም' });
+    }
+
+    // Verify whether the retailer is permitted by Admin to place orders on credit
+    if (isCreditOrder && !user.canOrderOnCredit) {
+      return res.status(403).json({
+        error: 'ይቅርታ፤ ለመለያዎ የብድር አገልግሎት አልተፈቀደም። እባክዎ አስተዳዳሪውን ያነጋግሩ።',
+      });
     }
 
     // Resolve accurate unit prices & verify existence of all products
@@ -652,6 +673,9 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): 
           isCreditOrder,
           creditApproved: isCreditOrder ? null : null,
           isCreditSettled: false,
+          latitude: latitude !== undefined && latitude !== null ? Number(latitude) : null,
+          longitude: longitude !== undefined && longitude !== null ? Number(longitude) : null,
+          locationName: locationName || null,
           items: {
             create: validatedItems,
           },
@@ -710,7 +734,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response): 
 // ----------------------------------------------------
 // 2. GET MY ORDERS (Returns Latest Orders for 1-Tap Reorder & History)
 // ----------------------------------------------------
-router.get('/my-orders', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.get('/my-orders', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const orders = await prisma.order.findMany({
       where: { 
@@ -730,9 +754,9 @@ router.get('/my-orders', requireAuth, async (req: AuthenticatedRequest, res: Res
 });
 
 // ----------------------------------------------------
-// 3. GET CREDIT REQUESTS (Mobile "ሂሳብ" Tab & Admin Credit Dashboard)
+// 3. GET CREDIT REQUESTS (Includes GPS Coordinates for Admin)
 // ----------------------------------------------------
-router.get('/credit-requests', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.get('/credit-requests', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const userRole = req.user?.role;
     const isAdmin = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
@@ -750,6 +774,7 @@ router.get('/credit-requests', requireAuth, async (req: AuthenticatedRequest, re
             shopName: true,
             creditLimit: true,
             usedCredit: true,
+            canOrderOnCredit: true,
           },
         },
         items: {
@@ -766,9 +791,9 @@ router.get('/credit-requests', requireAuth, async (req: AuthenticatedRequest, re
 });
 
 // ----------------------------------------------------
-// 4. GET ALL ORDERS (Admin Portal Orders Tab)
+// 4. GET ALL ORDERS (Includes GPS Coordinates for Google Maps Button)
 // ----------------------------------------------------
-router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const userRole = req.user?.role;
     const isAdmin = userRole === 'ADMIN' || userRole === 'SUPERADMIN';
@@ -799,7 +824,7 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response): P
 // ----------------------------------------------------
 // 5. ADMIN: APPROVE / REJECT CREDIT ORDER
 // ----------------------------------------------------
-router.patch('/:id/approve-credit', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.patch('/:id/approve-credit', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const userRole = req.user?.role;
     if (userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {
@@ -893,7 +918,7 @@ router.patch('/:id/approve-credit', requireAuth, async (req: AuthenticatedReques
 // ----------------------------------------------------
 // 6. ADMIN: SETTLE CREDIT (MARK AS PAID)
 // ----------------------------------------------------
-router.patch('/:id/settle-credit', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.patch('/:id/settle-credit', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const userRole = req.user?.role;
     if (userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {
@@ -951,7 +976,7 @@ router.patch('/:id/settle-credit', requireAuth, async (req: AuthenticatedRequest
 // ----------------------------------------------------
 // 7. ADMIN: STANDARD ORDER STATUS LIFECYCLE
 // ----------------------------------------------------
-router.patch('/:id/status', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+router.patch('/:id/status', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise => {
   try {
     const userRole = req.user?.role;
     if (userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {

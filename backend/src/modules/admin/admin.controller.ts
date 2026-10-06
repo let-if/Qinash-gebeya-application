@@ -261,7 +261,7 @@
 // // ====================================================
 // router.put('/products/:id', async (req: Request, res: Response): Promise<any> => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     const {
 //       categoryId,
 //       nameAm,
@@ -316,7 +316,7 @@
 // // ====================================================
 // router.patch('/products/:id/restock', async (req: Request, res: Response): Promise<any> => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     const { addedStock } = req.body;
 
 //     const quantityToAdd = Number(addedStock);
@@ -371,9 +371,10 @@
 
 // router.patch('/users/:id/approval', async (req: Request, res: Response): Promise<any> => {
 //   try {
+//     const id = String(req.params.id);
 //     const { status } = req.body;
 //     const updated = await prisma.user.update({
-//       where: { id: req.params.id },
+//       where: { id },
 //       data: { approvalStatus: status },
 //     });
 //     return res.json({ success: true, user: updated });
@@ -407,7 +408,7 @@
 
 // router.patch('/users/:id/permissions', async (req: Request, res: Response): Promise<any> => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 //     const { allowedTabs } = req.body;
 
 //     if (!Array.isArray(allowedTabs)) {
@@ -434,7 +435,7 @@
 // // ====================================================
 // router.delete('/categories/:id', async (req: Request, res: Response): Promise<any> => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 
 //     const category = await prisma.category.findUnique({
 //       where: { id },
@@ -445,7 +446,7 @@
 //       return res.status(404).json({ error: 'ምድቡ አልተገኘም' });
 //     }
 
-//     const productIds = category.products.map((p) => p.id);
+//     const productIds = category.products.map((p: any) => p.id);
 
 //     await prisma.$transaction(async (tx) => {
 //       if (productIds.length > 0) {
@@ -478,7 +479,7 @@
 // // ====================================================
 // router.delete('/products/:id', async (req: Request, res: Response): Promise<any> => {
 //   try {
-//     const { id } = req.params;
+//     const id = String(req.params.id);
 
 //     const existing = await prisma.product.findUnique({ where: { id } });
 //     if (!existing) {
@@ -670,6 +671,51 @@ router.post('/banners', async (req: Request, res: Response): Promise<any> => {
 });
 
 // ====================================================
+// 2B. Post-Order Skippable Ad (3-Sec Countdown Popup)
+// ====================================================
+router.get('/interstitial-ad', async (_req, res): Promise<any> => {
+  try {
+    const ad = await prisma.interstitialAd.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    return res.json(ad || null);
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/interstitial-ad', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { title, mediaType, mediaUrl, actionLink, durationSec } = req.body;
+
+    if (!mediaUrl) {
+      return res.status(400).json({ error: 'የማስታወቂያው ቪዲዮ ወይም ምስል ሊንክ አልተገኘም' });
+    }
+
+    // Deactivate existing interstitial ads
+    await prisma.interstitialAd.updateMany({
+      data: { isActive: false },
+    });
+
+    const ad = await prisma.interstitialAd.create({
+      data: {
+        title: title || 'የትእዛዝ ማጠናቀቂያ ማስታወቂያ',
+        mediaType: mediaType === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+        mediaUrl,
+        actionLink: actionLink || null,
+        durationSec: Number(durationSec) || 3,
+        isActive: true,
+      },
+    });
+
+    return res.status(201).json(ad);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// ====================================================
 // 3. Categories
 // ====================================================
 router.get('/categories', async (_req, res): Promise<any> => {
@@ -855,7 +901,7 @@ router.patch('/products/:id/restock', async (req: Request, res: Response): Promi
 });
 
 // ====================================================
-// 8. Users & Approvals (With Deny/Block Status)
+// 8. Users, Approvals & Dynamic Credit Configuration
 // ====================================================
 router.get('/users', async (_req, res): Promise<any> => {
   try {
@@ -869,6 +915,7 @@ router.get('/users', async (_req, res): Promise<any> => {
         approvalStatus: true,
         creditLimit: true,
         usedCredit: true,
+        canOrderOnCredit: true, // For retailer credit checkbox
         allowedTabs: true,
         createdAt: true,
       },
@@ -876,6 +923,35 @@ router.get('/users', async (_req, res): Promise<any> => {
     return res.json(users);
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Retailer Credit Settings (Toggle checkbox & Dynamic Limit)
+router.patch('/users/:id/credit-settings', async (req: Request, res: Response): Promise<any> => {
+  try {
+    const id = String(req.params.id);
+    const { canOrderOnCredit, creditLimit } = req.body;
+
+    const dataToUpdate: any = {};
+    if (typeof canOrderOnCredit === 'boolean') {
+      dataToUpdate.canOrderOnCredit = canOrderOnCredit;
+    }
+    if (creditLimit !== undefined && !isNaN(Number(creditLimit))) {
+      dataToUpdate.creditLimit = Number(creditLimit);
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: dataToUpdate,
+    });
+
+    return res.json({
+      success: true,
+      message: 'የብድር ቅንብር በተሳካ ሁኔታ ተቀይሯል',
+      user: updated,
+    });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || 'ቅንብሩን መቀየር አልተቻለም' });
   }
 });
 
@@ -937,6 +1013,31 @@ router.patch('/users/:id/permissions', async (req: Request, res: Response): Prom
     });
   } catch (err: any) {
     return res.status(400).json({ error: err.message || 'ፍቃዱን ማስተካከል አልተቻለም' });
+  }
+});
+
+// ====================================================
+// 8B. Real-Time Order Counter for Green Blinking Badge
+// ====================================================
+router.get('/orders/stats', async (_req, res): Promise<any> => {
+  try {
+    const [pendingOrdersCount, pendingCreditCount, latestOrder] = await Promise.all([
+      prisma.order.count({ where: { status: 'PENDING', isCreditOrder: false } }),
+      prisma.order.count({ where: { status: 'PENDING', isCreditOrder: true } }),
+      prisma.order.findFirst({
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, createdAt: true },
+      }),
+    ]);
+
+    return res.json({
+      pendingOrdersCount,
+      pendingCreditCount,
+      latestOrderTimestamp: latestOrder?.createdAt || null,
+      latestOrderId: latestOrder?.id || null,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

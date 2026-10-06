@@ -50,4 +50,17 @@ const styles = StyleSheet.create({
     boxShadow: '0px 12px 30px rgba(0, 0, 0, 0.45)',
   },
 });
+// import React from 'react';
+// import { Stack } from 'expo-router';
+// import { SessionProvider } from '../context/SessionContext';
+// import { CartProvider } from '../context/CartContext';
 
+// export default function RootLayout() {
+//   return (
+//     <SessionProvider>
+//       <CartProvider>
+//         <Stack screenOptions={{ headerShown: false }} />
+//       </CartProvider>
+//     </SessionProvider>
+//   );
+// }
