@@ -26,14 +26,23 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.letif.b2bretailadama"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
     "extra": {
-      "apiUrl": ""
+      "apiUrl": "",
+      "router": {},
+      "eas": {
+        "projectId": "17aec65b-c55e-4c42-9b88-a2e9619da7bd"
+      }
     }
   }
 }
