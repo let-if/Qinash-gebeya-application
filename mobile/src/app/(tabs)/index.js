@@ -1,4 +1,5 @@
 
+
 // import React, { useCallback, useEffect, useRef, useState } from 'react';
 // import {
 //   ActivityIndicator,
@@ -16,9 +17,9 @@
 // } from 'react-native';
 // import { useFocusEffect, useRouter } from 'expo-router';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
-// import { Video, ResizeMode } from 'expo-av';
 // import { apiRequest } from '../../lib/api';
 // import { useSession } from '../../context/SessionContext';
+// import { useVideoPlayer, VideoView } from 'expo-video';
 
 // const DEFAULT_CATEGORIES = [
 //   { id: 'cat_groc', name: 'ግሮሰሪ እና የባልትና ውጤቶች', icon: '🛒', slug: 'grocery' },
@@ -63,10 +64,49 @@
 //   // Consecutive Video / Media Playlist State
 //   const [adPlaylist, setAdPlaylist] = useState([]);
 //   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-//   const videoPlayerRef = useRef(null);
 //   const webVideoRef = useRef(null);
 //   const imageTimerRef = useRef(null);
 
+//   // Active media item for video source URL
+//   const activeMedia = adPlaylist[currentAdIndex] || null;
+
+//   // Modern Expo Video Player Hook
+//   const videoPlayer = useVideoPlayer(
+//     activeMedia?.type === 'video' ? activeMedia?.uri : null,
+//     (player) => {
+//       player.loop = false;
+//       player.muted = true;
+//       player.play();
+//     }
+//   );
+
+//   // Handle video completion event in expo-video
+//   useEffect(() => {
+//     if (!videoPlayer) return;
+//     const subscription = videoPlayer.addListener('playToEnd', () => {
+//       advanceToNextMedia();
+//     });
+//     return () => {
+//       subscription.remove();
+//     };
+//   }, [videoPlayer]);
+
+//   // Update player source when index changes
+//   // useEffect(() => {
+//   //   if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
+//   //     videoPlayer.replace(activeMedia.uri);
+//   //     videoPlayer.play();
+//   //   }
+//   // }, [currentAdIndex, activeMedia, videoPlayer]);
+// useEffect(() => {
+//   if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
+//     videoPlayer.replaceAsync(activeMedia.uri).then(() => { // <--- Asynchronous (clean & modern)
+//       videoPlayer.play();
+//     }).catch(() => {
+//       videoPlayer.play();
+//     });
+//   }
+// }, [currentAdIndex, activeMedia, videoPlayer]);
 //   // 1-Tap Repeat Last Order State
 //   const [lastOrder, setLastOrder] = useState(null);
 //   const [reordering, setReordering] = useState(false);
@@ -242,12 +282,6 @@
 //     };
 //   }, [currentAdIndex, adPlaylist, advanceToNextMedia]);
 
-//   const handleVideoPlaybackStatus = (status) => {
-//     if (status?.isLoaded && status?.didJustFinish) {
-//       advanceToNextMedia();
-//     }
-//   };
-
 //   useEffect(() => {
 //     if (Platform.OS === 'web' && webVideoRef.current) {
 //       webVideoRef.current.currentTime = 0;
@@ -346,12 +380,10 @@
 //     });
 //   };
 
-//   // Triggers the custom in-app Amharic clear modal
 //   const handleTriggerClearCart = () => {
 //     setClearModalVisible(true);
 //   };
 
-//   // Confirms and clears immediately
 //   const handleConfirmClearCart = async () => {
 //     setClearModalVisible(false);
 //     setCart({});
@@ -362,7 +394,6 @@
 //     setClearModalVisible(false);
 //   };
 
-//   // 1. REPEAT LAST ORDER: Populates cart instead of instantly placing order
 //   const handleExecuteReorder = async () => {
 //     if (!lastOrder || reordering) return;
 //     const rawItems = lastOrder.items || lastOrder.orderItems || [];
@@ -427,7 +458,6 @@
 //     }
 //   };
 
-//   // 2. SAVE DRAFT ACTION: Stores current cart as draft and navigates
 //   const handleSaveToDraft = async () => {
 //     try {
 //       await AsyncStorage.setItem('user_draft_cart', JSON.stringify(cart));
@@ -468,8 +498,6 @@
 //     : filteredProducts;
 
 //   const clearSearch = () => setSearchQuery('');
-
-//   const activeMedia = adPlaylist[currentAdIndex] || null;
 
 //   return (
 //     <View style={styles.screen}>
@@ -597,19 +625,16 @@
 //                       left: 0,
 //                     }}
 //                   />
-//                 ) : (
-//                   <Video
+//                 ) : videoPlayer ? (
+//                   <VideoView
 //                     key={`mobile_vid_${currentAdIndex}_${activeMedia.uri}`}
-//                     ref={videoPlayerRef}
+//                     player={videoPlayer}
 //                     style={styles.adMedia}
-//                     source={{ uri: activeMedia.uri }}
-//                     resizeMode={ResizeMode.COVER}
-//                     shouldPlay={true}
-//                     isLooping={false}
-//                     isMuted={true}
-//                     useNativeControls={false}
-//                     onPlaybackStatusUpdate={handleVideoPlaybackStatus}
+//                     nativeControls={false}
+//                     contentFit="cover"
 //                   />
+//                 ) : (
+//                   <View style={styles.adMedia} />
 //                 )
 //               )}
 
@@ -853,7 +878,6 @@
 //             <View pointerEvents="none" style={styles.floatingShine} />
 
 //             <View style={styles.floatingCartLeft}>
-//               {/* Red Circular ✕ Button triggering in-app Amharic dialog */}
 //               <TouchableOpacity
 //                 style={styles.floatingCancelBtn}
 //                 onPress={handleTriggerClearCart}
@@ -876,7 +900,6 @@
 //               </View>
 //             </View>
 
-//             {/* 2 ACTIONS: SEND TO DRAFT & SEND ORDER */}
 //             <View style={styles.floatingActionsGroup}>
 //               <TouchableOpacity
 //                 style={styles.floatingDraftBtn}
@@ -1065,8 +1088,6 @@
 //     paddingTop: 13,
 //     paddingBottom: 205,
 //   },
-
-//   /* Search */
 //   searchGlow: {
 //     backgroundColor: '#FFFFFF',
 //     shadowColor: '#0F7B4A',
@@ -1125,8 +1146,6 @@
 //     color: MUTED,
 //     fontWeight: '900',
 //   },
-
-//   /* SLIM 1-Tap Reorder Banner */
 //   reorderBannerSlim: {
 //     backgroundColor: '#0F7B4A',
 //     borderRadius: 12,
@@ -1195,8 +1214,6 @@
 //     fontSize: 10.5,
 //     fontWeight: '900',
 //   },
-
-//   /* Ad Banner & Sequential Media */
 //   adGlow: {
 //     marginBottom: 15,
 //     borderRadius: 21,
@@ -1339,8 +1356,6 @@
 //     width: 12,
 //     backgroundColor: '#FFFFFF',
 //   },
-
-//   /* Categories */
 //   categoryGrid: {
 //     flexDirection: 'row',
 //     flexWrap: 'wrap',
@@ -1396,8 +1411,6 @@
 //     color: '#FFFFFF',
 //     fontWeight: '800',
 //   },
-
-//   /* Section Header */
 //   sectionHeaderRow: {
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
@@ -1440,8 +1453,6 @@
 //     paddingVertical: 40,
 //     alignItems: 'center',
 //   },
-
-//   /* Empty Search */
 //   noResultCard: {
 //     backgroundColor: '#FFFFFF',
 //     borderRadius: 18,
@@ -1503,8 +1514,6 @@
 //     fontSize: 12,
 //     fontWeight: '900',
 //   },
-
-//   /* Product Cards */
 //   productStack: {
 //     flexDirection: 'column',
 //     gap: 10,
@@ -1675,8 +1684,6 @@
 //     fontSize: 12,
 //     fontWeight: '900',
 //   },
-
-//   /* Floating Cart Bar */
 //   floatingCartContainer: {
 //     position: 'absolute',
 //     left: 12,
@@ -1810,8 +1817,6 @@
 //     fontSize: 12,
 //     fontWeight: '900',
 //   },
-
-//   /* PURE IN-APP AMHARIC MODALS */
 //   modalOverlay: {
 //     flex: 1,
 //     backgroundColor: 'rgba(11, 31, 20, 0.65)',
@@ -1958,6 +1963,9 @@ export default function ShopScreen() {
   const [selectedUnits, setSelectedUnits] = useState({});
   const [cart, setCart] = useState({});
 
+  // Active Admin Broadcast Notification State
+  const [activeNotification, setActiveNotification] = useState(null);
+
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -1968,10 +1976,8 @@ export default function ShopScreen() {
   const webVideoRef = useRef(null);
   const imageTimerRef = useRef(null);
 
-  // Active media item for video source URL
   const activeMedia = adPlaylist[currentAdIndex] || null;
 
-  // Modern Expo Video Player Hook
   const videoPlayer = useVideoPlayer(
     activeMedia?.type === 'video' ? activeMedia?.uri : null,
     (player) => {
@@ -1981,7 +1987,6 @@ export default function ShopScreen() {
     }
   );
 
-  // Handle video completion event in expo-video
   useEffect(() => {
     if (!videoPlayer) return;
     const subscription = videoPlayer.addListener('playToEnd', () => {
@@ -1992,27 +1997,19 @@ export default function ShopScreen() {
     };
   }, [videoPlayer]);
 
-  // Update player source when index changes
-  // useEffect(() => {
-  //   if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
-  //     videoPlayer.replace(activeMedia.uri);
-  //     videoPlayer.play();
-  //   }
-  // }, [currentAdIndex, activeMedia, videoPlayer]);
-useEffect(() => {
-  if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
-    videoPlayer.replaceAsync(activeMedia.uri).then(() => { // <--- Asynchronous (clean & modern)
-      videoPlayer.play();
-    }).catch(() => {
-      videoPlayer.play();
-    });
-  }
-}, [currentAdIndex, activeMedia, videoPlayer]);
-  // 1-Tap Repeat Last Order State
+  useEffect(() => {
+    if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
+      videoPlayer.replaceAsync(activeMedia.uri).then(() => {
+        videoPlayer.play();
+      }).catch(() => {
+        videoPlayer.play();
+      });
+    }
+  }, [currentAdIndex, activeMedia, videoPlayer]);
+
   const [lastOrder, setLastOrder] = useState(null);
   const [reordering, setReordering] = useState(false);
 
-  // Pure In-App Amharic Modal State (No "localhost says..." popups)
   const [clearModalVisible, setClearModalVisible] = useState(false);
   const [notificationModal, setNotificationModal] = useState({
     visible: false,
@@ -2020,7 +2017,6 @@ useEffect(() => {
     message: '',
   });
 
-  // Adaptive scale
   const isTiny = SCREEN_W < 330;
   const isSmall = SCREEN_W < 370;
   const isTablet = SCREEN_W >= 680;
@@ -2054,8 +2050,26 @@ useEffect(() => {
     useCallback(() => {
       syncCart();
       fetchLastOrder();
+      fetchActiveNotification();
     }, [token])
   );
+
+  const fetchActiveNotification = useCallback(async () => {
+    try {
+      const res = await apiRequest('/notifications/active', { token }).catch(() => null);
+      if (res?.notification) {
+        setActiveNotification(res.notification);
+      } else {
+        // Fallback or check admin notifications endpoint if public active doesn't exist yet
+        const adminRes = await apiRequest('/admin/notifications', { token }).catch(() => null);
+        const list = Array.isArray(adminRes) ? adminRes : (adminRes?.notifications || []);
+        const active = list.find((n) => n.isActive !== false);
+        setActiveNotification(active || list[0] || null);
+      }
+    } catch {
+      setActiveNotification(null);
+    }
+  }, [token]);
 
   const fetchLastOrder = useCallback(async () => {
     if (!token) return;
@@ -2193,22 +2207,23 @@ useEffect(() => {
   useEffect(() => {
     setLoading(true);
     syncCart();
-    Promise.all([loadCatalog(false), loadAds(), fetchLastOrder()]);
-  }, [loadCatalog, loadAds, fetchLastOrder]);
+    Promise.all([loadCatalog(false), loadAds(), fetchLastOrder(), fetchActiveNotification()]);
+  }, [loadCatalog, loadAds, fetchLastOrder, fetchActiveNotification]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       loadCatalog(true);
       fetchLastOrder();
+      fetchActiveNotification();
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [loadCatalog, fetchLastOrder]);
+  }, [loadCatalog, fetchLastOrder, fetchActiveNotification]);
 
   const onRefresh = () => {
     setRefreshing(true);
     syncCart();
-    Promise.all([loadCatalog(false), loadAds(), fetchLastOrder()]);
+    Promise.all([loadCatalog(false), loadAds(), fetchLastOrder(), fetchActiveNotification()]);
   };
 
   const computeUnitPrice = (product, unit) => {
@@ -2418,6 +2433,9 @@ useEffect(() => {
           />
         }
       >
+        {/* ---------- NOTIFICATION PANEL (Above Search Bar) ---------- */}
+      
+
         {/* ---------- SEARCH BAR ---------- */}
         <View
           style={[
@@ -2595,7 +2613,19 @@ useEffect(() => {
             </View>
           </View>
         )}
-
+  {activeNotification && (
+          <View style={styles.notificationCard}>
+            <Text style={styles.notificationText}>{activeNotification.message}</Text>
+            <TouchableOpacity
+              onPress={() => setActiveNotification(null)}
+              style={styles.closeNotificationBtn}
+              activeOpacity={0.7}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={styles.closeBtnText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         {/* ---------- CATEGORIES GRID ---------- */}
         <View style={styles.categoryGrid}>
           {categories.map((cat) => {
@@ -2878,11 +2908,11 @@ useEffect(() => {
             <Text style={styles.modalMessage}>{notificationModal.message}</Text>
 
             <TouchableOpacity
-              style={[styles.modalConfirmBtn, { width: '100%', backgroundColor: GREEN }]}
+              style={[styles.modalConfirmBtn, { width: '100%', backgroundColor: GREEN, paddingVertical: 14 }]}
               onPress={() => setNotificationModal((prev) => ({ ...prev, visible: false }))}
               activeOpacity={0.85}
             >
-              <Text style={styles.modalConfirmBtnText}>እሺ</Text>
+              <Text style={[styles.modalConfirmBtnText, { fontSize: 15, color: '#FFFFFF' }]}>እሺ (OK)</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -2988,6 +3018,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 13,
     paddingBottom: 205,
+  },
+  // Notification Panel Styles
+  notificationCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#F2C94C',
+    borderRadius: 14,
+    padding: 14,
+    paddingRight: 40,
+    marginBottom: 12,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  notificationText: {
+    color: '#12241A',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  closeNotificationBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F5F7F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#62726A',
   },
   searchGlow: {
     backgroundColor: '#FFFFFF',

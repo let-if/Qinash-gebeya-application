@@ -1237,6 +1237,37 @@ router.delete('/categories/:id', async (req: Request, res: Response): Promise<an
 // ====================================================
 // 10. Delete Single Product
 // ====================================================
+// router.delete('/products/:id', async (req: Request, res: Response): Promise<any> => {
+//   try {
+//     const id = String(req.params.id);
+
+//     const existing = await prisma.product.findUnique({ where: { id } });
+//     if (!existing) {
+//       return res.status(404).json({ error: 'ምርቱ አልተገኘም' });
+//     }
+
+//     const orderItemCount = await prisma.orderItem.count({
+//       where: { productId: id },
+//     });
+
+//     if (orderItemCount > 0) {
+//       const updated = await prisma.product.update({
+//         where: { id },
+//         data: { isActive: false },
+//       });
+//       return res.status(200).json({
+//         success: true,
+//         message: 'ምርቱ ከገበያ ተሰውሯል',
+//         product: updated,
+//       });
+//     }
+
+//     await prisma.product.delete({ where: { id } });
+//     return res.status(200).json({ success: true, message: 'ምርቱ ተሰርዟል' });
+//   } catch (err: any) {
+//     return res.status(500).json({ error: err.message || 'ምርቱን መሰረዝ አልተቻለም' });
+//   }
+// });
 router.delete('/products/:id', async (req: Request, res: Response): Promise<any> => {
   try {
     const id = String(req.params.id);
@@ -1246,27 +1277,17 @@ router.delete('/products/:id', async (req: Request, res: Response): Promise<any>
       return res.status(404).json({ error: 'ምርቱ አልተገኘም' });
     }
 
-    const orderItemCount = await prisma.orderItem.count({
+    // Delete associated order items first to avoid foreign key constraint violations
+    await prisma.orderItem.deleteMany({
       where: { productId: id },
     });
 
-    if (orderItemCount > 0) {
-      const updated = await prisma.product.update({
-        where: { id },
-        data: { isActive: false },
-      });
-      return res.status(200).json({
-        success: true,
-        message: 'ምርቱ ከገበያ ተሰውሯል',
-        product: updated,
-      });
-    }
-
+    // Permanently delete the product from the database
     await prisma.product.delete({ where: { id } });
-    return res.status(200).json({ success: true, message: 'ምርቱ ተሰርዟል' });
+
+    return res.status(200).json({ success: true, message: 'ምርቱ ከሁለቱም ቦታዎች ተሰርዟል' });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'ምርቱን መሰረዝ አልተቻለም' });
   }
 });
-
 export default router;

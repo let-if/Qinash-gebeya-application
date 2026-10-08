@@ -667,7 +667,7 @@
 // const styles = StyleSheet.create({
 //   safeArea: {
 //     flex: 1,
-//     backgroundColor: '#F3F6F4',
+//     backgroundColor: '#EEF3F0',
 //   },
 //   scrollContainer: {
 //     padding: 16,
@@ -678,22 +678,33 @@
 //   },
 //   heroCard: {
 //     backgroundColor: '#0A5C36',
-//     borderRadius: 24,
+//     borderRadius: 28,
 //     padding: 24,
 //     alignItems: 'center',
 //     marginBottom: 16,
+//     borderBottomWidth: 4,
+//     borderBottomColor: '#F2C94C',
+//     shadowColor: '#0A5C36',
+//     shadowOffset: { width: 0, height: 8 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 14,
+//     elevation: 6,
 //   },
 //   avatarPill: {
-//     width: 64,
-//     height: 64,
-//     borderRadius: 32,
+//     width: 68,
+//     height: 68,
+//     borderRadius: 34,
 //     backgroundColor: '#FFFFFF',
 //     justifyContent: 'center',
 //     alignItems: 'center',
 //     marginBottom: 12,
+//     borderWidth: 3,
+//     borderColor: '#F2C94C',
 //   },
 //   badgePill: {
-//     backgroundColor: 'rgba(255, 255, 255, 0.18)',
+//     backgroundColor: 'rgba(242, 201, 76, 0.18)',
+//     borderWidth: 1,
+//     borderColor: 'rgba(242, 201, 76, 0.6)',
 //     paddingHorizontal: 12,
 //     paddingVertical: 4,
 //     borderRadius: 20,
@@ -702,30 +713,38 @@
 //   badgeText: {
 //     color: '#F2C94C',
 //     fontSize: 12,
-//     fontWeight: '700',
+//     fontWeight: '800',
+//     letterSpacing: 0.3,
 //   },
 //   heroTitle: {
 //     fontSize: 24,
-//     fontWeight: '800',
+//     fontWeight: '900',
 //     color: '#FFFFFF',
+//     textAlign: 'center',
 //   },
 //   heroSub: {
 //     fontSize: 13,
-//     color: '#D2E7DC',
+//     color: '#CFE6D9',
 //     marginTop: 4,
+//     textAlign: 'center',
 //   },
 //   card: {
 //     backgroundColor: '#FFFFFF',
-//     borderRadius: 18,
+//     borderRadius: 20,
 //     padding: 16,
 //     marginBottom: 14,
 //     borderWidth: 1,
-//     borderColor: '#E7EDE9',
+//     borderColor: '#E3EBE6',
+//     shadowColor: '#0A5C36',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.07,
+//     shadowRadius: 10,
+//     elevation: 2,
 //   },
 //   sectionHeader: {
 //     fontSize: 13,
 //     fontWeight: '800',
-//     color: '#718279',
+//     color: '#0A5C36',
 //     textTransform: 'uppercase',
 //     letterSpacing: 0.8,
 //     marginBottom: 14,
@@ -736,7 +755,7 @@
 //     alignItems: 'center',
 //     paddingVertical: 10,
 //     borderBottomWidth: 1,
-//     borderBottomColor: '#F5F8F6',
+//     borderBottomColor: '#F1F5F2',
 //   },
 //   rowLabel: {
 //     fontSize: 14,
@@ -744,18 +763,18 @@
 //   },
 //   rowValue: {
 //     fontSize: 14,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     color: '#15241C',
 //   },
 //   tagBadge: {
 //     backgroundColor: '#EBF6F0',
-//     paddingHorizontal: 10,
+//     paddingHorizontal: 12,
 //     paddingVertical: 4,
-//     borderRadius: 8,
+//     borderRadius: 999,
 //   },
 //   tagBadgeText: {
 //     color: '#0A5C36',
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     fontSize: 13,
 //   },
 //   gpsSuccessBox: {
@@ -763,7 +782,7 @@
 //     alignItems: 'center',
 //     backgroundColor: '#F0F9F4',
 //     padding: 12,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     borderWidth: 1,
 //     borderColor: '#C7E8D6',
 //     marginBottom: 12,
@@ -776,10 +795,12 @@
 //     backgroundColor: '#FFFFFF',
 //     justifyContent: 'center',
 //     alignItems: 'center',
+//     borderWidth: 1,
+//     borderColor: '#C7E8D6',
 //   },
 //   gpsSuccessTitle: {
 //     fontSize: 14,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     color: '#0A5C36',
 //   },
 //   gpsCoordsText: {
@@ -798,7 +819,7 @@
 //     alignItems: 'center',
 //     backgroundColor: '#FFF8ED',
 //     padding: 12,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     borderWidth: 1,
 //     borderColor: '#FFE0B2',
 //     marginBottom: 12,
@@ -807,19 +828,24 @@
 //   gpsEmptyText: {
 //     fontSize: 13,
 //     color: '#B76E00',
-//     fontWeight: '600',
+//     fontWeight: '700',
 //   },
 //   gpsButton: {
 //     backgroundColor: '#0A5C36',
 //     height: 48,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     justifyContent: 'center',
 //     alignItems: 'center',
+//     shadowColor: '#0A5C36',
+//     shadowOffset: { width: 0, height: 5 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 8,
+//     elevation: 4,
 //   },
 //   gpsButtonText: {
 //     color: '#FFFFFF',
 //     fontSize: 15,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //   },
 //   statusRow: {
 //     flexDirection: 'row',
@@ -845,7 +871,7 @@
 //   networkPill: {
 //     paddingHorizontal: 10,
 //     paddingVertical: 4,
-//     borderRadius: 8,
+//     borderRadius: 999,
 //   },
 //   networkPillText: {
 //     fontSize: 12,
@@ -868,7 +894,7 @@
 //   },
 //   actionTitle: {
 //     fontSize: 15,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     color: '#15241C',
 //   },
 //   actionSub: {
@@ -879,15 +905,15 @@
 //   langPill: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
-//     backgroundColor: '#F3F6F4',
+//     backgroundColor: '#EBF6F0',
 //     paddingHorizontal: 10,
 //     paddingVertical: 6,
-//     borderRadius: 10,
+//     borderRadius: 999,
 //     gap: 6,
 //   },
 //   langPillText: {
 //     fontSize: 13,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     color: '#0A5C36',
 //   },
 //   arrowIcon: {
@@ -896,17 +922,17 @@
 //   },
 //   divider: {
 //     height: 1,
-//     backgroundColor: '#F0F4F2',
+//     backgroundColor: '#EEF3F0',
 //     marginVertical: 4,
 //   },
 //   logoutBtn: {
-//     backgroundColor: '#FEECEC',
+//     backgroundColor: '#FFFFFF',
 //     height: 52,
-//     borderRadius: 14,
+//     borderRadius: 16,
 //     justifyContent: 'center',
 //     alignItems: 'center',
-//     borderWidth: 1,
-//     borderColor: '#F8C8C8',
+//     borderWidth: 1.5,
+//     borderColor: '#F5C2C2',
 //     marginTop: 8,
 //   },
 //   logoutBtnText: {
@@ -916,7 +942,7 @@
 //   },
 //   modalOverlay: {
 //     flex: 1,
-//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//     backgroundColor: 'rgba(10, 30, 20, 0.55)',
 //     justifyContent: 'center',
 //     alignItems: 'center',
 //     padding: 20,
@@ -925,13 +951,15 @@
 //     width: '100%',
 //     maxWidth: 390,
 //     backgroundColor: '#FFFFFF',
-//     borderRadius: 22,
+//     borderRadius: 26,
 //     padding: 20,
+//     borderTopWidth: 4,
+//     borderTopColor: '#0A5C36',
 //     shadowColor: '#000',
-//     shadowOffset: { width: 0, height: 6 },
-//     shadowOpacity: 0.15,
-//     shadowRadius: 10,
-//     elevation: 8,
+//     shadowOffset: { width: 0, height: 8 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 14,
+//     elevation: 10,
 //   },
 //   modalHeaderRow: {
 //     flexDirection: 'row',
@@ -942,7 +970,7 @@
 //   modalIconWrap: {
 //     width: 44,
 //     height: 44,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     justifyContent: 'center',
 //     alignItems: 'center',
 //   },
@@ -959,19 +987,19 @@
 //   customModalBody: {
 //     fontSize: 13,
 //     color: '#4B5E54',
-//     lineHeight: 18,
+//     lineHeight: 19,
 //     marginBottom: 14,
 //   },
 //   payloadBox: {
-//     backgroundColor: '#F4F7F4',
+//     backgroundColor: '#F4F8F5',
 //     padding: 10,
-//     borderRadius: 10,
+//     borderRadius: 12,
 //     borderWidth: 1,
-//     borderColor: '#E2E8E4',
+//     borderColor: '#E0E9E3',
 //   },
 //   payloadLabel: {
 //     fontSize: 11,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     color: '#657A70',
 //     marginBottom: 2,
 //   },
@@ -993,9 +1021,9 @@
 //   },
 //   modalCancelButton: {
 //     flex: 1,
-//     backgroundColor: '#F3F6F4',
+//     backgroundColor: '#F1F5F2',
 //     paddingVertical: 12,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     alignItems: 'center',
 //   },
 //   modalCancelButtonText: {
@@ -1007,13 +1035,14 @@
 //     flex: 1.3,
 //     backgroundColor: '#0A5C36',
 //     paddingVertical: 12,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     alignItems: 'center',
 //   },
 //   modalConfirmButtonText: {
 //     fontSize: 13,
 //     fontWeight: '800',
 //     color: '#FFFFFF',
+//     textAlign: 'center',
 //   },
 //   toastContainer: {
 //     position: 'absolute',
@@ -1023,6 +1052,8 @@
 //     paddingHorizontal: 18,
 //     paddingVertical: 10,
 //     borderRadius: 999,
+//     borderWidth: 1,
+//     borderColor: 'rgba(242, 201, 76, 0.5)',
 //     shadowColor: '#000',
 //     shadowOffset: { width: 0, height: 4 },
 //     shadowOpacity: 0.25,
@@ -1036,7 +1067,7 @@
 //   },
 //   modalTitle: {
 //     fontSize: 16,
-//     fontWeight: '800',
+//     fontWeight: '900',
 //     color: '#15241C',
 //     textAlign: 'center',
 //     marginBottom: 16,
@@ -1046,9 +1077,9 @@
 //     justifyContent: 'space-between',
 //     alignItems: 'center',
 //     padding: 14,
-//     borderRadius: 12,
+//     borderRadius: 14,
 //     borderWidth: 1.5,
-//     borderColor: '#E7EDE9',
+//     borderColor: '#E3EBE6',
 //     marginBottom: 10,
 //   },
 //   modalOptionActive: {
@@ -1087,7 +1118,6 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   Platform,
   ActivityIndicator,
   Modal,
@@ -1098,9 +1128,6 @@ import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSession } from '../../context/SessionContext';
-
-// Target gateway / Warehouse dispatcher number (Adama Hub)
-const GATEWAY_DISPATCH_PHONE = '0911000000';
 
 const DICTIONARY = {
   am: {
@@ -1116,19 +1143,6 @@ const DICTIONARY = {
     gpsPinned: 'ትክክለኛ GPS ተመዝግቧል',
     gpsEmpty: 'ምንም GPS አልተመዘገበም',
     gpsAccuracy: 'የቦታ ትክክለኛነት',
-    smsEngineSection: 'የኔትወርክ እና የ SMS መጠባበቂያ (Module 5)',
-    netStatusLabel: 'የኢንተርኔት ግንኙነት (Network Status)',
-    netOnline: 'መስመር ላይ (Online)',
-    netOffline: 'ተቋርጧል (Offline)',
-    smsBackupTitle: 'በ SMS የማዘዣ ሞተር (SMS Fallback)',
-    smsBackupSub: 'ኢንተርኔት በማይኖርበት ጊዜ ትእዛዝዎ በ SMS በቀጥታ ይተላለፋል',
-    smsModalTitle: 'የ SMS ትእዛዝ መላኪያ',
-    smsModalDescOnline: `የኢንተርኔት ግንኙነት ቢኖርም የ SMS ስርዓቱን መሞከር ይችላሉ። መልእክቱ በቀጥታ ወደ ${GATEWAY_DISPATCH_PHONE} ይላካል።`,
-    smsModalDescOffline: `⚠️ የኢንተርኔት ግንኙነት ተቋርጧል! ምንም ጭንቀት አይግባዎ፤ ትእዛዝዎ ወደ ${GATEWAY_DISPATCH_PHONE} በ SMS በቀጥታ ይተላለፋል።`,
-    smsModalTargetLabel: 'የሚላክበት ቁጥር (Receiver)',
-    smsModalPayloadLabel: 'የትእዛዝ መልእክት (Payload)',
-    smsModalSendBtn: 'በ SMS ላክ (Open SMS)',
-    smsCopiedText: 'የትእዛዝ መልእክቱ ተገልብጧል (Copied)!',
     settingsSection: 'ቅንብሮች እና ድጋፍ',
     langTitle: 'ቋንቋ ቀይር (Language)',
     langSelected: 'አማርኛ',
@@ -1159,19 +1173,6 @@ const DICTIONARY = {
     gpsPinned: 'GPS Suuqii Galmaa’eera',
     gpsEmpty: 'GPS hin galmoofne',
     gpsAccuracy: 'Qulqullina Iddoo',
-    smsEngineSection: 'Netwoorkii fi Kuusaa SMS (Module 5)',
-    netStatusLabel: 'Haala Netwoorkii (Network Status)',
-    netOnline: 'Toora Irra (Online)',
-    netOffline: 'Cufameera (Offline)',
-    smsBackupTitle: 'Mootara Ajaja SMS (SMS Fallback)',
-    smsBackupSub: 'Yeroo intarneetiin hin jirretti ajajni keessan SMS dhaan darba',
-    smsModalTitle: 'Mootara Ajaja SMS',
-    smsModalDescOnline: `Intarneetiin jiraatus mootara SMS qoruu dandeessu. Ergaan kallattiin gara ${GATEWAY_DISPATCH_PHONE} ergama.`,
-    smsModalDescOffline: `⚠️ Intarneetiin cufameera! Hin dhiphatinaa; ajajni keessan kallattiin gara ${GATEWAY_DISPATCH_PHONE} tti SMS dhaan darba.`,
-    smsModalTargetLabel: 'Gara Lakkoofsa (Receiver)',
-    smsModalPayloadLabel: 'Ergaa Ajajaa (Payload)',
-    smsModalSendBtn: 'SMS dhaan Ergi (Open SMS)',
-    smsCopiedText: 'Ergaan ajajaa koppii ta’eera!',
     settingsSection: 'Qindaa’inaa fi Gargaarsa',
     langTitle: 'Afaan Jijjiiri (Language)',
     langSelected: 'Afaan Oromoo',
@@ -1202,19 +1203,6 @@ const DICTIONARY = {
     gpsPinned: 'Precise GPS Pinned',
     gpsEmpty: 'No GPS Registered Yet',
     gpsAccuracy: 'Accuracy',
-    smsEngineSection: 'Network & Offline SMS Engine (Module 5)',
-    netStatusLabel: 'Network Connectivity',
-    netOnline: 'Connected (Online)',
-    netOffline: 'Disconnected (Offline)',
-    smsBackupTitle: 'SMS Order Dispatcher (Fallback)',
-    smsBackupSub: 'Orders automatically dispatch via compressed SMS when offline',
-    smsModalTitle: 'Offline SMS Order Engine',
-    smsModalDescOnline: `Even while online, you can test the offline SMS engine. The payload transmits to ${GATEWAY_DISPATCH_PHONE}.`,
-    smsModalDescOffline: `⚠️ Internet connection is offline! Your order will be seamlessly routed via native SMS to ${GATEWAY_DISPATCH_PHONE}.`,
-    smsModalTargetLabel: 'Destination Number',
-    smsModalPayloadLabel: 'Order Payload',
-    smsModalSendBtn: 'Launch SMS App',
-    smsCopiedText: 'Payload copied to clipboard!',
     settingsSection: 'Preferences & Support',
     langTitle: 'Language',
     langSelected: 'English',
@@ -1237,33 +1225,17 @@ const DICTIONARY = {
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, user } = useSession?.() || {};
-  const params = useLocalSearchParams();
 
   const [lang, setLang] = useState('am');
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [coords, setCoords] = useState(null);
-  const [isOnline, setIsOnline] = useState(true);
 
-  // Dynamic payload from CheckoutScreen or standard placeholder
-  const [currentPayload, setCurrentPayload] = useState('ORD#PROD_SAMPLE:2:CARTON#BATCH_6AM#0');
-
-  // Custom modal states
-  const [smsModalVisible, setSmsModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [supportModalVisible, setSupportModalVisible] = useState(false);
   const [infoToast, setInfoToast] = useState(null);
 
   const t = DICTIONARY[lang] || DICTIONARY.am;
-
-  // Sync payload when user is redirected from CheckoutScreen
-  useEffect(() => {
-    if (params?.smsPayload) {
-      const incoming = String(params.smsPayload);
-      setCurrentPayload(incoming);
-      setSmsModalVisible(true);
-    }
-  }, [params?.smsPayload]);
 
   useEffect(() => {
     async function loadSavedData() {
@@ -1281,14 +1253,6 @@ export default function ProfileScreen() {
       }
     }
     loadSavedData();
-
-    // Network status listener
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      const onlineStatus = Boolean(state.isConnected && state.isInternetReachable !== false);
-      setIsOnline(onlineStatus);
-    });
-
-    return () => unsubscribe();
   }, []);
 
   const showToast = (message) => {
@@ -1335,22 +1299,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // Dispatch Native SMS
-  const executeSmsDispatch = () => {
-    setSmsModalVisible(false);
-
-    if (Platform.OS === 'web') {
-      showToast(t.smsCopiedText);
-      return;
-    }
-
-    const separator = Linking.createURL('').includes('?') ? '&' : '?';
-    const smsUrl = `sms:${GATEWAY_DISPATCH_PHONE}${separator}body=${encodeURIComponent(currentPayload)}`;
-    Linking.openURL(smsUrl).catch(() => {
-      showToast('Cannot open SMS app on this device');
-    });
-  };
-
   const confirmLogoutAction = async () => {
     setLogoutModalVisible(false);
     if (signOut) await signOut();
@@ -1361,7 +1309,7 @@ export default function ProfileScreen() {
   const displayedShopName = user?.shopName || t.shopTitle;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -1437,55 +1385,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Offline SMS Backup Card */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>{t.smsEngineSection}</Text>
-
-          <View style={styles.statusRow}>
-            <View style={styles.statusInfo}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: isOnline ? '#10B981' : '#EF4444' },
-                ]}
-              />
-              <Text style={styles.statusLabel}>{t.netStatusLabel}</Text>
-            </View>
-            <View
-              style={[
-                styles.networkPill,
-                { backgroundColor: isOnline ? '#E8F5E9' : '#FFEBEE' },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.networkPillText,
-                  { color: isOnline ? '#0A5C36' : '#C62828' },
-                ]}
-              >
-                {isOnline ? `● ${t.netOnline}` : `● ${t.netOffline}`}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity
-            style={styles.actionRow}
-            onPress={() => setSmsModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.actionLeft}>
-              <Text style={styles.actionIcon}>💬</Text>
-              <View style={{ flex: 1, paddingRight: 8 }}>
-                <Text style={styles.actionTitle}>{t.smsBackupTitle}</Text>
-                <Text style={styles.actionSub}>{t.smsBackupSub}</Text>
-              </View>
-            </View>
-            <Text style={styles.arrowIcon}>›</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Language & Support Card */}
         <View style={styles.card}>
           <Text style={styles.sectionHeader}>{t.settingsSection}</Text>
@@ -1543,62 +1442,7 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      {/* 1. SMS Dispatch Modal */}
-      <Modal
-        visible={smsModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSmsModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeaderRow}>
-              <View style={[styles.modalIconWrap, { backgroundColor: isOnline ? '#E8F5E9' : '#FFEBEE' }]}>
-                <Text style={{ fontSize: 22 }}>{isOnline ? '📡' : '📶'}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.customModalTitle}>{t.smsModalTitle}</Text>
-                <Text style={[styles.networkStatusSmall, { color: isOnline ? '#0A5C36' : '#C62828' }]}>
-                  {isOnline ? `● ${t.netOnline}` : `● ${t.netOffline}`}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.customModalBody}>
-              {isOnline ? t.smsModalDescOnline : t.smsModalDescOffline}
-            </Text>
-
-            <View style={styles.payloadBox}>
-              <Text style={styles.payloadLabel}>{t.smsModalTargetLabel}:</Text>
-              <Text style={styles.phoneHighlight}>{GATEWAY_DISPATCH_PHONE}</Text>
-            </View>
-
-            <View style={[styles.payloadBox, { marginTop: 8 }]}>
-              <Text style={styles.payloadLabel}>{t.smsModalPayloadLabel}:</Text>
-              <Text style={styles.payloadCode}>{currentPayload}</Text>
-            </View>
-
-            <View style={styles.modalActionButtons}>
-              <TouchableOpacity
-                style={styles.modalCancelButton}
-                onPress={() => setSmsModalVisible(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.modalCancelButtonText}>{t.cancelText}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalConfirmButton}
-                onPress={executeSmsDispatch}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.modalConfirmButtonText}>{t.smsModalSendBtn}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* 2. Support Modal */}
+      {/* 1. Support Modal */}
       <Modal
         visible={supportModalVisible}
         transparent
@@ -1634,7 +1478,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* 3. Logout Modal */}
+      {/* 2. Logout Modal */}
       <Modal
         visible={logoutModalVisible}
         transparent
@@ -1667,7 +1511,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* 4. Language Modal */}
+      {/* 3. Language Modal */}
       <Modal
         visible={langModalVisible}
         transparent
@@ -1741,7 +1585,7 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -1749,6 +1593,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#EEF3F0',
+    paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   scrollContainer: {
     padding: 16,
@@ -1928,36 +1773,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  statusInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  statusLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#15241C',
-  },
-  networkPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  networkPillText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -2042,58 +1857,11 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 10,
   },
-  modalHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  modalIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  customModalTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#15241C',
-  },
-  networkStatusSmall: {
-    fontSize: 11,
-    fontWeight: '800',
-    marginTop: 2,
-  },
   customModalBody: {
     fontSize: 13,
     color: '#4B5E54',
     lineHeight: 19,
     marginBottom: 14,
-  },
-  payloadBox: {
-    backgroundColor: '#F4F8F5',
-    padding: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E9E3',
-  },
-  payloadLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#657A70',
-    marginBottom: 2,
-  },
-  phoneHighlight: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#0A5C36',
-  },
-  payloadCode: {
-    fontSize: 12,
-    color: '#1E293B',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    fontWeight: '700',
   },
   modalActionButtons: {
     flexDirection: 'row',

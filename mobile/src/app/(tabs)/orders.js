@@ -679,9 +679,9 @@ export default function OrdersScreen() {
   };
 
   const getSlotLabel = (slot) => {
-    return slot === 'BATCH_6AM'
-      ? '🌅 ንጋት 12:00 (6:00 AM ዙር)'
-      : '☀️ ቀትር 6:00 (12:00 PM ዙር)';
+    return slot === 'BATCH_12PM'
+      ? '🌅 ቀትር 6:00 (12:00 PM ዙር)'
+      : '☀️ ተዋት 12፡00 (6:00 AM  ዙር)';
   };
 
   if (loading && !refreshing) {

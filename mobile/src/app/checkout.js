@@ -2247,27 +2247,6 @@ export default function CheckoutScreen() {
                   style={[
                     styles.slotPill,
                     dyn.slotPill,
-                    slot === 'BATCH_6AM' && styles.slotPillActive,
-                  ]}
-                  onPress={() => setSlot('BATCH_6AM')}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.slotPillText,
-                      dyn.slotPillText,
-                      slot === 'BATCH_6AM' && styles.slotPillTextActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    🌅 6:00 ሰዓት (ጠዋት)
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.slotPill,
-                    dyn.slotPill,
                     slot === 'BATCH_12PM' && styles.slotPillActive,
                   ]}
                   onPress={() => setSlot('BATCH_12PM')}
@@ -2281,7 +2260,28 @@ export default function CheckoutScreen() {
                     ]}
                     numberOfLines={1}
                   >
-                    ☀️ 12:00 ሰዓት (ቀትር)
+                    🌅 6:00 ሰዓት (ቀትር)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.slotPill,
+                    dyn.slotPill,
+                    slot === 'BATCH_6AM' && styles.slotPillActive,
+                  ]}
+                  onPress={() => setSlot('BATCH_6AM')}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.slotPillText,
+                      dyn.slotPillText,
+                      slot === 'BATCH_6AM' && styles.slotPillTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    ☀️ 12:00 ሰዓት (ተዋት)
                   </Text>
                 </TouchableOpacity>
               </View>
