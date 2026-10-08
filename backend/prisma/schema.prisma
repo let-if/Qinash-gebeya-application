@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
- 
 }
 
 generator client {
@@ -71,28 +70,29 @@ enum MediaType {
 // ----------------------------------------------------
 
 model Order {
-  id              String        @id @default(uuid()) @map("order_id")
-  userId          String        @map("user_id")
-  totalAmount     Decimal       @map("total_amount") @db.Decimal(10, 2)
-  deliverySlot    DeliverySlot  @map("delivery_slot")
-  status          OrderStatus   @default(PENDING)
-  orderSource     OrderSource   @default(APP_DATA) @map("order_source")
-  voiceNoteUrl    String?       @map("voice_note_url")
+  id              String       @id @default(uuid()) @map("order_id")
+  userId          String       @map("user_id")
+  totalAmount     Decimal      @map("total_amount") @db.Decimal(10, 2)
+  deliverySlot    DeliverySlot @map("delivery_slot")
+  status          OrderStatus  @default(PENDING)
+  orderSource     OrderSource  @default(APP_DATA) @map("order_source")
+  voiceNoteUrl    String?      @map("voice_note_url")
 
   // --- Credit Workflow Additions ---
-  isCreditOrder   Boolean       @default(false) @map("is_credit_order")
-  creditApproved  Boolean?      @map("credit_approved")
-  isCreditSettled Boolean       @default(false) @map("is_credit_settled")
+  isCreditOrder   Boolean      @default(false) @map("is_credit_order")
+  creditApproved  Boolean?     @map("credit_approved")
+  isCreditSettled Boolean      @default(false) @map("is_credit_settled")
 
-  // --- Delivery GPS Location (For Google Maps Integration) ---
-  latitude        Decimal?      @map("latitude") @db.Decimal(10, 8)
-  longitude       Decimal?      @map("longitude") @db.Decimal(11, 8)
-  locationName    String?       @map("location_name") @db.VarChar(255)
+  // --- Delivery GPS Location (For Smart Route Optimization & Google Maps) ---
+  latitude        Decimal?     @map("latitude") @db.Decimal(10, 8)
+  longitude       Decimal?     @map("longitude") @db.Decimal(11, 8)
+  locationName    String?      @map("location_name") @db.VarChar(255)
+  routeSequence   Int?         @default(0) @map("route_sequence") // Added for Smart Route Sorting
 
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @default(now()) @updatedAt @map("updated_at")
 
-  user            User          @relation(fields: [userId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
   items           OrderItem[]
 
   @@index([userId])
@@ -100,42 +100,43 @@ model Order {
   @@index([deliverySlot, status])
   @@index([isCreditOrder, status])
   @@index([isCreditOrder, isCreditSettled])
+  @@index([deliverySlot, routeSequence]) // Added index for logistics sorting
   @@map("orders")
 }
 
 model Product {
-  id                  String        @id @default(uuid()) @map("product_id")
-  categoryId          String        @map("category_id")
-  nameAm              String        @map("name_am") @db.VarChar(150)
-  nameOm              String?       @map("name_om") @db.VarChar(150)
-  imageUrl            String        @map("image_url")
-  unitType            UnitType      @default(CARTON) @map("unit_type")
-  pricePerUnit        Decimal       @map("price_per_unit") @db.Decimal(10, 2)
+  id                  String       @id @default(uuid()) @map("product_id")
+  categoryId          String       @map("category_id")
+  nameAm              String       @map("name_am") @db.VarChar(150)
+  nameOm              String?      @map("name_om") @db.VarChar(150)
+  imageUrl            String       @map("image_url")
+  unitType            UnitType     @default(CARTON) @map("unit_type")
+  pricePerUnit        Decimal      @map("price_per_unit") @db.Decimal(10, 2)
 
-  // --- Multi-tier Breakdown Pricing (Carton / Half-Carton / Half-Dozen / Packet) ---
-  allowsHalfCarton    Boolean       @default(false) @map("allows_half_carton")
-  priceHalfCarton     Decimal?      @map("price_half_carton") @db.Decimal(10, 2)
-  allowsHalfDozen     Boolean       @default(false) @map("allows_half_dozen")
-  priceHalfDozen      Decimal?      @map("price_half_dozen") @db.Decimal(10, 2)
-  allowsPacket        Boolean       @default(false) @map("allows_packet")
-  pricePacket         Decimal?      @map("price_packet") @db.Decimal(10, 2)
+  // --- Multi-tier Breakdown Pricing ---
+  allowsHalfCarton    Boolean      @default(false) @map("allows_half_carton")
+  priceHalfCarton     Decimal?     @map("price_half_carton") @db.Decimal(10, 2)
+  allowsHalfDozen     Boolean      @default(false) @map("allows_half_dozen")
+  priceHalfDozen      Decimal?     @map("price_half_dozen") @db.Decimal(10, 2)
+  allowsPacket        Boolean      @default(false) @map("allows_packet")
+  pricePacket         Decimal?     @map("price_packet") @db.Decimal(10, 2)
 
-  minimumOrderQty     Int           @default(1) @map("minimum_order_qty")
-  isFastMoving        Boolean       @default(false) @map("is_fast_moving")
-  hasReturnGuarantee  Boolean       @default(true) @map("has_return_guarantee")
+  minimumOrderQty     Int          @default(1) @map("minimum_order_qty")
+  isFastMoving        Boolean      @default(false) @map("is_fast_moving")
+  hasReturnGuarantee  Boolean      @default(true) @map("has_return_guarantee")
 
   // --- Dual Inventory System & Compatibility ---
-  actualStock         Int           @default(50) @map("actual_stock") // Physical warehouse inventory (Admin only)
-  postedStock         Int           @default(50) @map("posted_stock") // Displayed quantity on the mobile app
-  currentStock        Int           @default(50) @map("current_stock") // Preserved for backwards compatibility
+  actualStock         Int          @default(50) @map("actual_stock")
+  postedStock         Int          @default(50) @map("posted_stock")
+  currentStock        Int          @default(50) @map("current_stock")
 
-  brand               String?       @default("ቀጥታ ከአምራች ፋብሪካ") @map("brand") @db.VarChar(100)
-  expiryDate          String?       @default("ታኅሣሥ 2027") @map("expiry_date") @db.VarChar(50)
-  isActive            Boolean       @default(true) @map("is_active")
-  createdAt           DateTime      @default(now()) @map("created_at")
-  updatedAt           DateTime      @default(now()) @updatedAt @map("updated_at")
+  brand               String?      @default("ቀጥታ ከአምራች ፋብሪካ") @map("brand") @db.VarChar(100)
+  expiryDate          String?      @default("ታኅሣሥ 2027") @map("expiry_date") @db.VarChar(50)
+  isActive            Boolean      @default(true) @map("is_active")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at")
 
-  category            Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category            Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems          OrderItem[]
 
   @@index([categoryId])
@@ -146,22 +147,19 @@ model Product {
 model User {
   id                 String         @id @default(uuid()) @map("user_id")
   phoneNumber        String         @unique @map("phone_number") @db.VarChar(15)
-  password           String?        // For Admin & Web Portal login (hashed with bcrypt)
+  password           String?        
   shopName           String         @map("shop_name") @db.VarChar(150)
   role               Role           @default(RETAILER)
   approvalStatus     ApprovalStatus @default(APPROVED) @map("approval_status")
   creditLimit        Decimal        @default(20000.00) @map("credit_limit") @db.Decimal(10, 2)
   usedCredit         Decimal        @default(0.00) @map("used_credit") @db.Decimal(10, 2)
   
-  // --- Admin Toggle for Retailer Credit Order Permission ---
   canOrderOnCredit   Boolean        @default(false) @map("can_order_on_credit")
-
   preferredLanguage  String         @default("am") @map("preferred_language") @db.VarChar(5)
   gpsLatitude        Decimal?       @map("gps_latitude") @db.Decimal(10, 8)
   gpsLongitude       Decimal?       @map("gps_longitude") @db.Decimal(11, 8)
   isActive           Boolean        @default(true) @map("is_active")
 
-  // --- Dynamic RBAC Permissions ---
   allowedTabs        String[]       @default(["orders", "products", "credit", "categories", "ads"]) @map("allowed_tabs")
 
   createdAt          DateTime       @default(now()) @map("created_at")
@@ -200,19 +198,14 @@ model Category {
   @@map("categories")
 }
 
-// ----------------------------------------------------
-// HOMEPAGE ADS & BANNERS (Supports up to 3 Images/Videos)
-// ----------------------------------------------------
-
 model Banner {
   id           String    @id @default(uuid()) @map("banner_id")
   title        String    @db.VarChar(150)
   mediaType    MediaType @default(IMAGE) @map("media_type")
-  mediaUrl     String    @map("media_url") // Primary media asset URL
+  mediaUrl     String    @map("media_url")
   
-  // Multi-item Carousel (up to 3 images or videos)
   mediaUrls    String[]  @default([]) @map("media_urls")
-  mediaTypes   String[]  @default([]) @map("media_types") // Stores ["IMAGE", "VIDEO", ...] matching mediaUrls
+  mediaTypes   String[]  @default([]) @map("media_types")
 
   thumbnailUrl String?   @map("thumbnail_url")
   actionLink   String?   @map("action_link")
@@ -225,21 +218,36 @@ model Banner {
 }
 
 // ----------------------------------------------------
-// POST-ORDER SKIPPABLE ADVERTISEMENT (3-Second Countdown Circle)
+// POST-ORDER SKIPPABLE ADVERTISEMENT (With Ad Seen Count)
 // ----------------------------------------------------
 
 model InterstitialAd {
-  id           String    @id @default(uuid()) @map("ad_id")
-  title        String?   @db.VarChar(150)
-  mediaType    MediaType @default(IMAGE) @map("media_type") // IMAGE or VIDEO
-  mediaUrl     String    @map("media_url")
-  actionLink   String?   @map("action_link")
-  durationSec  Int       @default(3) @map("duration_sec") // Countdown seconds
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id          String    @id @default(uuid()) @map("ad_id")
+  title       String?   @db.VarChar(150)
+  mediaType   MediaType @default(IMAGE) @map("media_type")
+  mediaUrl    String    @map("media_url")
+  actionLink  String?   @map("action_link")
+  durationSec Int       @default(3) @map("duration_sec")
+  viewCount   Int       @default(0) @map("view_count") // Added to track Ad Seen Count / Impressions
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("interstitial_ads")
+}
+
+// ----------------------------------------------------
+// SYSTEM BROADCAST NOTIFICATIONS (New Notification Panel)
+// ----------------------------------------------------
+
+model Notification {
+  id        String   @id @default(uuid()) @map("notification_id")
+  title     String?  @db.VarChar(150)
+  message   String   @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
 }
 
 model OrderItem {
@@ -256,7 +264,6 @@ model OrderItem {
   @@map("order_items")
 }
 
-// Micro-ERP / Credit Ledger for "የእኔ ሂሳብ"
 model LedgerEntry {
   id           String     @id @default(uuid())
   userId       String     @map("user_id")

@@ -15,7 +15,7 @@
 // }
 
 // // GET /api/catalog/ads (Active dynamic image & video banners including 3-slot media arrays)
-// router.get('/ads', async (_req, res: Response): Promise => {
+// router.get('/ads', async (_req, res: Response) => {
 //   try {
 //     const ads = await prisma.banner.findMany({
 //       where: { isActive: true },
@@ -40,7 +40,7 @@
 // });
 
 // // GET /api/catalog/post-order-ad (Active 3-second skippable ad for post-order popup)
-// router.get('/post-order-ad', async (_req, res: Response): Promise => {
+// router.get('/post-order-ad', async (_req, res: Response) => {
 //   try {
 //     const ad = await prisma.interstitialAd.findFirst({
 //       where: { isActive: true },
@@ -54,7 +54,7 @@
 // });
 
 // // GET /api/catalog/categories
-// router.get('/categories', async (_req, res: Response): Promise => {
+// router.get('/categories', async (_req, res: Response) => {
 //   try {
 //     const categories = await CatalogService.listCategories();
 //     return res.status(200).json({ categories });
@@ -64,7 +64,7 @@
 // });
 
 // // GET /api/catalog/products (Supports categoryId and fastMoving filters)
-// router.get('/products', async (req: Request, res: Response): Promise => {
+// router.get('/products', async (req: Request, res: Response) => {
 //   try {
 //     const categoryId = typeof req.query.categoryId === 'string' ? req.query.categoryId : undefined;
 //     const fastMoving = req.query.fastMoving === 'true';
@@ -82,7 +82,7 @@
 // });
 
 // // GET /api/catalog/products/:id (Single product detail)
-// router.get('/products/:id', async (req: Request, res: Response): Promise => {
+// router.get('/products/:id', async (req: Request, res: Response) => {
 //   try {
 //     const id = String(req.params.id);
 //     const rawProduct = await CatalogService.getProductById(id);
@@ -98,7 +98,7 @@
 // });
 
 // // PATCH /api/catalog/products/:id (Quick inventory & price updates from Admin Portal)
-// router.patch('/products/:id', async (req: Request, res: Response): Promise => {
+// router.patch('/products/:id', async (req: Request, res: Response) => {
 //   try {
 //     const id = String(req.params.id);
 //     const {
@@ -140,7 +140,7 @@
 // // ====================================================
 // // DELETE /api/catalog/categories/:id (Safe Cascade Deletion)
 // // ====================================================
-// router.delete('/categories/:id', async (req: Request, res: Response): Promise => {
+// router.delete('/categories/:id', async (req: Request, res: Response) => {
 //   try {
 //     const id = String(req.params.id);
 
@@ -208,7 +208,7 @@
 // // ====================================================
 // // DELETE /api/catalog/products/:id (Safe Soft/Hard Delete)
 // // ====================================================
-// router.delete('/products/:id', async (req: Request, res: Response): Promise => {
+// router.delete('/products/:id', async (req: Request, res: Response) => {
 //   try {
 //     const id = String(req.params.id);
 
@@ -284,13 +284,21 @@ router.get('/ads', async (_req, res: Response) => {
   }
 });
 
-// GET /api/catalog/post-order-ad (Active 3-second skippable ad for post-order popup)
+// GET /api/catalog/post-order-ad (Active 3-second skippable ad for post-order popup & increments impression count)
 router.get('/post-order-ad', async (_req, res: Response) => {
   try {
     const ad = await prisma.interstitialAd.findFirst({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    if (ad) {
+      // Safely increment ad impression / seen count
+      await prisma.interstitialAd.update({
+        where: { id: ad.id },
+        data: { viewCount: { increment: 1 } },
+      }).catch(() => {});
+    }
 
     return res.status(200).json({ ad: ad || null });
   } catch (err: any) {
@@ -404,7 +412,6 @@ router.delete('/categories/:id', async (req: Request, res: Response) => {
 
     const productIds = category.products.map((p) => p.id);
 
-    // Check if any product in this category has ever been ordered
     const orderItemsCount = await prisma.orderItem.count({
       where: {
         productId: { in: productIds },
@@ -412,7 +419,6 @@ router.delete('/categories/:id', async (req: Request, res: Response) => {
     });
 
     if (orderItemsCount > 0) {
-      // Soft-delete to preserve historical orders & invoices
       await prisma.$transaction([
         prisma.product.updateMany({
           where: { categoryId: id },
@@ -430,7 +436,6 @@ router.delete('/categories/:id', async (req: Request, res: Response) => {
       });
     }
 
-    // Never ordered: safe to wipe category and products
     await prisma.$transaction([
       prisma.product.deleteMany({
         where: { categoryId: id },
@@ -467,7 +472,6 @@ router.delete('/products/:id', async (req: Request, res: Response) => {
     });
 
     if (orderItemCount > 0) {
-      // Prevent foreign key constraint violation on order_items
       const updated = await prisma.product.update({
         where: { id },
         data: { isActive: false },
@@ -479,7 +483,6 @@ router.delete('/products/:id', async (req: Request, res: Response) => {
       });
     }
 
-    // If never ordered, safely delete completely
     await prisma.product.delete({ where: { id } });
     return res.status(200).json({ success: true, message: 'ምርቱ ሙሉ በሙሉ ተሰርዟል' });
   } catch (err: any) {

@@ -2,8 +2,8 @@
 // import React, { useCallback, useEffect, useRef, useState } from 'react';
 // import {
 //   ActivityIndicator,
-//   Alert,
 //   Image,
+//   Modal,
 //   Platform,
 //   RefreshControl,
 //   ScrollView,
@@ -71,6 +71,14 @@
 //   const [lastOrder, setLastOrder] = useState(null);
 //   const [reordering, setReordering] = useState(false);
 
+//   // Pure In-App Amharic Modal State (No "localhost says..." popups)
+//   const [clearModalVisible, setClearModalVisible] = useState(false);
+//   const [notificationModal, setNotificationModal] = useState({
+//     visible: false,
+//     title: '',
+//     message: '',
+//   });
+
 //   // Adaptive scale
 //   const isTiny = SCREEN_W < 330;
 //   const isSmall = SCREEN_W < 370;
@@ -96,7 +104,7 @@
 //       } else {
 //         setCart({});
 //       }
-//     } catch (e) {
+//     } catch {
 //       setCart({});
 //     }
 //   };
@@ -118,7 +126,7 @@
 //       } else {
 //         setLastOrder(null);
 //       }
-//     } catch (e) {
+//     } catch {
 //       setLastOrder(null);
 //     }
 //   }, [token]);
@@ -144,8 +152,8 @@
 //       if (prodRes?.products) {
 //         setProducts(prodRes.products);
 //       }
-//     } catch (err) {
-//       console.log('Catalog load error:', err);
+//     } catch {
+//       // Silent error handling
 //     } finally {
 //       if (!silent) {
 //         setLoading(false);
@@ -205,8 +213,8 @@
 //           type: 'text',
 //         },
 //       ]);
-//     } catch (err) {
-//       console.log('Ad load error:', err);
+//     } catch {
+//       // Silent error handling
 //     }
 //   }, [token]);
 
@@ -338,27 +346,20 @@
 //     });
 //   };
 
-//   const handleClearCart = async () => {
-//     const confirmMessage = 'በቅርጫቱ ውስጥ ያሉ እቃዎችን በሙሉ መሰረዝ ይፈልጋሉ?';
-//     if (Platform.OS === 'web') {
-//       if (window.confirm(confirmMessage)) {
-//         setCart({});
-//         await AsyncStorage.removeItem('user_cart').catch(() => {});
-//       }
-//       return;
-//     }
+//   // Triggers the custom in-app Amharic clear modal
+//   const handleTriggerClearCart = () => {
+//     setClearModalVisible(true);
+//   };
 
-//     Alert.alert('ቅርጫቱን አጽዳ', confirmMessage, [
-//       { text: 'ይቅር', style: 'cancel' },
-//       {
-//         text: 'አጽዳ',
-//         style: 'destructive',
-//         onPress: async () => {
-//           setCart({});
-//           await AsyncStorage.removeItem('user_cart').catch(() => {});
-//         },
-//       },
-//     ]);
+//   // Confirms and clears immediately
+//   const handleConfirmClearCart = async () => {
+//     setClearModalVisible(false);
+//     setCart({});
+//     await AsyncStorage.removeItem('user_cart').catch(() => {});
+//   };
+
+//   const handleCancelClearCart = () => {
+//     setClearModalVisible(false);
 //   };
 
 //   // 1. REPEAT LAST ORDER: Populates cart instead of instantly placing order
@@ -366,8 +367,11 @@
 //     if (!lastOrder || reordering) return;
 //     const rawItems = lastOrder.items || lastOrder.orderItems || [];
 //     if (rawItems.length === 0) {
-//       const msg = 'ያለፈው ትእዛዝ ምንም እቃዎች አልያዘም';
-//       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('ማስታወቂያ', msg);
+//       setNotificationModal({
+//         visible: true,
+//         title: 'ማስታወቂያ',
+//         message: 'ያለፈው ትእዛዝ ምንም እቃዎች አልያዘም',
+//       });
 //       return;
 //     }
 
@@ -379,7 +383,6 @@
 //         const pId = it.productId || it.product?.id;
 //         if (!pId) return;
 
-//         // Map backend unit to Amharic UI labels
 //         let unit = it.selectedUnit || 'ካርቶን';
 //         if (unit === 'HALF_CARTON') unit = 'ግማሽ ካርቶን';
 //         if (unit === 'HALF_DOZEN') unit = 'ግማሽ ደርዘን';
@@ -391,7 +394,6 @@
 //         const existingQty = newCart[key]?.quantity || 0;
 //         const addQty = Number(it.quantity) || 1;
 
-//         // Derive price from product or previous line item
 //         const matchingProduct = products.find((p) => p.id === pId);
 //         const resolvedPrice = matchingProduct
 //           ? computeUnitPrice(matchingProduct, unit)
@@ -409,16 +411,17 @@
 //       setCart(newCart);
 //       await AsyncStorage.setItem('user_cart', JSON.stringify(newCart));
 
-//       const successMsg = 'ያለፈው ትእዛዝ እቃዎች በቅርጫቱ ውስጥ ተሞልተዋል! ተጨማሪ እቃዎችን ማከል ወይም ማስተካከል ይችላሉ።';
-//       if (Platform.OS === 'web') {
-//         window.alert(successMsg);
-//       } else {
-//         Alert.alert('ተሳክቷል', successMsg);
-//       }
-//     } catch (err) {
-//       console.error('Reorder load error:', err);
-//       const msg = 'እቃዎችን መጫን አልተቻለም፤ እባክዎ እንደገና ይሞክሩ።';
-//       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('ስህተት', msg);
+//       setNotificationModal({
+//         visible: true,
+//         title: 'ተሳክቷል',
+//         message: 'ያለፈው ትእዛዝ እቃዎች በቅርጫቱ ውስጥ ተሞልተዋል! ተጨማሪ እቃዎችን ማከል ወይም ማስተካከል ይችላሉ።',
+//       });
+//     } catch {
+//       setNotificationModal({
+//         visible: true,
+//         title: 'ስህተት',
+//         message: 'እቃዎችን መጫን አልተቻለም፤ እባክዎ እንደገና ይሞክሩ።',
+//       });
 //     } finally {
 //       setReordering(false);
 //     }
@@ -432,7 +435,7 @@
 //         pathname: '/checkout',
 //         params: { isDraft: 'true' },
 //       });
-//     } catch (e) {
+//     } catch {
 //       router.push('/checkout');
 //     }
 //   };
@@ -850,11 +853,12 @@
 //             <View pointerEvents="none" style={styles.floatingShine} />
 
 //             <View style={styles.floatingCartLeft}>
+//               {/* Red Circular ✕ Button triggering in-app Amharic dialog */}
 //               <TouchableOpacity
 //                 style={styles.floatingCancelBtn}
-//                 onPress={handleClearCart}
+//                 onPress={handleTriggerClearCart}
 //                 activeOpacity={0.75}
-//                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+//                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
 //                 title="አጽዳ"
 //               >
 //                 <Text style={styles.floatingCancelText}>✕</Text>
@@ -893,6 +897,72 @@
 //           </View>
 //         </View>
 //       )}
+
+//       {/* ---------- PURE IN-APP AMHARIC CONFIRMATION MODAL ---------- */}
+//       <Modal
+//         visible={clearModalVisible}
+//         transparent={true}
+//         animationType="fade"
+//         onRequestClose={handleCancelClearCart}
+//       >
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalCard}>
+//             <View style={styles.modalIconBox}>
+//               <Text style={styles.modalIconEmoji}>🗑️</Text>
+//             </View>
+
+//             <Text style={styles.modalTitle}>ቅርጫቱን ማጽዳት</Text>
+//             <Text style={styles.modalMessage}>
+//               በቅርጫቱ ውስጥ ያሉ እቃዎችን በሙሉ መሰረዝ ይፈልጋሉ?
+//             </Text>
+
+//             <View style={styles.modalActionsRow}>
+//               <TouchableOpacity
+//                 style={styles.modalCancelBtn}
+//                 onPress={handleCancelClearCart}
+//                 activeOpacity={0.8}
+//               >
+//                 <Text style={styles.modalCancelBtnText}>ይቅር</Text>
+//               </TouchableOpacity>
+
+//               <TouchableOpacity
+//                 style={styles.modalConfirmBtn}
+//                 onPress={handleConfirmClearCart}
+//                 activeOpacity={0.85}
+//               >
+//                 <Text style={styles.modalConfirmBtnText}>አጽዳ</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+//         </View>
+//       </Modal>
+
+//       {/* ---------- PURE IN-APP AMHARIC NOTIFICATION MODAL ---------- */}
+//       <Modal
+//         visible={notificationModal.visible}
+//         transparent={true}
+//         animationType="fade"
+//         onRequestClose={() => setNotificationModal((prev) => ({ ...prev, visible: false }))}
+//       >
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalCard}>
+//             <View style={[styles.modalIconBox, { backgroundColor: '#E4F2EA', borderColor: '#CFE7D9' }]}>
+//               <Text style={styles.modalIconEmoji}>ℹ️</Text>
+//             </View>
+
+//             <Text style={styles.modalTitle}>{notificationModal.title}</Text>
+//             <Text style={styles.modalMessage}>{notificationModal.message}</Text>
+
+//             <TouchableOpacity
+//               style={[styles.modalConfirmBtn, { width: '100%', backgroundColor: GREEN }]}
+//               onPress={() => setNotificationModal((prev) => ({ ...prev, visible: false }))}
+//               activeOpacity={0.85}
+//             >
+//               <Text style={styles.modalConfirmBtnText}>እሺ</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       </Modal>
 //     </View>
 //   );
 // }
@@ -1740,6 +1810,96 @@
 //     fontSize: 12,
 //     fontWeight: '900',
 //   },
+
+//   /* PURE IN-APP AMHARIC MODALS */
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(11, 31, 20, 0.65)',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     paddingHorizontal: 20,
+//     zIndex: 99999,
+//   },
+//   modalCard: {
+//     width: '100%',
+//     maxWidth: 320,
+//     backgroundColor: '#FFFFFF',
+//     borderRadius: 22,
+//     padding: 22,
+//     alignItems: 'center',
+//     borderWidth: 1,
+//     borderColor: '#E6ECE7',
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 8 },
+//     shadowOpacity: 0.25,
+//     shadowRadius: 16,
+//     elevation: 15,
+//   },
+//   modalIconBox: {
+//     width: 54,
+//     height: 54,
+//     borderRadius: 27,
+//     backgroundColor: '#FEE2E2',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginBottom: 12,
+//     borderWidth: 1,
+//     borderColor: '#FCA5A5',
+//   },
+//   modalIconEmoji: {
+//     fontSize: 24,
+//   },
+//   modalTitle: {
+//     fontSize: 16,
+//     fontWeight: '900',
+//     color: INK,
+//     marginBottom: 6,
+//     textAlign: 'center',
+//   },
+//   modalMessage: {
+//     fontSize: 13,
+//     color: MUTED,
+//     fontWeight: '600',
+//     textAlign: 'center',
+//     lineHeight: 18,
+//     marginBottom: 20,
+//   },
+//   modalActionsRow: {
+//     flexDirection: 'row',
+//     gap: 10,
+//     width: '100%',
+//   },
+//   modalCancelBtn: {
+//     flex: 1,
+//     paddingVertical: 11,
+//     borderRadius: 12,
+//     backgroundColor: '#F1F5F2',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   modalCancelBtnText: {
+//     color: MUTED,
+//     fontSize: 13,
+//     fontWeight: '800',
+//   },
+//   modalConfirmBtn: {
+//     flex: 1,
+//     paddingVertical: 11,
+//     borderRadius: 12,
+//     backgroundColor: '#EF4444',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     shadowColor: '#EF4444',
+//     shadowOffset: { width: 0, height: 3 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 6,
+//     elevation: 3,
+//   },
+//   modalConfirmBtnText: {
+//     color: '#FFFFFF',
+//     fontSize: 13,
+//     fontWeight: '900',
+//   },
 // });
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -1758,9 +1918,9 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Video, ResizeMode } from 'expo-av';
 import { apiRequest } from '../../lib/api';
 import { useSession } from '../../context/SessionContext';
+import { useVideoPlayer, VideoView } from 'expo-video';
 
 const DEFAULT_CATEGORIES = [
   { id: 'cat_groc', name: 'ግሮሰሪ እና የባልትና ውጤቶች', icon: '🛒', slug: 'grocery' },
@@ -1805,10 +1965,49 @@ export default function ShopScreen() {
   // Consecutive Video / Media Playlist State
   const [adPlaylist, setAdPlaylist] = useState([]);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const videoPlayerRef = useRef(null);
   const webVideoRef = useRef(null);
   const imageTimerRef = useRef(null);
 
+  // Active media item for video source URL
+  const activeMedia = adPlaylist[currentAdIndex] || null;
+
+  // Modern Expo Video Player Hook
+  const videoPlayer = useVideoPlayer(
+    activeMedia?.type === 'video' ? activeMedia?.uri : null,
+    (player) => {
+      player.loop = false;
+      player.muted = true;
+      player.play();
+    }
+  );
+
+  // Handle video completion event in expo-video
+  useEffect(() => {
+    if (!videoPlayer) return;
+    const subscription = videoPlayer.addListener('playToEnd', () => {
+      advanceToNextMedia();
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [videoPlayer]);
+
+  // Update player source when index changes
+  // useEffect(() => {
+  //   if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
+  //     videoPlayer.replace(activeMedia.uri);
+  //     videoPlayer.play();
+  //   }
+  // }, [currentAdIndex, activeMedia, videoPlayer]);
+useEffect(() => {
+  if (videoPlayer && activeMedia?.type === 'video' && activeMedia?.uri) {
+    videoPlayer.replaceAsync(activeMedia.uri).then(() => { // <--- Asynchronous (clean & modern)
+      videoPlayer.play();
+    }).catch(() => {
+      videoPlayer.play();
+    });
+  }
+}, [currentAdIndex, activeMedia, videoPlayer]);
   // 1-Tap Repeat Last Order State
   const [lastOrder, setLastOrder] = useState(null);
   const [reordering, setReordering] = useState(false);
@@ -1984,12 +2183,6 @@ export default function ShopScreen() {
     };
   }, [currentAdIndex, adPlaylist, advanceToNextMedia]);
 
-  const handleVideoPlaybackStatus = (status) => {
-    if (status?.isLoaded && status?.didJustFinish) {
-      advanceToNextMedia();
-    }
-  };
-
   useEffect(() => {
     if (Platform.OS === 'web' && webVideoRef.current) {
       webVideoRef.current.currentTime = 0;
@@ -2088,12 +2281,10 @@ export default function ShopScreen() {
     });
   };
 
-  // Triggers the custom in-app Amharic clear modal
   const handleTriggerClearCart = () => {
     setClearModalVisible(true);
   };
 
-  // Confirms and clears immediately
   const handleConfirmClearCart = async () => {
     setClearModalVisible(false);
     setCart({});
@@ -2104,7 +2295,6 @@ export default function ShopScreen() {
     setClearModalVisible(false);
   };
 
-  // 1. REPEAT LAST ORDER: Populates cart instead of instantly placing order
   const handleExecuteReorder = async () => {
     if (!lastOrder || reordering) return;
     const rawItems = lastOrder.items || lastOrder.orderItems || [];
@@ -2169,7 +2359,6 @@ export default function ShopScreen() {
     }
   };
 
-  // 2. SAVE DRAFT ACTION: Stores current cart as draft and navigates
   const handleSaveToDraft = async () => {
     try {
       await AsyncStorage.setItem('user_draft_cart', JSON.stringify(cart));
@@ -2210,8 +2399,6 @@ export default function ShopScreen() {
     : filteredProducts;
 
   const clearSearch = () => setSearchQuery('');
-
-  const activeMedia = adPlaylist[currentAdIndex] || null;
 
   return (
     <View style={styles.screen}>
@@ -2339,19 +2526,16 @@ export default function ShopScreen() {
                       left: 0,
                     }}
                   />
-                ) : (
-                  <Video
+                ) : videoPlayer ? (
+                  <VideoView
                     key={`mobile_vid_${currentAdIndex}_${activeMedia.uri}`}
-                    ref={videoPlayerRef}
+                    player={videoPlayer}
                     style={styles.adMedia}
-                    source={{ uri: activeMedia.uri }}
-                    resizeMode={ResizeMode.COVER}
-                    shouldPlay={true}
-                    isLooping={false}
-                    isMuted={true}
-                    useNativeControls={false}
-                    onPlaybackStatusUpdate={handleVideoPlaybackStatus}
+                    nativeControls={false}
+                    contentFit="cover"
                   />
+                ) : (
+                  <View style={styles.adMedia} />
                 )
               )}
 
@@ -2595,7 +2779,6 @@ export default function ShopScreen() {
             <View pointerEvents="none" style={styles.floatingShine} />
 
             <View style={styles.floatingCartLeft}>
-              {/* Red Circular ✕ Button triggering in-app Amharic dialog */}
               <TouchableOpacity
                 style={styles.floatingCancelBtn}
                 onPress={handleTriggerClearCart}
@@ -2618,7 +2801,6 @@ export default function ShopScreen() {
               </View>
             </View>
 
-            {/* 2 ACTIONS: SEND TO DRAFT & SEND ORDER */}
             <View style={styles.floatingActionsGroup}>
               <TouchableOpacity
                 style={styles.floatingDraftBtn}
@@ -2807,8 +2989,6 @@ const styles = StyleSheet.create({
     paddingTop: 13,
     paddingBottom: 205,
   },
-
-  /* Search */
   searchGlow: {
     backgroundColor: '#FFFFFF',
     shadowColor: '#0F7B4A',
@@ -2867,8 +3047,6 @@ const styles = StyleSheet.create({
     color: MUTED,
     fontWeight: '900',
   },
-
-  /* SLIM 1-Tap Reorder Banner */
   reorderBannerSlim: {
     backgroundColor: '#0F7B4A',
     borderRadius: 12,
@@ -2937,8 +3115,6 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontWeight: '900',
   },
-
-  /* Ad Banner & Sequential Media */
   adGlow: {
     marginBottom: 15,
     borderRadius: 21,
@@ -3081,8 +3257,6 @@ const styles = StyleSheet.create({
     width: 12,
     backgroundColor: '#FFFFFF',
   },
-
-  /* Categories */
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -3138,8 +3312,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '800',
   },
-
-  /* Section Header */
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -3182,8 +3354,6 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     alignItems: 'center',
   },
-
-  /* Empty Search */
   noResultCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
@@ -3245,8 +3415,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-
-  /* Product Cards */
   productStack: {
     flexDirection: 'column',
     gap: 10,
@@ -3417,8 +3585,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-
-  /* Floating Cart Bar */
   floatingCartContainer: {
     position: 'absolute',
     left: 12,
@@ -3552,8 +3718,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
   },
-
-  /* PURE IN-APP AMHARIC MODALS */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(11, 31, 20, 0.65)',

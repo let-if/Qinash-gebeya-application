@@ -15,7 +15,9 @@
           "locationWhenInUsePermission": "Shop GPS is used once to pin delivery location."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      "expo-video"
     ],
     "ios": {
       "supportsTablet": true
