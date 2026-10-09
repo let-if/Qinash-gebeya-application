@@ -52,6 +52,7 @@
 
 //   const [cart, setCart] = useState({});
 //   const [drafts, setDrafts] = useState({});
+//   const [selectedDraftKeys, setSelectedDraftKeys] = useState({});
 //   const [draftExpanded, setDraftExpanded] = useState(false);
 //   const [canOrderOnCredit, setCanOrderOnCredit] = useState(false);
 
@@ -77,7 +78,6 @@
 
 //   const loadUserData = async () => {
 //     try {
-//       // 1. Fetch live user state from the server
 //       if (token) {
 //         const res = await apiRequest('/auth/me', { token }).catch(() => null);
 //         const userData = res?.user || res?.data;
@@ -89,7 +89,6 @@
 //         }
 //       }
 
-//       // 2. Check local fallback storage
 //       const cachedEligible = await AsyncStorage.getItem('user_credit_eligible').catch(() => null);
 //       if (cachedEligible !== null) {
 //         setCanOrderOnCredit(cachedEligible === '1');
@@ -119,8 +118,15 @@
 //       setCart(parsedCart);
 //       setDrafts(parsedDrafts);
 
-//       // Default draft view to collapsed unless opened via draft action
-//       if (params?.isDraft === 'true' && Object.keys(parsedDrafts).length > 0) {
+//       // Initialize all draft items as unselected by default so user intentionally selects what to send
+//       const initialSelected = {};
+//       Object.keys(parsedDrafts).forEach((k) => {
+//         initialSelected[k] = false;
+//       });
+//       setSelectedDraftKeys(initialSelected);
+
+//       // Open draft accordion automatically if arriving from "ረቂቅ" action
+//       if (params?.isDraft === 'true' || Object.keys(parsedCart).length === 0) {
 //         setDraftExpanded(true);
 //       }
 //     } catch {
@@ -164,30 +170,109 @@
 //     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
 //   };
 
-//   // Move all draft items into the active cart and clear draft storage
-//   const handleApplyDraftToCart = async () => {
-//     if (Object.keys(drafts).length === 0) return;
+//   // Check / Uncheck draft row
+//   const toggleDraftItemSelection = (key) => {
+//     setSelectedDraftKeys((prev) => ({
+//       ...prev,
+//       [key]: !prev[key],
+//     }));
+//   };
 
-//     const mergedCart = { ...cart, ...drafts };
+//   // Select all or deselect all drafts
+//   const handleToggleAllDrafts = () => {
+//     const allSelected = Object.keys(drafts).every((k) => selectedDraftKeys[k]);
+//     const nextState = {};
+//     Object.keys(drafts).forEach((k) => {
+//       nextState[k] = !allSelected;
+//     });
+//     setSelectedDraftKeys(nextState);
+//   };
+
+//   // Move ONLY selected draft items into active order list (Unselected items stay in Draft)
+//   const handleMoveSelectedToActiveOrder = async () => {
+//     const keysToMove = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
+
+//     if (keysToMove.length === 0) {
+//       setAlertConfig({
+//         visible: true,
+//         title: 'እቃ አልተመረጠም',
+//         message: 'እባክዎ ወደ ትእዛዝ ዝርዝር የሚዛወሩትን እቃዎች በሳጥኑ (checkbox) ላይ ይምረጡ',
+//         type: 'error',
+//       });
+//       return;
+//     }
+
+//     const mergedCart = { ...cart };
+//     const remainingDrafts = { ...drafts };
+
+//     keysToMove.forEach((k) => {
+//       const draftItem = drafts[k];
+//       if (mergedCart[k]) {
+//         mergedCart[k] = {
+//           ...mergedCart[k],
+//           quantity: (mergedCart[k].quantity || 0) + (draftItem.quantity || 1),
+//         };
+//       } else {
+//         mergedCart[k] = { ...draftItem };
+//       }
+//       delete remainingDrafts[k];
+//     });
+
 //     setCart(mergedCart);
-//     setDrafts({});
+//     setDrafts(remainingDrafts);
 
 //     await AsyncStorage.setItem('user_cart', JSON.stringify(mergedCart));
-//     await AsyncStorage.removeItem('user_draft_cart');
+//     await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
 
-//     setDraftExpanded(false);
+//     // Clear selections for remaining items
+//     const nextSelected = {};
+//     Object.keys(remainingDrafts).forEach((k) => {
+//       nextSelected[k] = false;
+//     });
+//     setSelectedDraftKeys(nextSelected);
+
 //     setAlertConfig({
 //       visible: true,
-//       title: 'ረቂቅ ተጭኗል',
-//       message: 'የተቀመጡት የረቂቅ እቃዎች ወደ ትእዛዝ መላኪያ ዝርዝር ገብተዋል',
+//       title: 'እቃዎች ተዛውረዋል',
+//       message: `የተመረጡት ${keysToMove.length} እቃዎች ወደ ትእዛዝ ዝርዝር ገብተዋል። ያልተመረጡት በረቂቅ ውስጥ ቀርተዋል።`,
 //       type: 'success',
 //     });
 //   };
 
-//   const handleDiscardDraft = async () => {
-//     setDrafts({});
-//     await AsyncStorage.removeItem('user_draft_cart');
-//     setDraftExpanded(false);
+//   // Permanently delete ONLY selected draft items
+//   const handleDeleteSelectedDrafts = async () => {
+//     const keysToDelete = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
+
+//     if (keysToDelete.length === 0) {
+//       setAlertConfig({
+//         visible: true,
+//         title: 'እቃ አልተመረጠም',
+//         message: 'እባክዎ የሚሰረዙትን የረቂቅ እቃዎች ይምረጡ',
+//         type: 'error',
+//       });
+//       return;
+//     }
+
+//     const remainingDrafts = { ...drafts };
+//     keysToDelete.forEach((k) => {
+//       delete remainingDrafts[k];
+//     });
+
+//     setDrafts(remainingDrafts);
+//     await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
+
+//     const nextSelected = {};
+//     Object.keys(remainingDrafts).forEach((k) => {
+//       nextSelected[k] = false;
+//     });
+//     setSelectedDraftKeys(nextSelected);
+
+//     setAlertConfig({
+//       visible: true,
+//       title: 'ተሰርዟል',
+//       message: `${keysToDelete.length} እቃዎች ከረቂቅ ተሰርዘዋል`,
+//       type: 'success',
+//     });
 //   };
 
 //   const handleSafeBack = () => {
@@ -212,6 +297,8 @@
 //       sum + (Number(item.price) || 0) * (Number(item.quantity) || 0),
 //     0
 //   );
+
+//   const selectedDraftCount = Object.keys(drafts).filter((k) => selectedDraftKeys[k]).length;
 
 //   const generateSmsOrderText = (loc) => {
 //     if (cartEntries.length === 0) return '';
@@ -322,7 +409,7 @@
 //       setAlertConfig({
 //         visible: true,
 //         title: 'ቅርጫት ባዶ ነው',
-//         message: 'እባክዎ መጀመሪያ እቃ ይምረጡ',
+//         message: 'እባክዎ መጀመሪያ እቃ ይምረጡ ወይም ከረቂቅ ወደ ትእዛዝ ያዛውሩ',
 //         type: 'error',
 //       });
 //       return;
@@ -370,6 +457,7 @@
 //           ? 'ጠዋት 6:00 ሰዓት'
 //           : 'ቀትር 12:00 ሰዓት';
 
+//       // Clear only the submitted cart. Unselected drafts stay untouched!
 //       await AsyncStorage.removeItem('user_cart');
 //       setCart({});
 
@@ -441,8 +529,8 @@
 //                     <Text style={styles.draftIconEmoji}>📁</Text>
 //                   </View>
 //                   <View>
-//                     <Text style={styles.draftHeadText}>የተቀመጠ ረቂቅ ({draftEntries.length} እቃዎች)</Text>
-//                     <Text style={styles.draftSubText}>ድምር: {draftTotalPrice.toLocaleString()} ብር</Text>
+//                     <Text style={styles.draftHeadText}>የተቀመጡ ረቂቆች ({draftEntries.length} እቃዎች)</Text>
+//                     <Text style={styles.draftSubText}>ጠቅላላ ዋጋ: {draftTotalPrice.toLocaleString()} ብር</Text>
 //                   </View>
 //                 </View>
 
@@ -454,30 +542,59 @@
 //               {draftExpanded && (
 //                 <View style={styles.draftExpandedBody}>
 //                   <View style={styles.draftItemsDivider} />
-//                   {draftEntries.map(([dKey, dItem]) => (
-//                     <View key={dKey} style={styles.draftRowSingle}>
-//                       <Text style={styles.draftItemName} numberOfLines={1}>• {dItem.name}</Text>
-//                       <Text style={styles.draftItemSpec}>
-//                         {dItem.quantity} {dItem.unit} · {(Number(dItem.price) * Number(dItem.quantity)).toLocaleString()} ብር
+
+//                   <View style={styles.draftSelectAllRow}>
+//                     <TouchableOpacity onPress={handleToggleAllDrafts} style={styles.selectAllBtn}>
+//                       <Text style={styles.selectAllBtnText}>
+//                         {selectedDraftCount === draftEntries.length ? 'ምርጫ ሰርዝ ✕' : 'ሁሉንም ምረጥ ✓'}
 //                       </Text>
-//                     </View>
-//                   ))}
+//                     </TouchableOpacity>
+//                     <Text style={styles.draftCountSelectedText}>የተመረጡ: {selectedDraftCount}/{draftEntries.length}</Text>
+//                   </View>
+
+//                   {draftEntries.map(([dKey, dItem]) => {
+//                     const isSelected = Boolean(selectedDraftKeys[dKey]);
+
+//                     return (
+//                       <TouchableOpacity
+//                         key={dKey}
+//                         style={[styles.draftRowSingle, isSelected && styles.draftRowSelected]}
+//                         activeOpacity={0.8}
+//                         onPress={() => toggleDraftItemSelection(dKey)}
+//                       >
+//                         <View style={[styles.draftCheckbox, isSelected && styles.draftCheckboxActive]}>
+//                           {isSelected && <Text style={styles.draftCheckmark}>✓</Text>}
+//                         </View>
+
+//                         <View style={styles.draftItemDetails}>
+//                           <Text style={styles.draftItemName} numberOfLines={1}>{dItem.name}</Text>
+//                           <Text style={styles.draftItemSpec}>
+//                             {dItem.quantity} {dItem.unit} · {(Number(dItem.price) * Number(dItem.quantity)).toLocaleString()} ብር
+//                           </Text>
+//                         </View>
+//                       </TouchableOpacity>
+//                     );
+//                   })}
 
 //                   <View style={styles.draftControlButtons}>
 //                     <TouchableOpacity
-//                       style={styles.draftDiscardBtn}
-//                       onPress={handleDiscardDraft}
+//                       style={[styles.draftDiscardBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
+//                       onPress={handleDeleteSelectedDrafts}
 //                       activeOpacity={0.75}
+//                       disabled={selectedDraftCount === 0}
 //                     >
-//                       <Text style={styles.draftDiscardBtnText}>ሰርዝ</Text>
+//                       <Text style={styles.draftDiscardBtnText}>የተመረጡትን ሰርዝ 🗑️</Text>
 //                     </TouchableOpacity>
 
 //                     <TouchableOpacity
-//                       style={styles.draftApplyBtn}
-//                       onPress={handleApplyDraftToCart}
+//                       style={[styles.draftApplyBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
+//                       onPress={handleMoveSelectedToActiveOrder}
 //                       activeOpacity={0.8}
+//                       disabled={selectedDraftCount === 0}
 //                     >
-//                       <Text style={styles.draftApplyBtnText}>ወደ ዝርዝር ጫን ›</Text>
+//                       <Text style={styles.draftApplyBtnText}>
+//                         ወደ ትእዛዝ ላክ ({selectedDraftCount}) ›
+//                       </Text>
 //                     </TouchableOpacity>
 //                   </View>
 //                 </View>
@@ -492,7 +609,9 @@
 //               </View>
 
 //               <Text style={[styles.emptyTitle, dyn.emptyTitle]}>
-//                 ቅርጫትዎ ውስጥ ምንም እቃ የለም
+//                 {draftEntries.length > 0
+//                   ? 'እቃዎች በረቂቅ ውስጥ ተቀምጠዋል። ወደ ትእዛዝ ለማዛወር ከላይ ያለውን ረቂቅ ይክፈቱ።'
+//                   : 'ቅርጫትዎ ውስጥ ምንም እቃ የለም'}
 //               </Text>
 
 //               <TouchableOpacity
@@ -597,27 +716,6 @@
 //                   style={[
 //                     styles.slotPill,
 //                     dyn.slotPill,
-//                     slot === 'BATCH_6AM' && styles.slotPillActive,
-//                   ]}
-//                   onPress={() => setSlot('BATCH_6AM')}
-//                   activeOpacity={0.8}
-//                 >
-//                   <Text
-//                     style={[
-//                       styles.slotPillText,
-//                       dyn.slotPillText,
-//                       slot === 'BATCH_6AM' && styles.slotPillTextActive,
-//                     ]}
-//                     numberOfLines={1}
-//                   >
-//                     🌅 6:00 ሰዓት (ጠዋት)
-//                   </Text>
-//                 </TouchableOpacity>
-
-//                 <TouchableOpacity
-//                   style={[
-//                     styles.slotPill,
-//                     dyn.slotPill,
 //                     slot === 'BATCH_12PM' && styles.slotPillActive,
 //                   ]}
 //                   onPress={() => setSlot('BATCH_12PM')}
@@ -631,7 +729,28 @@
 //                     ]}
 //                     numberOfLines={1}
 //                   >
-//                     ☀️ 12:00 ሰዓት (ቀትር)
+//                     🌅 6:00 ሰዓት (ቀትር)
+//                   </Text>
+//                 </TouchableOpacity>
+
+//                 <TouchableOpacity
+//                   style={[
+//                     styles.slotPill,
+//                     dyn.slotPill,
+//                     slot === 'BATCH_6AM' && styles.slotPillActive,
+//                   ]}
+//                   onPress={() => setSlot('BATCH_6AM')}
+//                   activeOpacity={0.8}
+//                 >
+//                   <Text
+//                     style={[
+//                       styles.slotPillText,
+//                       dyn.slotPillText,
+//                       slot === 'BATCH_6AM' && styles.slotPillTextActive,
+//                     ]}
+//                     numberOfLines={1}
+//                   >
+//                     ☀️ 12:00 ሰዓት (ተዋት)
 //                   </Text>
 //                 </TouchableOpacity>
 //               </View>
@@ -732,7 +851,7 @@
 //         )}
 //       </View>
 
-//       {/* OFFLINE MODAL */}
+//       {/* OFFLINE PROMPT MODAL */}
 //       {offlinePromptVisible && (
 //         <View style={styles.modalOverlay}>
 //           <View style={styles.offlineModalCard}>
@@ -979,6 +1098,8 @@
 //   scrollTailSpacer: {
 //     height: 12,
 //   },
+
+//   /* Draft Stored Master Card */
 //   draftCardMaster: {
 //     backgroundColor: '#FFFBEB',
 //     borderRadius: 16,
@@ -1044,15 +1165,75 @@
 //     backgroundColor: '#FDE68A',
 //     marginBottom: 8,
 //   },
-//   draftRowSingle: {
+//   draftSelectAllRow: {
 //     flexDirection: 'row',
 //     justifyContent: 'space-between',
 //     alignItems: 'center',
+//     marginBottom: 8,
+//   },
+//   selectAllBtn: {
+//     paddingVertical: 3,
+//     paddingHorizontal: 8,
+//     backgroundColor: '#FEF3C7',
+//     borderRadius: 6,
+//     borderWidth: 1,
+//     borderColor: '#FDE68A',
+//   },
+//   selectAllBtnText: {
+//     fontSize: 10.5,
+//     fontWeight: '800',
+//     color: '#92400E',
+//   },
+//   draftCountSelectedText: {
+//     fontSize: 10.5,
+//     fontWeight: '800',
+//     color: '#B45309',
+//   },
+//   draftRowSingle: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     paddingVertical: 6,
+//     paddingHorizontal: 8,
+//     borderRadius: 10,
 //     marginBottom: 4,
+//     backgroundColor: 'rgba(255, 255, 255, 0.6)',
+//     borderWidth: 1,
+//     borderColor: 'transparent',
+//   },
+//   draftRowSelected: {
+//     backgroundColor: '#FFFFFF',
+//     borderColor: '#F59E0B',
+//   },
+//   draftCheckbox: {
+//     width: 20,
+//     height: 20,
+//     borderRadius: 5,
+//     borderWidth: 1.8,
+//     borderColor: '#D97706',
+//     backgroundColor: '#FFFFFF',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginRight: 9,
+//   },
+//   draftCheckboxActive: {
+//     backgroundColor: '#D97706',
+//     borderColor: '#D97706',
+//   },
+//   draftCheckmark: {
+//     color: '#FFFFFF',
+//     fontSize: 12,
+//     fontWeight: '900',
+//     lineHeight: 14,
+//   },
+//   draftItemDetails: {
+//     flex: 1,
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
 //   },
 //   draftItemName: {
 //     fontSize: 11.5,
-//     fontWeight: '700',
+//     fontWeight: '800',
 //     color: '#78350F',
 //     flex: 1,
 //   },
@@ -1095,6 +1276,7 @@
 //     fontSize: 11.5,
 //     fontWeight: '900',
 //   },
+
 //   emptyContainer: {
 //     flex: 1,
 //     justifyContent: 'center',
@@ -1551,7 +1733,7 @@ import { apiRequest } from '../lib/api';
 import { useSession } from '../context/SessionContext';
 import CustomAlert from '../components/CustomAlert';
 
-const ADMIN_DESTINATION_PHONE = '+251911000000';
+const ADMIN_DESTINATION_PHONE = '0968821059';
 
 const UNIT_MAP = {
   'ካርቶን': 'CARTON',
@@ -1649,14 +1831,12 @@ export default function CheckoutScreen() {
       setCart(parsedCart);
       setDrafts(parsedDrafts);
 
-      // Initialize all draft items as unselected by default so user intentionally selects what to send
       const initialSelected = {};
       Object.keys(parsedDrafts).forEach((k) => {
         initialSelected[k] = false;
       });
       setSelectedDraftKeys(initialSelected);
 
-      // Open draft accordion automatically if arriving from "ረቂቅ" action
       if (params?.isDraft === 'true' || Object.keys(parsedCart).length === 0) {
         setDraftExpanded(true);
       }
@@ -1701,7 +1881,6 @@ export default function CheckoutScreen() {
     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
   };
 
-  // Check / Uncheck draft row
   const toggleDraftItemSelection = (key) => {
     setSelectedDraftKeys((prev) => ({
       ...prev,
@@ -1709,7 +1888,6 @@ export default function CheckoutScreen() {
     }));
   };
 
-  // Select all or deselect all drafts
   const handleToggleAllDrafts = () => {
     const allSelected = Object.keys(drafts).every((k) => selectedDraftKeys[k]);
     const nextState = {};
@@ -1719,7 +1897,6 @@ export default function CheckoutScreen() {
     setSelectedDraftKeys(nextState);
   };
 
-  // Move ONLY selected draft items into active order list (Unselected items stay in Draft)
   const handleMoveSelectedToActiveOrder = async () => {
     const keysToMove = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
 
@@ -1755,7 +1932,6 @@ export default function CheckoutScreen() {
     await AsyncStorage.setItem('user_cart', JSON.stringify(mergedCart));
     await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
 
-    // Clear selections for remaining items
     const nextSelected = {};
     Object.keys(remainingDrafts).forEach((k) => {
       nextSelected[k] = false;
@@ -1770,7 +1946,6 @@ export default function CheckoutScreen() {
     });
   };
 
-  // Permanently delete ONLY selected draft items
   const handleDeleteSelectedDrafts = async () => {
     const keysToDelete = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
 
@@ -1831,17 +2006,23 @@ export default function CheckoutScreen() {
 
   const selectedDraftCount = Object.keys(drafts).filter((k) => selectedDraftKeys[k]).length;
 
+  // Perfect Amharic descriptive SMS payload format
   const generateSmsOrderText = (loc) => {
     if (cartEntries.length === 0) return '';
-    const itemChunks = cartEntries.map(([_, it]) => {
-      const pId = it.productId || 'PROD';
+    
+    const itemsListAmharic = cartEntries.map(([_, it], index) => {
+      const name = it.name || 'እቃ';
       const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
-      const u = UNIT_MAP[it.unit] || 'CARTON';
-      return `${pId}:${qty}:${u}`;
-    });
-    const creditFlag = isCredit && canOrderOnCredit ? '1' : '0';
-    const locPart = loc?.latitude ? `#LOC:${loc.latitude},${loc.longitude}` : '';
-    return `ORD#${itemChunks.join('|')}#${slot}#${creditFlag}${locPart}`;
+      const unit = it.unit || 'ካርቶን';
+      const subTotal = ((Number(it.price) || 0) * qty).toLocaleString();
+      return `${index + 1}. ${name} - ብዛት: ${qty} ${unit} (ዋጋ: ${subTotal} ብር)`;
+    }).join('\n');
+
+    const slotTimeText = slot === 'BATCH_6AM' ? 'ጠዋት 6:00 ሰዓት' : 'ቀትር 12:00 ሰዓት';
+    const creditStatusText = isCredit && canOrderOnCredit ? 'በብድር (Credit Order)' : 'ጥሬ ገንዘብ (Cash)';
+    const locPart = loc?.latitude ? `\nመገኛ (GPS): ${loc.latitude},${loc.longitude}` : '';
+
+    return `ሰላም! አዲስ የትእዛዝ ጥያቄ ከቅናሽ ገበያ መተግበሪያ:\n\nየተመረጡ እቃዎች:\n${itemsListAmharic}\n\nጠቅላላ ድምር: ${totalPrice.toLocaleString()} ብር\nየመላኪያ ሰዓት: ${slotTimeText}\nየክፍያ ሁኔታ: ${creditStatusText}${locPart}`;
   };
 
   const acquireAccurateGps = async () => {
@@ -1988,7 +2169,6 @@ export default function CheckoutScreen() {
           ? 'ጠዋት 6:00 ሰዓት'
           : 'ቀትር 12:00 ሰዓት';
 
-      // Clear only the submitted cart. Unselected drafts stay untouched!
       await AsyncStorage.removeItem('user_cart');
       setCart({});
 
@@ -2047,7 +2227,6 @@ export default function CheckoutScreen() {
 
           <Text style={[styles.pageTitle, dyn.pageTitle]}>ትእዛዙን ላክ</Text>
 
-          {/* DRAFT ACCORDION PANEL */}
           {draftEntries.length > 0 && (
             <View style={styles.draftCardMaster}>
               <TouchableOpacity
@@ -2286,7 +2465,6 @@ export default function CheckoutScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* RETAILER CREDIT CHECKBOX */}
               {canOrderOnCredit && (
                 <>
                   <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
@@ -2382,7 +2560,6 @@ export default function CheckoutScreen() {
         )}
       </View>
 
-      {/* OFFLINE PROMPT MODAL */}
       {offlinePromptVisible && (
         <View style={styles.modalOverlay}>
           <View style={styles.offlineModalCard}>
@@ -2629,8 +2806,6 @@ const styles = StyleSheet.create({
   scrollTailSpacer: {
     height: 12,
   },
-
-  /* Draft Stored Master Card */
   draftCardMaster: {
     backgroundColor: '#FFFBEB',
     borderRadius: 16,
@@ -2807,7 +2982,6 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontWeight: '900',
   },
-
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
