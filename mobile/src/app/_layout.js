@@ -3,7 +3,14 @@ import React from 'react';
 import { Stack, ErrorBoundaryProps } from 'expo-router';
 import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
 import { SessionProvider } from '../context/SessionContext';
-
+import * as Notifications from 'expo-notifications';
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 export function ErrorBoundary({ error }) {
   return (
     <View style={styles.errorContainer}>
@@ -16,27 +23,7 @@ export function ErrorBoundary({ error }) {
   );
 }
 
-// export default function RootLayout() {
-//   const isWeb = Platform.OS === 'web';
 
-//   if (isWeb) {
-//     return (
-//       <SessionProvider>
-//         <View style={styles.webContainer}>
-//           <View style={styles.phoneFrame}>
-//             <Stack />
-//           </View>
-//         </View>
-//       </SessionProvider>
-//     );
-//   }
-
-//   return (
-//     <SessionProvider>
-//       <Stack />
-//     </SessionProvider>
-//   );
-// }
 export default function RootLayout() {
   const isWeb = Platform.OS === 'web';
 

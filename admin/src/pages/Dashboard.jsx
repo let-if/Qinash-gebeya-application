@@ -1650,109 +1650,7 @@ React.createElement(
                 )
               )
             ),
-            // React.createElement(
-            //   'div',
-            //   { className: 'grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6' },
-            //   React.createElement(
-            //     'form',
-            //     { onSubmit: submitBanner, className: panelBase + ' p-4 sm:p-6 space-y-4' },
-            //     React.createElement('h2', { className: 'text-sm sm:text-base font-black text-[#12241A] tracking-tight' }, 'መነሻ ገጽ ማስታወቂያ (3-Slot Carousel Studio)'),
-            //     React.createElement('input', {
-            //       type: 'text',
-            //       placeholder: 'የማስታወቂያ ርዕስ (Title)',
-            //       value: adForm.title,
-            //       required: true,
-            //       onChange: (e) => setAdForm({ ...adForm, title: e.target.value }),
-            //       className: inputBase
-            //     }),
-
-            //     React.createElement(
-            //       'div',
-            //       { className: 'space-y-2.5' },
-            //       React.createElement('p', { className: 'text-[11px] font-black text-[#62726A]' }, 'እስከ 3 የሚደርሱ ምስሎች ወይም 15 ሰከንድ ቪዲዮዎች ይስቀሉ:'),
-            //       [0, 1, 2].map((slotIdx) => {
-            //         const slot = adForm.mediaSlots[slotIdx];
-            //         const slotKey = 'slot' + slotIdx;
-            //         const isUploading = uploadingSlot === slotKey;
-
-            //         return React.createElement(
-            //           'div',
-            //           { key: slotIdx, className: 'p-3 border rounded-xl bg-[#FAFCFA] border-[#DDE4DD] flex items-center justify-between gap-3 hover:border-[#BFDCCB] transition-colors duration-200' },
-            //           React.createElement(
-            //             'div',
-            //             { className: 'flex items-center gap-2.5 overflow-hidden flex-1 min-w-0' },
-            //             slot.url ? (
-            //               slot.type === 'VIDEO'
-            //                 ? React.createElement('div', { className: 'w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center text-xs font-bold shrink-0' }, '▶')
-            //                 : React.createElement('img', { src: slot.url, className: 'w-10 h-10 object-cover rounded-lg border shrink-0', alt: '' })
-            //             ) : React.createElement(
-            //               'div',
-            //               { className: 'w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 font-bold text-xs shrink-0' },
-            //               slotIdx + 1
-            //             ),
-            //             React.createElement(
-            //               'div',
-            //               { className: 'overflow-hidden flex-1 min-w-0' },
-            //               React.createElement('p', { className: 'text-xs font-bold text-[#12241A]' }, 'ማስታወቂያ ክፍል ' + (slotIdx + 1)),
-            //               React.createElement('p', { className: 'text-[10px] text-[#62726A] truncate' }, slot.url || 'ፋይል አልተመረጠም')
-            //             )
-            //           ),
-            //           React.createElement(
-            //             'div',
-            //             { className: 'shrink-0' },
-            //             React.createElement('input', {
-            //               type: 'file',
-            //               accept: 'image/*,video/mp4',
-            //               id: 'mediaInput' + slotIdx,
-            //               className: 'hidden',
-            //               onChange: (e) => handleFileUpload(e.target.files[0], slotKey, (url, type) => {
-            //                 const updated = [...adForm.mediaSlots];
-            //                 updated[slotIdx] = { url, type };
-            //                 setAdForm({ ...adForm, mediaSlots: updated });
-            //               })
-            //             }),
-            //             React.createElement(
-            //               'label',
-            //               {
-            //                 htmlFor: 'mediaInput' + slotIdx,
-            //                 className: 'px-3.5 py-2 sm:px-3 sm:py-1.5 bg-[#E4F2EA] text-[#0F7B4A] hover:bg-[#d5ebde] rounded-lg text-xs font-black cursor-pointer inline-flex items-center gap-1 active:scale-95 transition-all duration-200'
-            //               },
-            //               React.createElement(Upload, { className: 'h-3.5 w-3.5' }),
-            //               React.createElement('span', null, isUploading ? '...' : slot.url ? 'ቀይር' : 'ስቀል')
-            //             )
-            //           )
-            //         );
-            //       })
-            //     ),
-
-            //     React.createElement('button', { type: 'submit', className: 'w-full py-3 sm:py-2.5 ' + primaryBtn }, 'ማስታወቂያውን በሞባይል ላይ ልቀቅ')
-            //   ),
-
-            //   React.createElement(
-            //     'div',
-            //     { className: panelBase + ' p-4 sm:p-6 space-y-3' },
-            //     React.createElement('h3', { className: 'text-sm font-black text-[#12241A] tracking-tight' }, 'በአሁኑ ሰዓት የሚሰሩ ማስታወቂያዎች (' + banners.length + ')'),
-            //     banners.map((b) => {
-            //       const totalMedia = Array.isArray(b.mediaUrls) && b.mediaUrls.length > 0 ? b.mediaUrls.length : (b.mediaUrl ? 1 : 0);
-            //       const isVideo = b.mediaType === 'VIDEO';
-
-            //       return React.createElement(
-            //         'div',
-            //         { key: b.id, className: 'p-3 border border-[#E6ECE7] rounded-xl text-xs flex gap-3 items-center bg-gradient-to-r from-white to-[#FCFDFB] hover:border-[#CFE7D9] hover:shadow-sm transition-all duration-200' },
-            //         isVideo
-            //           ? React.createElement('div', { className: 'w-14 h-14 bg-gradient-to-br from-[#12241A] to-black text-white flex items-center justify-center rounded-lg text-[10px] font-black shrink-0 ring-1 ring-white/10' }, '▶ ቪዲዮ')
-            //           : React.createElement('img', { src: b.mediaUrl || b.mediaUrls?.[0], className: 'w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-[#E6ECE7] shadow-sm', alt: '' }),
-            //         React.createElement(
-            //           'div',
-            //           { className: 'overflow-hidden flex-1 min-w-0' },
-            //           React.createElement('p', { className: 'font-black truncate text-[#12241A]' }, b.title),
-            //           React.createElement('p', { className: 'text-[11px] text-[#62726A] font-semibold' }, isVideo ? 'የቪዲዮ ማስታወቂያ' : 'የምስል ማስታወቂያ'),
-            //           React.createElement('span', { className: 'text-[10px] text-[#0F7B4A] font-bold bg-[#E4F2EA] px-2 py-0.5 rounded-full inline-block mt-1' }, totalMedia + ' ሚዲያ ፋይሎች (Files)')
-            //         )
-            //       );
-            //     })
-            //   )
-            // ),
+          
             React.createElement(
               'div',
               { className: 'grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start' },
@@ -2016,33 +1914,76 @@ React.createElement(
                   className: inputBase
                 })
               ),
+              // React.createElement(
+              //   'div',
+              //   { className: 'space-y-2 pt-2' },
+              //   React.createElement('label', { className: 'text-xs font-black text-[#12241A] block' }, 'ለዚህ አስተዳዳሪ የሚፈቀዱ የሳይድባር ገጾች:'),
+              //   React.createElement(
+              //     'div',
+              //     { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5' },
+              //     ALL_SYSTEM_TABS.map((t) => {
+              //       const isChecked = userForm.allowedTabs.includes(t.id);
+              //       return React.createElement(
+              //         'button',
+              //         {
+              //           key: t.id,
+              //           type: 'button',
+              //           onClick: () => toggleTabInCreation(t.id),
+              //           className: 'flex items-center gap-2.5 p-3 sm:p-2.5 rounded-xl border text-xs font-bold transition-all duration-200 cursor-pointer text-left active:scale-[0.98] ' +
+              //             (isChecked ? 'border-[#0F7B4A] bg-[#E4F2EA] text-[#0F7B4A] shadow-sm' : 'border-[#E6ECE7] bg-white text-[#62726A] hover:border-[#BFDCCB]')
+              //         },
+              //         React.createElement('div', {
+              //           className: 'w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 shrink-0 ' +
+              //             (isChecked ? 'border-[#0F7B4A] bg-[#0F7B4A] text-white' : 'border-gray-300 bg-white')
+              //         }, isChecked ? '✓' : ''),
+              //         React.createElement('span', null, t.name)
+              //       );
+              //     })
+              //   )
+              // ),
               React.createElement(
-                'div',
-                { className: 'space-y-2 pt-2' },
-                React.createElement('label', { className: 'text-xs font-black text-[#12241A] block' }, 'ለዚህ አስተዳዳሪ የሚፈቀዱ የሳይድባር ገጾች:'),
-                React.createElement(
-                  'div',
-                  { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5' },
-                  ALL_SYSTEM_TABS.map((t) => {
-                    const isChecked = userForm.allowedTabs.includes(t.id);
-                    return React.createElement(
-                      'button',
-                      {
-                        key: t.id,
-                        type: 'button',
-                        onClick: () => toggleTabInCreation(t.id),
-                        className: 'flex items-center gap-2.5 p-3 sm:p-2.5 rounded-xl border text-xs font-bold transition-all duration-200 cursor-pointer text-left active:scale-[0.98] ' +
-                          (isChecked ? 'border-[#0F7B4A] bg-[#E4F2EA] text-[#0F7B4A] shadow-sm' : 'border-[#E6ECE7] bg-white text-[#62726A] hover:border-[#BFDCCB]')
-                      },
-                      React.createElement('div', {
-                        className: 'w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 shrink-0 ' +
-                          (isChecked ? 'border-[#0F7B4A] bg-[#0F7B4A] text-white' : 'border-gray-300 bg-white')
-                      }, isChecked ? '✓' : ''),
-                      React.createElement('span', null, t.name)
-                    );
-                  })
-                )
-              ),
+  'div',
+  { className: 'space-y-2 pt-2' },
+  React.createElement('label', { className: 'text-xs font-black text-[#12241A] block' }, 'ለዚህ አስተዳዳሪ የሚፈቀዱ የሳይድባር ገጾች:'),
+  React.createElement(
+    'div',
+    { className: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5' },
+    ALL_SYSTEM_TABS.filter((t) => {
+      // Conditional visibility rules based on the user's role
+      const role = userForm.role; // Assuming your role is stored in userForm.role
+
+      // 1. "ፍቃድ ቀይር" should ONLY be available for admins
+      if (t.id === 'licence_change' || t.name?.includes('ፍቃድ ቀይር')) {
+        return role === 'admin';
+      }
+
+      // 2. "የብድር ታሪክ" should ONLY be available for retailers
+      if (t.id === 'credit_history' || t.name?.includes('የብድር ታሪክ')) {
+        return role === 'retailer';
+      }
+
+      // All other tabs remain visible for everyone normally
+      return true;
+    }).map((t) => {
+      const isChecked = userForm.allowedTabs.includes(t.id);
+      return React.createElement(
+        'button',
+        {
+          key: t.id,
+          type: 'button',
+          onClick: () => toggleTabInCreation(t.id),
+          className: 'flex items-center gap-2.5 p-3 sm:p-2.5 rounded-xl border text-xs font-bold transition-all duration-200 cursor-pointer text-left active:scale-[0.98] ' +
+            (isChecked ? 'border-[#0F7B4A] bg-[#E4F2EA] text-[#0F7B4A] shadow-sm' : 'border-[#E6ECE7] bg-white text-[#62726A] hover:border-[#BFDCCB]')
+        },
+        React.createElement('div', {
+          className: 'w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 shrink-0 ' +
+            (isChecked ? 'border-[#0F7B4A] bg-[#0F7B4A] text-white' : 'border-gray-300 bg-white')
+        }, isChecked ? '✓' : ''),
+        React.createElement('span', null, t.name)
+      );
+    })
+  )
+),
               React.createElement('button', { type: 'submit', className: 'w-full sm:w-auto py-3 sm:py-2.5 px-6 ' + primaryBtn }, 'አዲሱን Admin መዝግብ')
             ),
 
