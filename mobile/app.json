@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ቅናሽ ገበያ",
-    "slug": "b2b-retail-adama",
+    "slug": "b2b-retail-adama-v2",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,12 +22,11 @@
     "ios": {
       "supportsTablet": true
     },
-  "android": {
+    "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0F7B4A"
       },
-  
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
@@ -42,8 +41,9 @@
       "apiUrl": "",
       "router": {},
       "eas": {
-        "projectId": "17aec65b-c55e-4c42-9b88-a2e9619da7bd"
+        "projectId": "492f2b03-ed39-42cc-afba-8d1db7f1f6e3"
       }
-    }
+    },
+    "owner": "letifylkal"
   }
 }

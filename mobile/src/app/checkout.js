@@ -20,7 +20,7 @@
 // import { useSession } from '../context/SessionContext';
 // import CustomAlert from '../components/CustomAlert';
 
-// const ADMIN_DESTINATION_PHONE = '+251911000000';
+// const ADMIN_DESTINATION_PHONE = '0968821059';
 
 // const UNIT_MAP = {
 //   'ካርቶን': 'CARTON',
@@ -118,14 +118,12 @@
 //       setCart(parsedCart);
 //       setDrafts(parsedDrafts);
 
-//       // Initialize all draft items as unselected by default so user intentionally selects what to send
 //       const initialSelected = {};
 //       Object.keys(parsedDrafts).forEach((k) => {
 //         initialSelected[k] = false;
 //       });
 //       setSelectedDraftKeys(initialSelected);
 
-//       // Open draft accordion automatically if arriving from "ረቂቅ" action
 //       if (params?.isDraft === 'true' || Object.keys(parsedCart).length === 0) {
 //         setDraftExpanded(true);
 //       }
@@ -170,7 +168,6 @@
 //     await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
 //   };
 
-//   // Check / Uncheck draft row
 //   const toggleDraftItemSelection = (key) => {
 //     setSelectedDraftKeys((prev) => ({
 //       ...prev,
@@ -178,7 +175,6 @@
 //     }));
 //   };
 
-//   // Select all or deselect all drafts
 //   const handleToggleAllDrafts = () => {
 //     const allSelected = Object.keys(drafts).every((k) => selectedDraftKeys[k]);
 //     const nextState = {};
@@ -188,7 +184,6 @@
 //     setSelectedDraftKeys(nextState);
 //   };
 
-//   // Move ONLY selected draft items into active order list (Unselected items stay in Draft)
 //   const handleMoveSelectedToActiveOrder = async () => {
 //     const keysToMove = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
 
@@ -224,7 +219,6 @@
 //     await AsyncStorage.setItem('user_cart', JSON.stringify(mergedCart));
 //     await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
 
-//     // Clear selections for remaining items
 //     const nextSelected = {};
 //     Object.keys(remainingDrafts).forEach((k) => {
 //       nextSelected[k] = false;
@@ -239,7 +233,6 @@
 //     });
 //   };
 
-//   // Permanently delete ONLY selected draft items
 //   const handleDeleteSelectedDrafts = async () => {
 //     const keysToDelete = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
 
@@ -300,17 +293,23 @@
 
 //   const selectedDraftCount = Object.keys(drafts).filter((k) => selectedDraftKeys[k]).length;
 
+//   // Perfect Amharic descriptive SMS payload format
 //   const generateSmsOrderText = (loc) => {
 //     if (cartEntries.length === 0) return '';
-//     const itemChunks = cartEntries.map(([_, it]) => {
-//       const pId = it.productId || 'PROD';
+    
+//     const itemsListAmharic = cartEntries.map(([_, it], index) => {
+//       const name = it.name || 'እቃ';
 //       const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
-//       const u = UNIT_MAP[it.unit] || 'CARTON';
-//       return `${pId}:${qty}:${u}`;
-//     });
-//     const creditFlag = isCredit && canOrderOnCredit ? '1' : '0';
-//     const locPart = loc?.latitude ? `#LOC:${loc.latitude},${loc.longitude}` : '';
-//     return `ORD#${itemChunks.join('|')}#${slot}#${creditFlag}${locPart}`;
+//       const unit = it.unit || 'ካርቶን';
+//       const subTotal = ((Number(it.price) || 0) * qty).toLocaleString();
+//       return `${index + 1}. ${name} - ብዛት: ${qty} ${unit} (ዋጋ: ${subTotal} ብር)`;
+//     }).join('\n');
+
+//     const slotTimeText = slot === 'BATCH_6AM' ? 'ጠዋት 6:00 ሰዓት' : 'ቀትር 12:00 ሰዓት';
+//     const creditStatusText = isCredit && canOrderOnCredit ? 'በብድር (Credit Order)' : 'ጥሬ ገንዘብ (Cash)';
+//     const locPart = loc?.latitude ? `\nመገኛ (GPS): ${loc.latitude},${loc.longitude}` : '';
+
+//     return `ሰላም! አዲስ የትእዛዝ ጥያቄ ከቅናሽ ገበያ መተግበሪያ:\n\nየተመረጡ እቃዎች:\n${itemsListAmharic}\n\nጠቅላላ ድምር: ${totalPrice.toLocaleString()} ብር\nየመላኪያ ሰዓት: ${slotTimeText}\nየክፍያ ሁኔታ: ${creditStatusText}${locPart}`;
 //   };
 
 //   const acquireAccurateGps = async () => {
@@ -457,7 +456,6 @@
 //           ? 'ጠዋት 6:00 ሰዓት'
 //           : 'ቀትር 12:00 ሰዓት';
 
-//       // Clear only the submitted cart. Unselected drafts stay untouched!
 //       await AsyncStorage.removeItem('user_cart');
 //       setCart({});
 
@@ -516,7 +514,6 @@
 
 //           <Text style={[styles.pageTitle, dyn.pageTitle]}>ትእዛዙን ላክ</Text>
 
-//           {/* DRAFT ACCORDION PANEL */}
 //           {draftEntries.length > 0 && (
 //             <View style={styles.draftCardMaster}>
 //               <TouchableOpacity
@@ -755,7 +752,6 @@
 //                 </TouchableOpacity>
 //               </View>
 
-//               {/* RETAILER CREDIT CHECKBOX */}
 //               {canOrderOnCredit && (
 //                 <>
 //                   <View style={[styles.sectionHeaderRow, styles.sectionHeaderRowSpaced]}>
@@ -851,7 +847,6 @@
 //         )}
 //       </View>
 
-//       {/* OFFLINE PROMPT MODAL */}
 //       {offlinePromptVisible && (
 //         <View style={styles.modalOverlay}>
 //           <View style={styles.offlineModalCard}>
@@ -1098,8 +1093,6 @@
 //   scrollTailSpacer: {
 //     height: 12,
 //   },
-
-//   /* Draft Stored Master Card */
 //   draftCardMaster: {
 //     backgroundColor: '#FFFBEB',
 //     borderRadius: 16,
@@ -1276,7 +1269,6 @@
 //     fontSize: 11.5,
 //     fontWeight: '900',
 //   },
-
 //   emptyContainer: {
 //     flex: 1,
 //     justifyContent: 'center',
@@ -1768,6 +1760,7 @@ export default function CheckoutScreen() {
   const [selectedDraftKeys, setSelectedDraftKeys] = useState({});
   const [draftExpanded, setDraftExpanded] = useState(false);
   const [canOrderOnCredit, setCanOrderOnCredit] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState('guest');
 
   const [slot, setSlot] = useState('BATCH_12PM');
   const [isCredit, setIsCredit] = useState(false);
@@ -1789,57 +1782,69 @@ export default function CheckoutScreen() {
   const S = isSmall ? 0.9 : isTablet ? 1.12 : SCREEN_W >= 420 ? 1.06 : 1;
   const dyn = useMemo(() => buildDynamic(S, isTablet), [S, isTablet]);
 
-  const loadUserData = async () => {
+  const loadUserDataAndStorage = async () => {
     try {
+      let resolvedUserId = 'guest';
+
       if (token) {
         const res = await apiRequest('/auth/me', { token }).catch(() => null);
         const userData = res?.user || res?.data;
-        if (userData && typeof userData.canOrderOnCredit !== 'undefined') {
+        if (userData) {
+          resolvedUserId = String(userData.id || userData._id || 'guest');
           const eligible = Boolean(userData.canOrderOnCredit);
           setCanOrderOnCredit(eligible);
           await AsyncStorage.setItem('user_credit_eligible', eligible ? '1' : '0');
-          return;
         }
       }
 
-      const cachedEligible = await AsyncStorage.getItem('user_credit_eligible').catch(() => null);
-      if (cachedEligible !== null) {
-        setCanOrderOnCredit(cachedEligible === '1');
-        return;
+      if (resolvedUserId === 'guest') {
+        const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          resolvedUserId = String(parsed?.id || parsed?._id || 'guest');
+          setCanOrderOnCredit(Boolean(parsed?.canOrderOnCredit));
+        }
       }
 
-      const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        setCanOrderOnCredit(Boolean(parsed?.canOrderOnCredit));
+      setCurrentUserId(resolvedUserId);
+
+      const scopedCartKey = `user_cart_${resolvedUserId}`;
+      const scopedDraftKey = `user_draft_cart_${resolvedUserId}`;
+
+      let parsedCart = {};
+      let parsedDrafts = {};
+
+      const storedDraftsJson = await AsyncStorage.getItem(scopedDraftKey).catch(() => null);
+      parsedDrafts = storedDraftsJson ? JSON.parse(storedDraftsJson) : {};
+
+      if (params?.cartData) {
+        try {
+          const incomingData = JSON.parse(params.cartData);
+          if (params?.isDraft === 'true') {
+            Object.entries(incomingData).forEach(([k, item]) => {
+              parsedDrafts[k] = { ...item };
+            });
+            await AsyncStorage.setItem(scopedDraftKey, JSON.stringify(parsedDrafts));
+            await AsyncStorage.setItem('user_draft_cart', JSON.stringify(parsedDrafts));
+          } else {
+            parsedCart = incomingData;
+            await AsyncStorage.setItem(scopedCartKey, JSON.stringify(parsedCart));
+            await AsyncStorage.setItem('user_cart', JSON.stringify(parsedCart));
+          }
+        } catch {}
       }
-    } catch {
-      setCanOrderOnCredit(false);
-    }
-  };
 
-  const loadStorageCarts = async () => {
-    try {
-      const [storedCart, storedDrafts] = await Promise.all([
-        AsyncStorage.getItem('user_cart'),
-        AsyncStorage.getItem('user_draft_cart'),
-      ]);
-
-      const parsedCart = storedCart ? JSON.parse(storedCart) : {};
-      const parsedDrafts = storedDrafts ? JSON.parse(storedDrafts) : {};
+      if (Object.keys(parsedCart).length === 0) {
+        const storedCart = await AsyncStorage.getItem(scopedCartKey).catch(() => null);
+        if (storedCart) {
+          parsedCart = JSON.parse(storedCart);
+        }
+      }
 
       setCart(parsedCart);
       setDrafts(parsedDrafts);
 
-      const initialSelected = {};
-      Object.keys(parsedDrafts).forEach((k) => {
-        initialSelected[k] = false;
-      });
-      setSelectedDraftKeys(initialSelected);
-
-      if (params?.isDraft === 'true' || Object.keys(parsedCart).length === 0) {
-        setDraftExpanded(true);
-      }
+      setDraftExpanded((prev) => (params?.isDraft === 'true' || Object.keys(parsedCart).length === 0 ? true : prev));
     } catch {
       setCart({});
       setDrafts({});
@@ -1850,54 +1855,61 @@ export default function CheckoutScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      loadStorageCarts();
-      loadUserData();
+      loadUserDataAndStorage();
     }, [token])
   );
 
-  const updateQuantity = async (key, delta) => {
-    const updated = { ...cart };
-    if (!updated[key]) return;
+  const updateQuantity = useCallback(async (key, delta) => {
+    setCart((prevCart) => {
+      const updated = { ...prevCart };
+      if (!updated[key]) return prevCart;
 
-    const nextQty = (updated[key].quantity || 0) + delta;
+      const nextQty = (updated[key].quantity || 0) + delta;
 
-    if (nextQty <= 0) {
-      delete updated[key];
-    } else {
-      updated[key] = {
-        ...updated[key],
-        quantity: nextQty,
-      };
-    }
+      if (nextQty <= 0) {
+        delete updated[key];
+      } else {
+        updated[key] = {
+          ...updated[key],
+          quantity: nextQty,
+        };
+      }
 
-    setCart(updated);
-    await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
-  };
-
-  const removeItem = async (key) => {
-    const updated = { ...cart };
-    delete updated[key];
-    setCart(updated);
-    await AsyncStorage.setItem('user_cart', JSON.stringify(updated));
-  };
-
-  const toggleDraftItemSelection = (key) => {
-    setSelectedDraftKeys((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  const handleToggleAllDrafts = () => {
-    const allSelected = Object.keys(drafts).every((k) => selectedDraftKeys[k]);
-    const nextState = {};
-    Object.keys(drafts).forEach((k) => {
-      nextState[k] = !allSelected;
+      AsyncStorage.setItem(`user_cart_${currentUserId}`, JSON.stringify(updated)).catch(() => {});
+      return updated;
     });
-    setSelectedDraftKeys(nextState);
-  };
+  }, [currentUserId]);
 
-  const handleMoveSelectedToActiveOrder = async () => {
+  const removeItem = useCallback(async (key) => {
+    setCart((prevCart) => {
+      const updated = { ...prevCart };
+      delete updated[key];
+      AsyncStorage.setItem(`user_cart_${currentUserId}`, JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, [currentUserId]);
+
+  const toggleDraftItemSelection = useCallback((key) => {
+    setSelectedDraftKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const handleToggleAllDrafts = useCallback(() => {
+    setSelectedDraftKeys((prev) => {
+      const allSelected = Object.keys(drafts).every((k) => prev[k]);
+      const nextState = {};
+      Object.keys(drafts).forEach((k) => {
+        nextState[k] = !allSelected;
+      });
+      return nextState;
+    });
+  }, [drafts]);
+
+  // Count only drafts that still exist (ignores stale selected keys)
+  const selectedDraftCount = useMemo(() => {
+    return Object.keys(drafts).filter((k) => selectedDraftKeys[k]).length;
+  }, [drafts, selectedDraftKeys]);
+
+  const handleMoveSelectedToActiveOrder = useCallback(async () => {
     const keysToMove = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
 
     if (keysToMove.length === 0) {
@@ -1910,6 +1922,7 @@ export default function CheckoutScreen() {
       return;
     }
 
+    // Compute first, then set each state once (no state updates inside an updater)
     const mergedCart = { ...cart };
     const remainingDrafts = { ...drafts };
 
@@ -1928,25 +1941,20 @@ export default function CheckoutScreen() {
 
     setCart(mergedCart);
     setDrafts(remainingDrafts);
+    setSelectedDraftKeys({});
 
-    await AsyncStorage.setItem('user_cart', JSON.stringify(mergedCart));
-    await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
-
-    const nextSelected = {};
-    Object.keys(remainingDrafts).forEach((k) => {
-      nextSelected[k] = false;
-    });
-    setSelectedDraftKeys(nextSelected);
+    AsyncStorage.setItem(`user_cart_${currentUserId}`, JSON.stringify(mergedCart)).catch(() => {});
+    AsyncStorage.setItem(`user_draft_cart_${currentUserId}`, JSON.stringify(remainingDrafts)).catch(() => {});
 
     setAlertConfig({
       visible: true,
       title: 'እቃዎች ተዛውረዋል',
-      message: `የተመረጡት ${keysToMove.length} እቃዎች ወደ ትእዛዝ ዝርዝር ገብተዋል። ያልተመረጡት በረቂቅ ውስጥ ቀርተዋል።`,
+      message: `የተመረጡት ${keysToMove.length} እቃዎች ወደ ትእዛዝ ዝርዝር ገብተዋል።`,
       type: 'success',
     });
-  };
+  }, [cart, drafts, selectedDraftKeys, currentUserId]);
 
-  const handleDeleteSelectedDrafts = async () => {
+  const handleDeleteSelectedDrafts = useCallback(async () => {
     const keysToDelete = Object.keys(drafts).filter((k) => selectedDraftKeys[k]);
 
     if (keysToDelete.length === 0) {
@@ -1965,13 +1973,8 @@ export default function CheckoutScreen() {
     });
 
     setDrafts(remainingDrafts);
-    await AsyncStorage.setItem('user_draft_cart', JSON.stringify(remainingDrafts));
-
-    const nextSelected = {};
-    Object.keys(remainingDrafts).forEach((k) => {
-      nextSelected[k] = false;
-    });
-    setSelectedDraftKeys(nextSelected);
+    setSelectedDraftKeys({});
+    await AsyncStorage.setItem(`user_draft_cart_${currentUserId}`, JSON.stringify(remainingDrafts)).catch(() => {});
 
     setAlertConfig({
       visible: true,
@@ -1979,7 +1982,7 @@ export default function CheckoutScreen() {
       message: `${keysToDelete.length} እቃዎች ከረቂቅ ተሰርዘዋል`,
       type: 'success',
     });
-  };
+  }, [drafts, selectedDraftKeys, currentUserId]);
 
   const handleSafeBack = () => {
     if (router.canGoBack()) {
@@ -2004,18 +2007,15 @@ export default function CheckoutScreen() {
     0
   );
 
-  const selectedDraftCount = Object.keys(drafts).filter((k) => selectedDraftKeys[k]).length;
-
-  // Perfect Amharic descriptive SMS payload format
   const generateSmsOrderText = (loc) => {
     if (cartEntries.length === 0) return '';
-    
+
     const itemsListAmharic = cartEntries.map(([_, it], index) => {
       const name = it.name || 'እቃ';
       const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
       const unit = it.unit || 'ካርቶን';
       const subTotal = ((Number(it.price) || 0) * qty).toLocaleString();
-      return `${index + 1}. ${name} - ብዛት: ${qty} ${unit} (ዋጋ: ${subTotal} ብር)`;
+      return `${index + 1}. ${name} ብዛት: ${qty} ${unit} (ዋጋ: ${subTotal} ብር)`;
     }).join('\n');
 
     const slotTimeText = slot === 'BATCH_6AM' ? 'ጠዋት 6:00 ሰዓት' : 'ቀትር 12:00 ሰዓት';
@@ -2130,7 +2130,14 @@ export default function CheckoutScreen() {
     setSubmitting(true);
 
     const isOnline = await checkIsDeviceOnline();
-    const gpsLocation = await acquireAccurateGps();
+
+    // GPS lookup is limited to 7 seconds so the button can never stay stuck
+    const gpsLocation = await Promise.race([
+      acquireAccurateGps(),
+      new Promise((resolve) =>
+        setTimeout(() => resolve({ latitude: null, longitude: null }), 7000)
+      ),
+    ]);
 
     if (!isOnline) {
       setSubmitting(false);
@@ -2169,7 +2176,7 @@ export default function CheckoutScreen() {
           ? 'ጠዋት 6:00 ሰዓት'
           : 'ቀትር 12:00 ሰዓት';
 
-      await AsyncStorage.removeItem('user_cart');
+      await AsyncStorage.removeItem(`user_cart_${currentUserId}`);
       setCart({});
 
       if (isCredit && canOrderOnCredit) {
@@ -2208,6 +2215,112 @@ export default function CheckoutScreen() {
     );
   }
 
+  // Draft card: rendered INSIDE the scroll area so every button stays reachable
+  const draftSection =
+    draftEntries.length > 0 ? (
+      <View style={styles.draftCardMaster}>
+        <View style={styles.draftToggleHeader}>
+          <TouchableOpacity
+            style={styles.draftLeftTitle}
+            activeOpacity={0.8}
+            onPress={() => setDraftExpanded(!draftExpanded)}
+          >
+            <View style={styles.draftIconTag}>
+              <Text style={styles.draftIconEmoji}>📁</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.draftHeadText}>የተቀመጡ ረቂቆች ({draftEntries.length} እቃዎች)</Text>
+              <Text style={styles.draftSubText}>ጠቅላላ ዋጋ: {draftTotalPrice.toLocaleString()} ብር</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.draftToggleArrow}
+            activeOpacity={0.8}
+            onPress={() => setDraftExpanded(!draftExpanded)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.draftArrowSymbol}>{draftExpanded ? '▲ ዝጋ' : '▼ ክፈት'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {draftExpanded && (
+          <View style={styles.draftExpandedBody}>
+            <View style={styles.draftItemsDivider} />
+
+            <View style={styles.draftSelectAllRow}>
+              <TouchableOpacity
+                onPress={handleToggleAllDrafts}
+                style={styles.selectAllBtn}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.selectAllBtnText}>
+                  {selectedDraftCount === draftEntries.length ? 'ምርጫ ሰርዝ ✕' : 'ሁሉንም ምረጥ ✓'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.draftCountSelectedText}>
+                የተመረጡ: {selectedDraftCount}/{draftEntries.length}
+              </Text>
+            </View>
+
+            {draftEntries.map(([dKey, dItem]) => {
+              const isSelected = Boolean(selectedDraftKeys[dKey]);
+
+              return (
+                <TouchableOpacity
+                  key={dKey}
+                  style={[styles.draftRowSingle, isSelected && styles.draftRowSelected]}
+                  activeOpacity={0.7}
+                  onPress={() => toggleDraftItemSelection(dKey)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isSelected }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View
+                      pointerEvents="none"
+                      style={[styles.draftCheckbox, isSelected && styles.draftCheckboxActive]}
+                    >
+                      {isSelected && <Text style={styles.draftCheckmark}>✓</Text>}
+                    </View>
+
+                    <View pointerEvents="none" style={styles.draftItemDetails}>
+                      <Text style={styles.draftItemName} numberOfLines={1}>{dItem.name}</Text>
+                      <Text style={styles.draftItemSpec}>
+                        {dItem.quantity} {dItem.unit} · {(Number(dItem.price) * Number(dItem.quantity)).toLocaleString()} ብር
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+
+            <View style={styles.draftControlButtons}>
+              <TouchableOpacity
+                style={[styles.draftDiscardBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
+                onPress={handleDeleteSelectedDrafts}
+                activeOpacity={0.75}
+                disabled={selectedDraftCount === 0}
+              >
+                <Text style={styles.draftDiscardBtnText}>የተመረጡትን ሰርዝ 🗑️</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.draftApplyBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
+                onPress={handleMoveSelectedToActiveOrder}
+                activeOpacity={0.8}
+                disabled={selectedDraftCount === 0}
+              >
+                <Text style={styles.draftApplyBtnText}>
+                  ወደ ትእዛዝ ላክ ({selectedDraftCount}) ›
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
+    ) : null;
+
   return (
     <SafeAreaView style={styles.safe}>
       <View pointerEvents="none" style={styles.glowOrbA} />
@@ -2220,6 +2333,7 @@ export default function CheckoutScreen() {
               style={[styles.backLink, dyn.backChip]}
               onPress={handleSafeBack}
               activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={[styles.backText, dyn.backText]}>‹ ተመለስ</Text>
             </TouchableOpacity>
@@ -2227,120 +2341,47 @@ export default function CheckoutScreen() {
 
           <Text style={[styles.pageTitle, dyn.pageTitle]}>ትእዛዙን ላክ</Text>
 
-          {draftEntries.length > 0 && (
-            <View style={styles.draftCardMaster}>
-              <TouchableOpacity
-                style={styles.draftToggleHeader}
-                activeOpacity={0.8}
-                onPress={() => setDraftExpanded(!draftExpanded)}
-              >
-                <View style={styles.draftLeftTitle}>
-                  <View style={styles.draftIconTag}>
-                    <Text style={styles.draftIconEmoji}>📁</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.draftHeadText}>የተቀመጡ ረቂቆች ({draftEntries.length} እቃዎች)</Text>
-                    <Text style={styles.draftSubText}>ጠቅላላ ዋጋ: {draftTotalPrice.toLocaleString()} ብር</Text>
-                  </View>
-                </View>
-
-                <View style={styles.draftToggleArrow}>
-                  <Text style={styles.draftArrowSymbol}>{draftExpanded ? '▲ ዝጋ' : '▼ ክፈት'}</Text>
-                </View>
-              </TouchableOpacity>
-
-              {draftExpanded && (
-                <View style={styles.draftExpandedBody}>
-                  <View style={styles.draftItemsDivider} />
-
-                  <View style={styles.draftSelectAllRow}>
-                    <TouchableOpacity onPress={handleToggleAllDrafts} style={styles.selectAllBtn}>
-                      <Text style={styles.selectAllBtnText}>
-                        {selectedDraftCount === draftEntries.length ? 'ምርጫ ሰርዝ ✕' : 'ሁሉንም ምረጥ ✓'}
-                      </Text>
-                    </TouchableOpacity>
-                    <Text style={styles.draftCountSelectedText}>የተመረጡ: {selectedDraftCount}/{draftEntries.length}</Text>
-                  </View>
-
-                  {draftEntries.map(([dKey, dItem]) => {
-                    const isSelected = Boolean(selectedDraftKeys[dKey]);
-
-                    return (
-                      <TouchableOpacity
-                        key={dKey}
-                        style={[styles.draftRowSingle, isSelected && styles.draftRowSelected]}
-                        activeOpacity={0.8}
-                        onPress={() => toggleDraftItemSelection(dKey)}
-                      >
-                        <View style={[styles.draftCheckbox, isSelected && styles.draftCheckboxActive]}>
-                          {isSelected && <Text style={styles.draftCheckmark}>✓</Text>}
-                        </View>
-
-                        <View style={styles.draftItemDetails}>
-                          <Text style={styles.draftItemName} numberOfLines={1}>{dItem.name}</Text>
-                          <Text style={styles.draftItemSpec}>
-                            {dItem.quantity} {dItem.unit} · {(Number(dItem.price) * Number(dItem.quantity)).toLocaleString()} ብር
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-
-                  <View style={styles.draftControlButtons}>
-                    <TouchableOpacity
-                      style={[styles.draftDiscardBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
-                      onPress={handleDeleteSelectedDrafts}
-                      activeOpacity={0.75}
-                      disabled={selectedDraftCount === 0}
-                    >
-                      <Text style={styles.draftDiscardBtnText}>የተመረጡትን ሰርዝ 🗑️</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.draftApplyBtn, selectedDraftCount === 0 && { opacity: 0.5 }]}
-                      onPress={handleMoveSelectedToActiveOrder}
-                      activeOpacity={0.8}
-                      disabled={selectedDraftCount === 0}
-                    >
-                      <Text style={styles.draftApplyBtnText}>
-                        ወደ ትእዛዝ ላክ ({selectedDraftCount}) ›
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-
           {cartEntries.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <View style={[styles.emptyIconWrap, dyn.emptyIconWrap]}>
-                <Text style={[styles.emptyIcon, dyn.emptyIcon]}>🛒</Text>
-              </View>
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.emptyScrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {draftSection}
 
-              <Text style={[styles.emptyTitle, dyn.emptyTitle]}>
-                {draftEntries.length > 0
-                  ? 'እቃዎች በረቂቅ ውስጥ ተቀምጠዋል። ወደ ትእዛዝ ለማዛወር ከላይ ያለውን ረቂቅ ይክፈቱ።'
-                  : 'ቅርጫትዎ ውስጥ ምንም እቃ የለም'}
-              </Text>
+              <View style={styles.emptyContainer}>
+                <View style={[styles.emptyIconWrap, dyn.emptyIconWrap]}>
+                  <Text style={[styles.emptyIcon, dyn.emptyIcon]}>🛒</Text>
+                </View>
 
-              <TouchableOpacity
-                style={[styles.goShopBtn, dyn.goShopBtn]}
-                onPress={() => router.replace('/(tabs)')}
-                activeOpacity={0.8}
-              >
-                <View pointerEvents="none" style={styles.btnShine} />
-                <Text style={[styles.goShopBtnText, dyn.goShopBtnText]}>
-                  ወደ ገበያ ተመለስ
+                <Text style={[styles.emptyTitle, dyn.emptyTitle]}>
+                  {draftEntries.length > 0
+                    ? 'እቃዎች በረቂቅ ውስጥ ተቀምጠዋል። ወደ ትእዛዝ ለማዛወር ከላይ ያለውን ረቂቅ ይክፈቱ።'
+                    : 'ቅርጫትዎ ውስጥ ምንም እቃ የለም'}
                 </Text>
-              </TouchableOpacity>
-            </View>
+
+                <TouchableOpacity
+                  style={[styles.goShopBtn, dyn.goShopBtn]}
+                  onPress={() => router.replace('/(tabs)')}
+                  activeOpacity={0.8}
+                >
+                  <View pointerEvents="none" style={styles.btnShine} />
+                  <Text style={[styles.goShopBtnText, dyn.goShopBtnText]}>
+                    ወደ ገበያ ተመለስ
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           ) : (
             <ScrollView
               style={styles.scroll}
               contentContainerStyle={[styles.scrollContent, dyn.scrollContent]}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
+              {draftSection}
+
               {cartEntries.map(([key, item]) => {
                 const isImageFile =
                   item.imageUrl &&
@@ -2386,7 +2427,7 @@ export default function CheckoutScreen() {
                           <Text style={[styles.stepBtnText, dyn.stepBtnText]}>−</Text>
                         </TouchableOpacity>
 
-                        <View style={[styles.stepQtyBox, dyn.stepQtyBox]}>
+                        <View pointerEvents="none" style={[styles.stepQtyBox, dyn.stepQtyBox]}>
                           <Text style={[styles.stepQtyText, dyn.stepQtyText]}>
                             {item.quantity}
                           </Text>
@@ -2484,6 +2525,7 @@ export default function CheckoutScreen() {
                     activeOpacity={0.85}
                   >
                     <View
+                      pointerEvents="none"
                       style={[
                         styles.checkbox,
                         dyn.checkbox,
@@ -2493,7 +2535,7 @@ export default function CheckoutScreen() {
                       {isCredit && <Text style={[styles.checkMark, dyn.checkMark]}>✓</Text>}
                     </View>
 
-                    <View style={styles.creditTextWrap}>
+                    <View pointerEvents="none" style={styles.creditTextWrap}>
                       <Text style={[styles.creditTitle, dyn.creditTitle]}>
                         በብድር ይሁን (Request on Credit)
                       </Text>
@@ -2593,6 +2635,7 @@ export default function CheckoutScreen() {
             <TouchableOpacity
               style={styles.cancelOfflineBtn}
               onPress={() => setOfflinePromptVisible(false)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={styles.cancelOfflineBtnText}>ተመለስ</Text>
             </TouchableOpacity>
@@ -2687,8 +2730,9 @@ const buildDynamic = (s, isTablet) =>
     itemName: { fontSize: 13.5 * s },
     itemUnitSub: { fontSize: 11.5 * s, marginTop: 3 * s },
     stepperContainer: { borderRadius: 11 * s },
-    stepBtn: { width: 31 * s, height: 31 * s },
-    stepBtnText: { fontSize: 16 * s },
+    // Larger touch targets for + and −
+    stepBtn: { width: 36 * s, height: 36 * s },
+    stepBtnText: { fontSize: 17 * s },
     stepQtyBox: { minWidth: 28 * s },
     stepQtyText: { fontSize: 13 * s },
     slotRow: { gap: 9 * s, marginBottom: 4 },
@@ -2803,6 +2847,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 2,
   },
+  emptyScrollContent: {
+    flexGrow: 1,
+    paddingTop: 2,
+    paddingBottom: 25,
+  },
   scrollTailSpacer: {
     height: 12,
   },
@@ -2898,7 +2947,7 @@ const styles = StyleSheet.create({
   draftRowSingle: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 8,
     borderRadius: 10,
     marginBottom: 4,
@@ -2956,7 +3005,7 @@ const styles = StyleSheet.create({
   },
   draftDiscardBtn: {
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingVertical: 9,
     borderRadius: 9,
     backgroundColor: '#FEE2E2',
     borderWidth: 1,
@@ -2971,7 +3020,7 @@ const styles = StyleSheet.create({
   },
   draftApplyBtn: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 9,
     borderRadius: 9,
     backgroundColor: '#D97706',
     justifyContent: 'center',
@@ -3144,9 +3193,9 @@ const styles = StyleSheet.create({
     color: INK,
   },
   deleteItemBtn: {
-    width: 27,
-    height: 27,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#FEE2E2',
     borderWidth: 1,
     borderColor: '#FCA5A5',
@@ -3329,6 +3378,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 99999,
+    // Android draws by elevation first, so the overlay must be above the footer
+    elevation: 100,
     paddingHorizontal: 20,
   },
   offlineModalCard: {

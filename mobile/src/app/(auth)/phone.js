@@ -1,5 +1,5 @@
 
-// import React, { useState } from 'react';
+// import React, { useState, useRef } from 'react';
 // import {
 //   ActivityIndicator,
 //   KeyboardAvoidingView,
@@ -19,7 +19,46 @@
 // import { useSession } from '../../context/SessionContext';
 // import CustomAlert from '../../components/CustomAlert';
 
-// // Brand logo: green tile, striped scalloped awning, yellow price-drop arrow
+// // Page texts in both languages
+// const TEXTS = {
+//   am: {
+//     toggleLabel: 'English',
+//     brandTitle: 'ቅናሽ ገበያ',
+//     brandSubtitle: 'Q I N A S H   G E B E Y A',
+//     tagline: 'ዋጋ ይቀንሳል፣ ትርፍ ይጨምራል',
+//     cardTitle: 'እንኳን ደህና መጡ',
+//     cardSubtitle: 'ለመጀመር የስልክ ቁጥርዎን ያስገቡ',
+//     inputLabel: 'የስልክ ቁጥር',
+//     helper: 'የሚጠቀሙበትን ስልክ ቁጥር ብቻ ያስገቡ',
+//     loading: 'እየተላከ ነው...',
+//     next: 'ቀጥል',
+//     trust: 'ደህንነቱ የተጠበቀ የንግድ ማዘዣ',
+//     footer: 'የአዳማ ኪዮስክ ቸርቻሪዎች የጅምላ መተግበሪያ',
+//     warnTitle: 'ማስጠንቀቂያ',
+//     warnMessage: 'እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ',
+//     errorTitle: 'ስህተት',
+//     errorFallback: 'ግንኙነት አልተሳካም፤ እባክዎ ደግመው ይሞክሩ',
+//   },
+//   en: {
+//     toggleLabel: 'አማርኛ',
+//     brandTitle: 'Qinash Gebeya',
+//     brandSubtitle: 'W H O L E S A L E   A P P',
+//     tagline: 'Lower prices, higher profit',
+//     cardTitle: 'Welcome',
+//     cardSubtitle: 'Enter your phone number to get started',
+//     inputLabel: 'Phone number',
+//     helper: 'Enter only the phone number you use',
+//     loading: 'Sending...',
+//     next: 'Continue',
+//     trust: 'Secure business ordering',
+//     footer: 'Wholesale app for Adama kiosk retailers',
+//     warnTitle: 'Warning',
+//     warnMessage: 'Please enter a valid phone number',
+//     errorTitle: 'Error',
+//     errorFallback: 'Connection failed. Please try again',
+//   },
+// };
+
 // function QinashLogo({ size = 52 }) {
 //   const stripeW = (size * 0.62) / 4;
 
@@ -35,7 +74,6 @@
 //         overflow: 'hidden',
 //       }}
 //     >
-//       {/* Soft inner highlight */}
 //       <View
 //         style={{
 //           position: 'absolute',
@@ -47,8 +85,6 @@
 //           backgroundColor: 'rgba(255,255,255,0.10)',
 //         }}
 //       />
-
-//       {/* Inner ring */}
 //       <View
 //         pointerEvents="none"
 //         style={{
@@ -60,8 +96,6 @@
 //           borderColor: 'rgba(255,255,255,0.18)',
 //         }}
 //       />
-
-//       {/* Awning */}
 //       <View style={{ width: size * 0.62, alignItems: 'center' }}>
 //         <View
 //           style={{
@@ -84,8 +118,6 @@
 //             />
 //           ))}
 //         </View>
-
-//         {/* Scallops */}
 //         <View style={{ flexDirection: 'row', marginTop: -1 }}>
 //           {[0, 1, 2, 3].map((i) => (
 //             <View
@@ -101,8 +133,6 @@
 //           ))}
 //         </View>
 //       </View>
-
-//       {/* Yellow price-drop arrow */}
 //       <View style={{ alignItems: 'center', marginTop: size * 0.05 }}>
 //         <View
 //           style={{
@@ -135,13 +165,16 @@
 // export default function PhoneScreen() {
 //   const router = useRouter();
 //   const session = useSession();
-//   const { width, height } = useWindowDimensions();
+//   const { width } = useWindowDimensions();
+//   const inputRef = useRef(null);
 
-//   // Layout helpers (UI only)
-//   const isSmall = height < 700 || width < 350;
+//   // Width only: height changes when the keyboard opens and must not re-layout the page
+//   const isSmall = width < 350;
 //   const logoSize = isSmall ? 46 : 54;
 
-//   // const [phone, setPhone] = useState('0900460680');
+//   const [lang, setLang] = useState('am');
+//   const t = TEXTS[lang];
+
 //   const [phone, setPhone] = useState('');
 //   const [loading, setLoading] = useState(false);
 //   const [focused, setFocused] = useState(false);
@@ -162,13 +195,17 @@
 //     });
 //   };
 
+//   const toggleLanguage = () => {
+//     setLang((prev) => (prev === 'am' ? 'en' : 'am'));
+//   };
+
 //   const handleNext = async () => {
 //     const cleanedPhone = phone.trim();
 
 //     if (!cleanedPhone || cleanedPhone.length < 9) {
 //       triggerAlert(
-//         'ማስጠንቀቂያ',
-//         'እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ',
+//         t.warnTitle,
+//         t.warnMessage,
 //         'error',
 //       );
 //       return;
@@ -201,34 +238,50 @@
 //       });
 //     } catch (err) {
 //       triggerAlert(
-//         'ስህተት',
+//         t.errorTitle,
 //         err?.message ||
-//           'ግንኙነት አልተሳካም፤ እባክዎ ደግመው ይሞክሩ',
+//           t.errorFallback,
 //         'error',
 //       );
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
-// return (
-//     <SafeAreaView style={styles.safe}>
-//       <StatusBar
-//         barStyle="light-content"
-//         backgroundColor="#0F7B4A"
-//       />
 
-//       <View style={styles.keyboard}>
+//   return (
+//     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+//       <StatusBar barStyle="light-content" backgroundColor="#0F7B4A" />
+
+//       <KeyboardAvoidingView
+//         style={styles.container}
+//         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+//       >
 //         <ScrollView
-//           style={styles.keyboard}
 //           contentContainerStyle={styles.scrollContent}
 //           keyboardShouldPersistTaps="handled"
 //           showsVerticalScrollIndicator={false}
+//           bounces={false}
 //         >
 //           {/* Compact Hero */}
 //           <View style={styles.hero}>
 //             <View pointerEvents="none" style={styles.heroCircleA} />
 //             <View pointerEvents="none" style={styles.heroCircleB} />
 //             <View pointerEvents="none" style={styles.heroRing} />
+
+//             {/* Language switch */}
+//             <View style={styles.langRow}>
+//               <TouchableOpacity
+//                 style={styles.langButton}
+//                 onPress={toggleLanguage}
+//                 activeOpacity={0.8}
+//                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+//                 accessibilityRole="button"
+//                 accessibilityLabel="Change language"
+//               >
+//                 <Text style={styles.langGlobe}>🌐</Text>
+//                 <Text style={styles.langButtonText}>{t.toggleLabel}</Text>
+//               </TouchableOpacity>
+//             </View>
 
 //             <View style={styles.brandRow}>
 //               <View style={styles.logoHalo}>
@@ -240,23 +293,23 @@
 //                   style={[styles.brandTitle, isSmall && styles.brandTitleSmall]}
 //                   numberOfLines={1}
 //                 >
-//                   ቅናሽ ገበያ
+//                   {t.brandTitle}
 //                 </Text>
 
 //                 <Text style={styles.brandSubtitleLatin} numberOfLines={1}>
-//                   Q I N A S H   G E B E Y A
+//                   {t.brandSubtitle}
 //                 </Text>
 
 //                 <View style={styles.taglinePill}>
 //                   <Text style={styles.brandTagline}>
-//                     ዋጋ ይቀንሳል፣ ትርፍ ይጨምራል
+//                     {t.tagline}
 //                   </Text>
 //                 </View>
 //               </View>
 //             </View>
 //           </View>
 
-//           {/* Login area */}
+//           {/* Login Card Area */}
 //           <View style={styles.mainWrapper}>
 //             <View style={[styles.card, isSmall && styles.cardSmall]}>
 //               <View style={styles.cardHeader}>
@@ -266,11 +319,11 @@
 
 //                 <View style={styles.headingGroup}>
 //                   <Text style={styles.cardTitle}>
-//                     እንኳን ደህና መጡ
+//                     {t.cardTitle}
 //                   </Text>
 
 //                   <Text style={styles.cardSubtitle}>
-//                     ለመጀመር የስልክ ቁጥርዎን ያስገቡ
+//                     {t.cardSubtitle}
 //                   </Text>
 //                 </View>
 //               </View>
@@ -280,10 +333,13 @@
 //               {/* Input Section */}
 //               <View style={styles.inputSection}>
 //                 <Text style={styles.inputLabel}>
-//                   የስልክ ቁጥር
+//                   {t.inputLabel}
 //                 </Text>
 
-//                 <View
+//                 {/* Single input box: tapping anywhere on it opens the keyboard */}
+//                 <TouchableOpacity
+//                   activeOpacity={1}
+//                   onPress={() => inputRef.current?.focus()}
 //                   style={[
 //                     styles.inputBox,
 //                     focused && styles.inputBoxFocused,
@@ -302,21 +358,15 @@
 //                   </View>
 
 //                   <TextInput
-//                     style={[
-//                       styles.input,
-//                       {
-//                         borderWidth: 0,
-//                         borderColor: 'transparent',
-//                         backgroundColor: 'transparent',
-//                         outlineStyle: 'none',
-//                         elevation: 0,
-//                       },
-//                     ]}
+//                     ref={inputRef}
+//                     style={styles.input}
 //                     value={phone}
-//                     onChangeText={(text) => setPhone(text)}
+//                     onChangeText={setPhone}
 //                     placeholder="9XXXXXXXX"
 //                     placeholderTextColor="#9CAEA4"
 //                     keyboardType="phone-pad"
+//                     autoFocus={false}
+//                     showSoftInputOnFocus={true}
 //                     onFocus={() => setFocused(true)}
 //                     onBlur={() => setFocused(false)}
 //                     selectionColor="#0F7B4A"
@@ -324,10 +374,10 @@
 //                     autoCorrect={false}
 //                     autoCapitalize="none"
 //                   />
-//                 </View>
+//                 </TouchableOpacity>
 
 //                 <Text style={styles.helperText}>
-//                   የሚጠቀሙበትን ስልክ ቁጥር ብቻ ያስገቡ
+//                   {t.helper}
 //                 </Text>
 //               </View>
 
@@ -343,25 +393,18 @@
 //               >
 //                 {loading ? (
 //                   <View style={styles.buttonContent}>
-//                     <ActivityIndicator
-//                       size="small"
-//                       color="#FFFFFF"
-//                     />
-
+//                     <ActivityIndicator size="small" color="#FFFFFF" />
 //                     <Text style={styles.buttonLabel}>
-//                       እየተላከ ነው...
+//                       {t.loading}
 //                     </Text>
 //                   </View>
 //                 ) : (
 //                   <View style={styles.buttonContent}>
 //                     <Text style={styles.buttonLabel}>
-//                       ቀጥል
+//                       {t.next}
 //                     </Text>
-
 //                     <View style={styles.arrowIconBubble}>
-//                       <Text style={styles.arrowSymbol}>
-//                         ›
-//                       </Text>
+//                       <Text style={styles.arrowSymbol}>›</Text>
 //                     </View>
 //                   </View>
 //                 )}
@@ -372,9 +415,8 @@
 //                 <View style={styles.checkIcon}>
 //                   <Text style={styles.checkChar}>✓</Text>
 //                 </View>
-
 //                 <Text style={styles.trustText}>
-//                   ደህንነቱ የተጠበቀ የንግድ ማዘዣ
+//                   {t.trust}
 //                 </Text>
 //               </View>
 //             </View>
@@ -383,13 +425,13 @@
 //             <View style={styles.footerSection}>
 //               <View style={styles.footerDot} />
 //               <Text style={styles.footerNote}>
-//                 የአዳማ ኪዮስክ ቸርቻሪዎች የጅምላ መተግበሪያ
+//                 {t.footer}
 //               </Text>
 //               <View style={styles.footerDot} />
 //             </View>
 //           </View>
 //         </ScrollView>
-//       </View>
+//       </KeyboardAvoidingView>
 
 //       {/* Alert */}
 //       <CustomAlert
@@ -407,223 +449,18 @@
 //     </SafeAreaView>
 //   );
 // }
-// //   return (
-// //     <SafeAreaView style={styles.safe}>
-// //       <StatusBar
-// //         barStyle="light-content"
-// //         backgroundColor="#0F7B4A"
-// //       />
-
-// //       <KeyboardAvoidingView
-// //         style={styles.keyboard}
-// //         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-// //       >
-// //         <ScrollView
-// //           style={styles.keyboard}
-// //           contentContainerStyle={styles.scrollContent}
-// //           keyboardShouldPersistTaps="handled"
-// //           showsVerticalScrollIndicator={false}
-// //           bounces={false}
-// //         >
-// //           {/* Compact Hero */}
-// //           <View style={styles.hero}>
-// //             <View pointerEvents="none" style={styles.heroCircleA} />
-// //             <View pointerEvents="none" style={styles.heroCircleB} />
-// //             <View pointerEvents="none" style={styles.heroRing} />
-
-// //             <View style={styles.brandRow}>
-// //               <View style={styles.logoHalo}>
-// //                 <QinashLogo size={logoSize} />
-// //               </View>
-
-// //               <View style={styles.brandInfo}>
-// //                 <Text
-// //                   style={[styles.brandTitle, isSmall && styles.brandTitleSmall]}
-// //                   numberOfLines={1}
-// //                   adjustsFontSizeToFit
-// //                 >
-// //                   ቅናሽ ገበያ
-// //                 </Text>
-
-// //                 <Text style={styles.brandSubtitleLatin} numberOfLines={1}>
-// //                   Q I N A S H   G E B E Y A
-// //                 </Text>
-
-// //                 <View style={styles.taglinePill}>
-// //                   <Text style={styles.brandTagline}>
-// //                     ዋጋ ይቀንሳል፣ ትርፍ ይጨምራል
-// //                   </Text>
-// //                 </View>
-// //               </View>
-// //             </View>
-// //           </View>
-
-// //           {/* Login area: card is centered in the free space */}
-// //           <View style={styles.mainWrapper}>
-// //             <View style={[styles.card, isSmall && styles.cardSmall]}>
-// //               <View style={styles.cardHeader}>
-// //                 <View style={styles.stepBadge}>
-// //                   <Text style={styles.stepBadgeText}>1</Text>
-// //                 </View>
-
-// //                 <View style={styles.headingGroup}>
-// //                   <Text style={styles.cardTitle}>
-// //                     እንኳን ደህና መጡ
-// //                   </Text>
-
-// //                   <Text style={styles.cardSubtitle}>
-// //                     ለመጀመር የስልክ ቁጥርዎን ያስገቡ
-// //                   </Text>
-// //                 </View>
-// //               </View>
-
-// //               <View style={styles.divider} />
-
-// //               {/* Input Section */}
-// //               <View style={styles.inputSection}>
-// //                 <Text style={styles.inputLabel}>
-// //                   የስልክ ቁጥር
-// //                 </Text>
-
-// //                 <View
-// //                   style={[
-// //                     styles.inputBox,
-// //                     focused && styles.inputBoxFocused,
-// //                   ]}
-// //                 >
-// //                   <View
-// //                     style={[
-// //                       styles.inputPrefix,
-// //                       focused && styles.inputPrefixFocused,
-// //                     ]}
-// //                   >
-// //                     <Text style={styles.flagEmoji}>🇪🇹</Text>
-// //                     <Text style={styles.prefixCode}>
-// //                       +251
-// //                     </Text>
-// //                   </View>
-
-// //                   <TextInput
-// //                     style={[
-// //                       styles.input,
-// //                       {
-// //                         borderWidth: 0,
-// //                         borderColor: 'transparent',
-// //                         backgroundColor: 'transparent',
-// //                         outlineStyle: 'none',
-// //                         elevation: 0,
-// //                       },
-// //                     ]}
-// //                     value={phone}
-// //                     onChangeText={setPhone}
-// //                     placeholder="9XXXXXXXX"
-// //                     placeholderTextColor="#9CAEA4"
-// //                     keyboardType="phone-pad"
-// //                     onFocus={() => setFocused(true)}
-// //                     onBlur={() => setFocused(false)}
-// //                     selectionColor="#0F7B4A"
-// //                     underlineColorAndroid="transparent"
-// //                     autoCorrect={false}
-// //                     autoCapitalize="none"
-// //                     numberOfLines={1}
-// //                   />
-// //                 </View>
-
-// //                 <Text style={styles.helperText}>
-// //                   የሚጠቀሙበትን ስልክ ቁጥር ብቻ ያስገቡ
-// //                 </Text>
-// //               </View>
-
-// //               {/* Primary Action Button */}
-// //               <TouchableOpacity
-// //                 style={[
-// //                   styles.actionButton,
-// //                   loading && styles.actionButtonDisabled,
-// //                 ]}
-// //                 onPress={handleNext}
-// //                 disabled={loading}
-// //                 activeOpacity={0.85}
-// //               >
-// //                 {loading ? (
-// //                   <View style={styles.buttonContent}>
-// //                     <ActivityIndicator
-// //                       size="small"
-// //                       color="#FFFFFF"
-// //                     />
-
-// //                     <Text style={styles.buttonLabel}>
-// //                       እየተላከ ነው...
-// //                     </Text>
-// //                   </View>
-// //                 ) : (
-// //                   <View style={styles.buttonContent}>
-// //                     <Text style={styles.buttonLabel}>
-// //                       ቀጥል
-// //                     </Text>
-
-// //                     <View style={styles.arrowIconBubble}>
-// //                       <Text style={styles.arrowSymbol}>
-// //                         ›
-// //                       </Text>
-// //                     </View>
-// //                   </View>
-// //                 )}
-// //               </TouchableOpacity>
-
-// //               {/* Trust Badge */}
-// //               <View style={styles.trustBadge}>
-// //                 <View style={styles.checkIcon}>
-// //                   <Text style={styles.checkChar}>✓</Text>
-// //                 </View>
-
-// //                 <Text style={styles.trustText}>
-// //                   ደህንነቱ የተጠበቀ የንግድ ማዘዣ
-// //                 </Text>
-// //               </View>
-// //             </View>
-
-// //             {/* Footer */}
-// //             <View style={styles.footerSection}>
-// //               <View style={styles.footerDot} />
-// //               <Text style={styles.footerNote}>
-// //                 የአዳማ ኪዮስክ ቸርቻሪዎች የጅምላ መተግበሪያ
-// //               </Text>
-// //               <View style={styles.footerDot} />
-// //             </View>
-// //           </View>
-// //         </ScrollView>
-// //       </KeyboardAvoidingView>
-
-// //       {/* Alert */}
-// //       <CustomAlert
-// //         visible={alertConfig.visible}
-// //         title={alertConfig.title}
-// //         message={alertConfig.message}
-// //         type={alertConfig.type}
-// //         onClose={() =>
-// //           setAlertConfig((prev) => ({
-// //             ...prev,
-// //             visible: false,
-// //           }))
-// //         }
-// //       />
-// //     </SafeAreaView>
-// //   );
-// // }
 
 // const styles = StyleSheet.create({
 //   safe: {
 //     flex: 1,
 //     backgroundColor: '#F4F7F4',
 //   },
-//   keyboard: {
+//   container: {
 //     flex: 1,
 //   },
 //   scrollContent: {
 //     flexGrow: 1,
 //   },
-
-//   /* Centers the card in the space under the hero */
 //   mainWrapper: {
 //     flexGrow: 1,
 //     width: '100%',
@@ -633,8 +470,6 @@
 //     paddingHorizontal: 20,
 //     paddingVertical: 24,
 //   },
-
-//   /* Hero (compact) */
 //   hero: {
 //     backgroundColor: '#0F7B4A',
 //     paddingHorizontal: 22,
@@ -676,7 +511,36 @@
 //     borderColor: 'rgba(255, 255, 255, 0.15)',
 //   },
 
-//   /* Brand */
+//   /* Language switch */
+//   langRow: {
+//     width: '100%',
+//     maxWidth: 480,
+//     alignSelf: 'center',
+//     flexDirection: 'row',
+//     justifyContent: 'flex-end',
+//     marginBottom: 10,
+//   },
+//   langButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: 6,
+//     backgroundColor: 'rgba(255, 255, 255, 0.18)',
+//     borderWidth: 1,
+//     borderColor: 'rgba(255, 255, 255, 0.35)',
+//     paddingHorizontal: 12,
+//     paddingVertical: 6,
+//     borderRadius: 20,
+//   },
+//   langGlobe: {
+//     fontSize: 13,
+//   },
+//   langButtonText: {
+//     color: '#FFFFFF',
+//     fontSize: 12.5,
+//     fontWeight: '800',
+//     letterSpacing: 0.2,
+//   },
+
 //   brandRow: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -729,8 +593,6 @@
 //     fontWeight: '800',
 //     color: '#12241A',
 //   },
-
-//   /* Card */
 //   card: {
 //     backgroundColor: '#FFFFFF',
 //     borderRadius: 28,
@@ -786,8 +648,6 @@
 //     backgroundColor: '#EDF3EF',
 //     marginVertical: 18,
 //   },
-
-//   /* Input */
 //   inputSection: {
 //     marginBottom: 18,
 //   },
@@ -799,6 +659,7 @@
 //     letterSpacing: 0.2,
 //   },
 //   inputBox: {
+//     width: '100%',
 //     height: 58,
 //     borderWidth: 1.5,
 //     borderColor: '#DCE6E0',
@@ -840,6 +701,7 @@
 //   },
 //   input: {
 //     flex: 1,
+//     minWidth: 0,
 //     height: '100%',
 //     fontSize: 18,
 //     fontWeight: '700',
@@ -847,7 +709,8 @@
 //     letterSpacing: 0.8,
 //     paddingVertical: 0,
 //     paddingHorizontal: 2,
-//     borderWidth: 0,
+//     backgroundColor: 'transparent',
+//     ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
 //   },
 //   helperText: {
 //     fontSize: 11.5,
@@ -855,8 +718,6 @@
 //     marginTop: 8,
 //     marginLeft: 4,
 //   },
-
-//   /* Button */
 //   actionButton: {
 //     height: 58,
 //     borderRadius: 18,
@@ -900,8 +761,6 @@
 //     fontWeight: '800',
 //     marginTop: -1,
 //   },
-
-//   /* Trust */
 //   trustBadge: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -932,8 +791,6 @@
 //     color: '#3F5A4A',
 //     fontWeight: '700',
 //   },
-
-//   /* Footer */
 //   footerSection: {
 //     flexDirection: 'row',
 //     alignItems: 'center',
@@ -974,6 +831,46 @@ import { useRouter } from 'expo-router';
 import { apiRequest } from '../../lib/api';
 import { useSession } from '../../context/SessionContext';
 import CustomAlert from '../../components/CustomAlert';
+
+// Page texts in both languages
+const TEXTS = {
+  am: {
+    toggleLabel: 'English',
+    brandTitle: 'ቅናሽ ገበያ',
+    brandSubtitle: 'Q I N A S H   G E B E Y A',
+    tagline: 'ዋጋ ይቀንሳል፣ ትርፍ ይጨምራል',
+    cardTitle: 'እንኳን ደህና መጡ',
+    cardSubtitle: 'ለመጀመር የስልክ ቁጥርዎን ያስገቡ',
+    inputLabel: 'የስልክ ቁጥር',
+    helper: 'የሚጠቀሙበትን ስልክ ቁጥር ብቻ ያስገቡ',
+    loading: 'እየተላከ ነው...',
+    next: 'ቀጥል',
+    trust: 'ደህንነቱ የተጠበቀ የንግድ ማዘዣ',
+    footer: 'የአዳማ ኪዮስክ ቸርቻሪዎች የጅምላ መተግበሪያ',
+    warnTitle: 'ማስጠንቀቂያ',
+    warnMessage: 'እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ',
+    errorTitle: 'ስህተት',
+    errorFallback: 'ግንኙነት አልተሳካም፤ እባክዎ ደግመው ይሞክሩ',
+  },
+  en: {
+    toggleLabel: 'አማርኛ',
+    brandTitle: 'Qinash Gebeya',
+    brandSubtitle: 'W H O L E S A L E   A P P',
+    tagline: 'Lower prices, higher profit',
+    cardTitle: 'Welcome',
+    cardSubtitle: 'Enter your phone number to get started',
+    inputLabel: 'Phone number',
+    helper: 'Enter only the phone number you use',
+    loading: 'Sending...',
+    next: 'Continue',
+    trust: 'Secure business ordering',
+    footer: 'Wholesale app for Adama kiosk retailers',
+    warnTitle: 'Warning',
+    warnMessage: 'Please enter a valid phone number',
+    errorTitle: 'Error',
+    errorFallback: 'Connection failed. Please try again',
+  },
+};
 
 function QinashLogo({ size = 52 }) {
   const stripeW = (size * 0.62) / 4;
@@ -1088,6 +985,9 @@ export default function PhoneScreen() {
   const isSmall = width < 350;
   const logoSize = isSmall ? 46 : 54;
 
+  const [lang, setLang] = useState('am');
+  const t = TEXTS[lang];
+
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -1108,13 +1008,17 @@ export default function PhoneScreen() {
     });
   };
 
+  const toggleLanguage = () => {
+    setLang((prev) => (prev === 'am' ? 'en' : 'am'));
+  };
+
   const handleNext = async () => {
     const cleanedPhone = phone.trim();
 
     if (!cleanedPhone || cleanedPhone.length < 9) {
       triggerAlert(
-        'ማስጠንቀቂያ',
-        'እባክዎ ትክክለኛ ስልክ ቁጥር ያስገቡ',
+        t.warnTitle,
+        t.warnMessage,
         'error',
       );
       return;
@@ -1139,17 +1043,19 @@ export default function PhoneScreen() {
         return;
       }
 
+      // Pass both phone and devOtp to the verification screen
       router.push({
         pathname: '/(auth)/verify',
         params: {
           phone: cleanedPhone,
+          devOtp: res?.devOtp || '',
         },
       });
     } catch (err) {
       triggerAlert(
-        'ስህተት',
+        t.errorTitle,
         err?.message ||
-          'ግንኙነት አልተሳካም፤ እባክዎ ደግመው ይሞክሩ',
+          t.errorFallback,
         'error',
       );
     } finally {
@@ -1177,6 +1083,21 @@ export default function PhoneScreen() {
             <View pointerEvents="none" style={styles.heroCircleB} />
             <View pointerEvents="none" style={styles.heroRing} />
 
+            {/* Language switch */}
+            <View style={styles.langRow}>
+              <TouchableOpacity
+                style={styles.langButton}
+                onPress={toggleLanguage}
+                activeOpacity={0.8}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Change language"
+              >
+                <Text style={styles.langGlobe}>🌐</Text>
+                <Text style={styles.langButtonText}>{t.toggleLabel}</Text>
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.brandRow}>
               <View style={styles.logoHalo}>
                 <QinashLogo size={logoSize} />
@@ -1187,16 +1108,16 @@ export default function PhoneScreen() {
                   style={[styles.brandTitle, isSmall && styles.brandTitleSmall]}
                   numberOfLines={1}
                 >
-                  ቅናሽ ገበያ
+                  {t.brandTitle}
                 </Text>
 
                 <Text style={styles.brandSubtitleLatin} numberOfLines={1}>
-                  Q I N A S H   G E B E Y A
+                  {t.brandSubtitle}
                 </Text>
 
                 <View style={styles.taglinePill}>
                   <Text style={styles.brandTagline}>
-                    ዋጋ ይቀንሳል፣ ትርፍ ይጨምራል
+                    {t.tagline}
                   </Text>
                 </View>
               </View>
@@ -1213,11 +1134,11 @@ export default function PhoneScreen() {
 
                 <View style={styles.headingGroup}>
                   <Text style={styles.cardTitle}>
-                    እንኳን ደህና መጡ
+                    {t.cardTitle}
                   </Text>
 
                   <Text style={styles.cardSubtitle}>
-                    ለመጀመር የስልክ ቁጥርዎን ያስገቡ
+                    {t.cardSubtitle}
                   </Text>
                 </View>
               </View>
@@ -1227,7 +1148,7 @@ export default function PhoneScreen() {
               {/* Input Section */}
               <View style={styles.inputSection}>
                 <Text style={styles.inputLabel}>
-                  የስልክ ቁጥር
+                  {t.inputLabel}
                 </Text>
 
                 {/* Single input box: tapping anywhere on it opens the keyboard */}
@@ -1271,7 +1192,7 @@ export default function PhoneScreen() {
                 </TouchableOpacity>
 
                 <Text style={styles.helperText}>
-                  የሚጠቀሙበትን ስልክ ቁጥር ብቻ ያስገቡ
+                  {t.helper}
                 </Text>
               </View>
 
@@ -1289,13 +1210,13 @@ export default function PhoneScreen() {
                   <View style={styles.buttonContent}>
                     <ActivityIndicator size="small" color="#FFFFFF" />
                     <Text style={styles.buttonLabel}>
-                      እየተላከ ነው...
+                      {t.loading}
                     </Text>
                   </View>
                 ) : (
                   <View style={styles.buttonContent}>
                     <Text style={styles.buttonLabel}>
-                      ቀጥል
+                      {t.next}
                     </Text>
                     <View style={styles.arrowIconBubble}>
                       <Text style={styles.arrowSymbol}>›</Text>
@@ -1310,7 +1231,7 @@ export default function PhoneScreen() {
                   <Text style={styles.checkChar}>✓</Text>
                 </View>
                 <Text style={styles.trustText}>
-                  ደህንነቱ የተጠበቀ የንግድ ማዘዣ
+                  {t.trust}
                 </Text>
               </View>
             </View>
@@ -1319,7 +1240,7 @@ export default function PhoneScreen() {
             <View style={styles.footerSection}>
               <View style={styles.footerDot} />
               <Text style={styles.footerNote}>
-                የአዳማ ኪዮስክ ቸርቻሪዎች የጅምላ መተግበሪያ
+                {t.footer}
               </Text>
               <View style={styles.footerDot} />
             </View>
@@ -1404,6 +1325,37 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
+
+  /* Language switch */
+  langRow: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 10,
+  },
+  langButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  langGlobe: {
+    fontSize: 13,
+  },
+  langButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',

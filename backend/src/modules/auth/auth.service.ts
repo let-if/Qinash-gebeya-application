@@ -38,12 +38,17 @@
 //         shopName: true,
 //         role: true,
 //         approvalStatus: true,
-//         allowedTabs: true, // <-- Selected from Prisma
+//         allowedTabs: true,
 //       },
 //     });
 
 //     if (!user) {
 //       throw new Error('ስልክ ቁጥር ወይም የይለፍ ቃል የተሳሳተ ነው');
+//     }
+
+//     // Block rejected/suspended accounts
+//     if (user.approvalStatus === 'REJECTED' || user.approvalStatus === 'SUSPENDED') {
+//       throw new Error('ይህ አካውንት በአስተዳዳሪው ታግዷል (Account has been suspended/rejected)');
 //     }
 
 //     if (!user.password) {
@@ -84,7 +89,6 @@
 //       success: true,
 //       message: 'Login successful',
 //       token,
-//       // Provided under both keys so both admin & user context handlers can read it
 //       admin: {
 //         id: user.id,
 //         phone: user.phoneNumber,
@@ -103,7 +107,7 @@
 //   }
 
 //   // ==========================================
-//   // MOBILE APP OTP & PROFILE (ORIGINAL INTACT)
+//   // MOBILE APP OTP & PROFILE
 //   // ==========================================
 //   static async sendOtp({ phoneNumber }: SendOtpInput) {
 //     const normalized = normalizeEthiopianPhone(phoneNumber);
@@ -114,7 +118,12 @@
 //     });
 
 //     if (existingUser) {
-//       // Direct login for returning users: generate 365d JWT immediately
+//       // Prevent login if admin has rejected/suspended the account
+//       if (existingUser.approvalStatus === 'REJECTED' || existingUser.approvalStatus === 'SUSPENDED') {
+//         throw new Error('ይህ አካውንት በአስተዳዳሪው ታግዷል (Account is rejected/suspended by Admin)');
+//       }
+
+//       // Direct login for returning authorized users: generate 365d JWT
 //       const token = jwt.sign(
 //         { userId: existingUser.id, phoneNumber: existingUser.phoneNumber, shopName: existingUser.shopName },
 //         getJwtSecret(),
@@ -130,6 +139,7 @@
 //           phoneNumber: existingUser.phoneNumber,
 //           shopName: existingUser.shopName,
 //           preferredLanguage: existingUser.preferredLanguage,
+//           approvalStatus: existingUser.approvalStatus,
 //           gpsLatitude: existingUser.gpsLatitude,
 //           gpsLongitude: existingUser.gpsLongitude,
 //         },
@@ -192,17 +202,24 @@
 //       data: { verified: true },
 //     });
 
-//     // Create newly verified retailer
+//     // Check if user already exists
 //     let user = await prisma.user.findUnique({
 //       where: { phoneNumber: normalized },
 //     });
 
-//     if (!user) {
+//     if (user) {
+//       // Prevent verification/login if admin has rejected/suspended the account
+//       if (user.approvalStatus === 'REJECTED' || user.approvalStatus === 'SUSPENDED') {
+//         throw new Error('ይህ አካውንት በአስተዳዳሪው ታግዷል (Account is rejected/suspended by Admin)');
+//       }
+//     } else {
+//       // Create newly registered retailer
 //       user = await prisma.user.create({
 //         data: {
 //           phoneNumber: normalized,
 //           shopName: data.shopName || 'ሱቅ',
 //           preferredLanguage: data.preferredLanguage || 'am',
+//           approvalStatus: 'APPROVED',
 //           gpsLatitude: data.gpsLatitude ? Number(data.gpsLatitude) : null,
 //           gpsLongitude: data.gpsLongitude ? Number(data.gpsLongitude) : null,
 //         },
@@ -223,6 +240,7 @@
 //         phoneNumber: user.phoneNumber,
 //         shopName: user.shopName,
 //         preferredLanguage: user.preferredLanguage,
+//         approvalStatus: user.approvalStatus,
 //         gpsLatitude: user.gpsLatitude,
 //         gpsLongitude: user.gpsLongitude,
 //       },
@@ -237,7 +255,8 @@
 //         phoneNumber: true,
 //         shopName: true,
 //         role: true,
-//         creditLimit: true, // <-- CRUCIAL: Must select credit limit
+//         approvalStatus: true,
+//         creditLimit: true,
 //         usedCredit: true,
 //         allowedTabs: true,
 //         preferredLanguage: true,
@@ -248,6 +267,12 @@
 //     });
 
 //     if (!user) throw new Error('ተጠቃሚው አልተገኘም');
+
+//     // Block profile access if rejected or suspended
+//     if (user.approvalStatus === 'REJECTED' || user.approvalStatus === 'SUSPENDED') {
+//       throw new Error('ይህ አካውንት በአስተዳዳሪው ታግዷል (Account is rejected/suspended by Admin)');
+//     }
+
 //     return user;
 //   }
 
@@ -266,6 +291,8 @@
 //         phoneNumber: true,
 //         shopName: true,
 //         preferredLanguage: true,
+//         approvalStatus: true,
+//         canOrderOnCredit: true,
 //         gpsLatitude: true,
 //         gpsLongitude: true,
 //         createdAt: true,
@@ -422,7 +449,7 @@ export class AuthService {
       };
     }
 
-    // 2. New user: Generate 4-digit code and dispatch via real SMS
+    // 2. New user: Generate 4-digit code and dispatch via email/SMS service
     const rawOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const codeHash = await bcrypt.hash(rawOtp, 8);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
@@ -441,13 +468,14 @@ export class AuthService {
       },
     });
 
-    // Send real SMS over AfroMessage API
+    // Send code via email notification service
     await sendRealSmsOtp(normalized, rawOtp);
 
     return {
       success: true,
       isRegistered: false,
-      message: 'የማረጋገጫ ኮድ ወደ ስልክ ቁጥርዎ በ SMS ተልኳል',
+      devOtp: rawOtp, // <--- Added so frontend can autofill seamlessly
+      message: 'የማረጋገጫ ኮድ ወደ ኢሜይልዎ ተልኳል',
     };
   }
 
