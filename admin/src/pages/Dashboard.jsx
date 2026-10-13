@@ -956,12 +956,17 @@ export default function Dashboard() {
                       { className: 'flex items-center gap-x-3 gap-y-1.5 flex-wrap' },
                       React.createElement('span', { className: 'font-black text-sm text-[#12241A] break-words' }, o.user?.shopName || 'ሱቅ'),
                       React.createElement('span', { className: 'text-xs text-[#62726A] font-semibold' }, '📞 ' + (o.user?.phoneNumber || '')),
-                      React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
-                        (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
-                         isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
-                         o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
-                      }, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ የጸደቀ' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
+                      // React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
+                      //   (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
+                      //    isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
+                      //    o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
+                      // }, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ የጸደቀ' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
 
+React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
+  (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
+   isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
+   o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
+}, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ ጸድቋል (Confirmed)' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
                       orderLat && orderLng ? React.createElement(
                         'button',
                         {

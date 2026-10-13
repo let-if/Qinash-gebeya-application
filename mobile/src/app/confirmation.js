@@ -532,7 +532,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '../context/SessionContext';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
-const RECORDED_VOICE = require('../../assets/Voice 261001_134911.m4a');
+// const RECORDED_VOICE = require('../../assets/Voice 261001_134911.m4a');
+const RECORDED_VOICE = require('../../assets/audio_2026-10-12_07-15-06.m4a');
 
 export default function ConfirmationScreen() {
   const router = useRouter();
