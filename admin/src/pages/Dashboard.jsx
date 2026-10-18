@@ -63,11 +63,11 @@ export default function Dashboard() {
   const [batchRouteOrders, setBatchRouteOrders] = useState([]);
   const [selectedRouteSlot, setSelectedRouteSlot] = useState('BATCH_6AM');
   const [usersList, setUsersList] = useState([]);
-
+const [orderSearchQuery, setOrderSearchQuery] = React.useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [uploadingSlot, setUploadingSlot] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
   // Amharic in-app message / confirm panel
   const [dialog, setDialog] = useState({ open: false, type: 'alert', message: '' });
   const dialogResolveRef = useRef(null);
@@ -920,7 +920,120 @@ export default function Dashboard() {
           'div',
           { className: 'max-w-6xl mx-auto space-y-4 sm:space-y-6' },
 
-          // ==========================================
+//           // ==========================================
+//           // TAB: ORDERS
+//           // ==========================================
+//           activeTab === 'orders' ? React.createElement(
+//             'div',
+//             { className: 'space-y-3 sm:space-y-4' },
+//             React.createElement(
+//               'div',
+//               { className: 'flex flex-col sm:flex-row sm:items-center justify-between gap-2' },
+//               React.createElement('h2', { className: 'text-sm sm:text-base font-black text-[#12241A] tracking-tight' }, 'የገቡ ትእዛዞች ዝርዝር (Standard Orders - ' + orders.length + ')'),
+//               React.createElement('span', { className: 'self-start sm:self-auto text-xs text-[#62726A] font-semibold bg-white border border-[#E6ECE7] px-3 py-1.5 rounded-full shadow-sm' }, 'ጠቅላላ ሽያጭ: ' + orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString() + ' ብር')
+//             ),
+//             orders.length === 0 ? React.createElement('div', { className: 'bg-white p-10 sm:p-12 text-center rounded-2xl border border-[#E6ECE7] shadow-sm text-xs text-[#62726A] font-semibold' }, 'ምንም የገባ ትእዛዝ የለም') :
+//             React.createElement(
+//               'div',
+//               { className: 'space-y-3' },
+//               orders.map((o) => {
+//                 const items = o.items || o.orderItems || [];
+//                 const isPending = o.status === 'PENDING';
+//                 const isApproved = o.status === 'APPROVED' || o.status === 'CONFIRMED';
+//                 const isDispatched = o.status === 'DISPATCHED';
+
+//                 const orderLat = o.latitude || o.user?.gpsLatitude;
+//                 const orderLng = o.longitude || o.user?.gpsLongitude;
+
+//                 return React.createElement(
+//                   'div',
+//                   { key: o.id, className: 'bg-gradient-to-b from-white to-[#FCFDFB] p-4 sm:p-5 rounded-2xl border border-[#E6ECE7] shadow-sm hover:shadow-lg hover:shadow-[#12241A]/[0.07] hover:border-[#CFE7D9] transition-all duration-300 flex flex-col md:flex-row justify-between md:items-center gap-4' },
+//                   React.createElement(
+//                     'div',
+//                     { className: 'space-y-2 flex-1 min-w-0' },
+//                     React.createElement(
+//                       'div',
+//                       { className: 'flex items-center gap-x-3 gap-y-1.5 flex-wrap' },
+//                       React.createElement('span', { className: 'font-black text-sm text-[#12241A] break-words' }, o.user?.shopName || 'ሱቅ'),
+//                       React.createElement('span', { className: 'text-xs text-[#62726A] font-semibold' }, '📞 ' + (o.user?.phoneNumber || '')),
+//                       // React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
+//                       //   (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
+//                       //    isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
+//                       //    o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
+//                       // }, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ የጸደቀ' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
+
+// React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
+//   (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
+//    isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
+//    o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
+// }, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ ጸድቋል (Confirmed)' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
+//                       orderLat && orderLng ? React.createElement(
+//                         'button',
+//                         {
+//                           type: 'button',
+//                           onClick: () => openGoogleMapsLocation(orderLat, orderLng),
+//                           className: 'px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-lg text-[11px] font-black inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-all shadow-sm'
+//                         },
+//                         React.createElement(MapPin, { className: 'h-3.5 w-3.5 text-emerald-600' }),
+//                         '📍 አድራሻ (Google Maps)'
+//                       ) : null
+//                     ),
+//                  React.createElement(
+//     'div',
+//     { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
+//     React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (o.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+//     // React.createElement('span', null, 'ቀን: ' + new Date(o.createdAt).toLocaleDateString('am-ET'))
+//     React.createElement('span', null, 'ቀን: ' + new Date(o.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
+//   ),
+//                     React.createElement(
+//                       'div',
+//                       { className: 'text-xs bg-gradient-to-b from-[#F9FBF8] to-[#F4F8F4] p-2.5 rounded-xl border border-[#EEF2EE] space-y-1.5' },
+//                       items.map((it, idx) => React.createElement(
+//                         'div',
+//                         { key: idx, className: 'flex justify-between gap-3 text-[#334155]' },
+//                         React.createElement('span', { className: 'min-w-0 break-words' }, '• ' + (it.product?.nameAm || 'እቃ') + ' (' + it.quantity + ' ' + (it.selectedUnit || it.unitType || 'ካርቶን') + ')'),
+//                         React.createElement('span', { className: 'font-bold shrink-0 whitespace-nowrap' }, (Number(it.unitPrice) * Number(it.quantity)).toLocaleString() + ' ብር')
+//                       ))
+//                     )
+//                   ),
+//                   React.createElement(
+//                     'div',
+//                     { className: 'flex flex-col md:items-end gap-3 md:gap-2 w-full md:w-auto shrink-0 border-t border-[#EEF2EE] pt-3 md:border-0 md:pt-0' },
+//                     React.createElement('div', { className: 'font-black text-lg text-[#0F7B4A] drop-shadow-sm' }, Number(o.totalAmount || 0).toLocaleString() + ' ብር'),
+//                     React.createElement(
+//                       'div',
+//                       { className: 'flex gap-2 w-full md:w-auto' },
+//                       isPending ? React.createElement(
+//                         'button',
+//                         {
+//                           onClick: () => updateOrderStatus(o.id, 'APPROVED'),
+//                           className: 'flex-1 md:flex-none px-3.5 py-2.5 md:py-1.5 text-center ' + primaryBtn
+//                         },
+//                         'አጽድቅ (Approve)'
+//                       ) : null,
+//                       isApproved ? React.createElement(
+//                         'button',
+//                         {
+//                           onClick: () => updateOrderStatus(o.id, 'DISPATCHED'),
+//                           className: 'flex-1 md:flex-none px-3.5 py-2.5 md:py-1.5 text-center bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl text-xs font-black cursor-pointer shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/40 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] transition-all duration-200'
+//                         },
+//                         'ላክ (Dispatch)'
+//                       ) : null,
+//                       isPending || isApproved ? React.createElement(
+//                         'button',
+//                         {
+//                           onClick: () => updateOrderStatus(o.id, 'CANCELLED'),
+//                           className: 'flex-1 md:flex-none px-2.5 py-2.5 md:py-1.5 text-center bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold cursor-pointer ring-1 ring-red-100 hover:ring-red-200 active:scale-[0.98] transition-all duration-200'
+//                         },
+//                         'ሰርዝ (Cancel)'
+//                       ) : null
+//                     )
+//                   )
+//                 );
+//               })
+//             )
+//           ) : null,
+// ==========================================
           // TAB: ORDERS
           // ==========================================
           activeTab === 'orders' ? React.createElement(
@@ -932,11 +1045,43 @@ export default function Dashboard() {
               React.createElement('h2', { className: 'text-sm sm:text-base font-black text-[#12241A] tracking-tight' }, 'የገቡ ትእዛዞች ዝርዝር (Standard Orders - ' + orders.length + ')'),
               React.createElement('span', { className: 'self-start sm:self-auto text-xs text-[#62726A] font-semibold bg-white border border-[#E6ECE7] px-3 py-1.5 rounded-full shadow-sm' }, 'ጠቅላላ ሽያጭ: ' + orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString() + ' ብር')
             ),
+
+            // --- SEARCH INPUT BAR ---
+            React.createElement(
+              'div',
+              { className: 'bg-white p-3 rounded-2xl border border-[#E6ECE7] shadow-sm flex items-center gap-2' },
+              React.createElement('span', { className: 'text-sm px-2 text-[#62726A]' }, '🔍'),
+              React.createElement('input', {
+                type: 'text',
+                placeholder: 'በትዕዛዝ፣ በሱቅ ስር፣ በስልክ ቁጥር ወይም በቀን ፈልግ...',
+                value: orderSearchQuery,
+                onChange: (e) => setOrderSearchQuery(e.target.value),
+                className: 'w-full text-xs font-semibold text-[#12241A] focus:outline-none bg-transparent placeholder-[#94A3B8]'
+              }),
+              orderSearchQuery ? React.createElement(
+                'button',
+                {
+                  type: 'button',
+                  onClick: () => setOrderSearchQuery(''),
+                  className: 'text-xs text-red-500 font-bold px-2 py-1 hover:bg-red-50 rounded-lg transition-colors'
+                },
+                'Clear'
+              ) : null
+            ),
+
             orders.length === 0 ? React.createElement('div', { className: 'bg-white p-10 sm:p-12 text-center rounded-2xl border border-[#E6ECE7] shadow-sm text-xs text-[#62726A] font-semibold' }, 'ምንም የገባ ትእዛዝ የለም') :
             React.createElement(
               'div',
               { className: 'space-y-3' },
-              orders.map((o) => {
+              orders.filter((o) => {
+                if (!orderSearchQuery) return true;
+                const query = orderSearchQuery.toLowerCase().trim();
+                const shopName = (o.user?.shopName || '').toLowerCase();
+                const phone = (o.user?.phoneNumber || '').toLowerCase();
+                const formattedDate = new Date(o.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }).toLowerCase();
+                
+                return shopName.includes(query) || phone.includes(query) || formattedDate.includes(query);
+              }).map((o) => {
                 const items = o.items || o.orderItems || [];
                 const isPending = o.status === 'PENDING';
                 const isApproved = o.status === 'APPROVED' || o.status === 'CONFIRMED';
@@ -956,17 +1101,11 @@ export default function Dashboard() {
                       { className: 'flex items-center gap-x-3 gap-y-1.5 flex-wrap' },
                       React.createElement('span', { className: 'font-black text-sm text-[#12241A] break-words' }, o.user?.shopName || 'ሱቅ'),
                       React.createElement('span', { className: 'text-xs text-[#62726A] font-semibold' }, '📞 ' + (o.user?.phoneNumber || '')),
-                      // React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
-                      //   (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
-                      //    isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
-                      //    o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
-                      // }, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ የጸደቀ' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
-
-React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
-  (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
-   isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
-   o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
-}, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ ጸድቋል (Confirmed)' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
+                      React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-bold ring-1 shadow-sm ' + 
+                        (isApproved ? 'bg-emerald-100 text-emerald-700 ring-emerald-200' : 
+                         isDispatched ? 'bg-blue-100 text-blue-700 ring-blue-200' : 
+                         o.status === 'CANCELLED' ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-700 ring-amber-200')
+                      }, isPending ? '⏳ በመጠባበቅ ላይ' : isApproved ? '✅ ጸድቋል (Confirmed)' : isDispatched ? '🚚 በመንገድ ላይ' : o.status),
                       orderLat && orderLng ? React.createElement(
                         'button',
                         {
@@ -978,12 +1117,12 @@ React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full
                         '📍 አድራሻ (Google Maps)'
                       ) : null
                     ),
-                 React.createElement(
-    'div',
-    { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
-    React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (o.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
-    React.createElement('span', null, 'ቀን: ' + new Date(o.createdAt).toLocaleDateString('am-ET'))
-  ),
+                    React.createElement(
+                      'div',
+                      { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
+                      React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (o.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+                      React.createElement('span', null, 'ቀን: ' + new Date(o.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
+                    ),
                     React.createElement(
                       'div',
                       { className: 'text-xs bg-gradient-to-b from-[#F9FBF8] to-[#F4F8F4] p-2.5 rounded-xl border border-[#EEF2EE] space-y-1.5' },
@@ -1121,7 +1260,126 @@ React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full
             )
           ) : null,
 
-          // ==========================================
+          // // ==========================================
+          // // TAB: CREDIT REQUESTS
+          // // ==========================================
+          // activeTab === 'credit' ? React.createElement(
+          //   'div',
+          //   { className: 'space-y-3 sm:space-y-4' },
+          //   React.createElement(
+          //     'div',
+          //     { className: 'flex flex-col sm:flex-row sm:items-center justify-between gap-1.5' },
+          //     React.createElement('h2', { className: 'text-sm sm:text-base font-black text-[#12241A] tracking-tight' }, 'የብድር ጥያቄዎችና ሂሳብ መዝገብ (Credit Ledger - ' + creditOrders.length + ')'),
+          //     React.createElement('span', { className: 'text-xs text-amber-700 font-bold' }, '*ፈቃድ የተሰጠው ብድር ሲከፈል "ተከፍሏል" የሚለውን ይጫኑ')
+          //   ),
+          //   creditOrders.length === 0 ? React.createElement('div', { className: 'bg-white p-10 sm:p-12 text-center rounded-2xl border border-[#E6ECE7] shadow-sm text-xs text-[#62726A] font-semibold' }, 'ምንም የብድር ጥያቄ የለም') :
+          //   React.createElement(
+          //     'div',
+          //     { className: 'space-y-3' },
+          //     creditOrders.map((co) => {
+          //       const items = co.items || co.orderItems || [];
+          //       const isPaid = co.isCreditSettled === true;
+          //       const isApproved = co.creditApproved === true && !isPaid;
+          //       const isRejected = co.creditApproved === false;
+          //       const isWaiting = co.creditApproved === null;
+
+          //       const limit = Number(co.user?.creditLimit || 20000);
+          //       const used = Number(co.user?.usedCredit || 0);
+          //       const remaining = limit - used;
+
+          //       const orderLat = co.latitude || co.user?.gpsLatitude;
+          //       const orderLng = co.longitude || co.user?.gpsLongitude;
+
+          //       return React.createElement(
+          //         'div',
+          //         { key: co.id, className: 'bg-gradient-to-b from-white to-[#FCFDFB] p-4 sm:p-5 rounded-2xl border border-[#E6ECE7] shadow-sm hover:shadow-lg hover:shadow-[#12241A]/[0.07] hover:border-[#CFE7D9] transition-all duration-300 flex flex-col md:flex-row justify-between md:items-center gap-4' },
+          //         React.createElement(
+          //           'div',
+          //           { className: 'space-y-2 flex-1 min-w-0' },
+          //           React.createElement(
+          //             'div',
+          //             { className: 'flex items-center gap-x-3 gap-y-1.5 flex-wrap' },
+          //             React.createElement('span', { className: 'font-black text-sm text-[#12241A] break-words' }, co.user?.shopName || 'ሱቅ'),
+          //             React.createElement('span', { className: 'text-xs text-[#62726A] font-semibold' }, '📞 ' + (co.user?.phoneNumber || '')),
+          //             React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full font-black ring-1 shadow-sm ' +
+          //               (isPaid ? 'bg-blue-100 text-blue-800 ring-blue-200' :
+          //                isApproved ? 'bg-emerald-100 text-emerald-800 ring-emerald-200' :
+          //                isRejected ? 'bg-red-100 text-red-700 ring-red-200' : 'bg-amber-100 text-amber-800 ring-amber-200 animate-pulse')
+          //             }, isPaid ? '✅ ተከፍሏል (Paid)' : isApproved ? '✔ ተፈቅዷል (Allowed)' : isRejected ? '❌ ውድቅ የተደረገ' : '⏳ ፈቃድ በመጠባበቅ ላይ'),
+
+          //             orderLat && orderLng ? React.createElement(
+          //               'button',
+          //               {
+          //                 type: 'button',
+          //                 onClick: () => openGoogleMapsLocation(orderLat, orderLng),
+          //                 className: 'px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 rounded-lg text-[11px] font-black inline-flex items-center gap-1 cursor-pointer active:scale-95 transition-all shadow-sm'
+          //               },
+          //               React.createElement(MapPin, { className: 'h-3.5 w-3.5 text-emerald-600' }),
+          //               '📍 አድራሻ (Google Maps)'
+          //             ) : null
+          //           ),
+          //           React.createElement(
+          //             'div',
+          //             { className: 'text-xs flex gap-x-6 gap-y-1 text-[#62726A] flex-wrap' },
+          //             React.createElement('span', null, 'የብድር ጣሪያ: ' + limit.toLocaleString() + ' ብር'),
+          //             React.createElement('span', null, 'የተወሰደ: ' + used.toLocaleString() + ' ብር'),
+          //             React.createElement('span', { className: 'font-bold text-[#0F7B4A]' }, 'የቀረ ጣሪያ: ' + remaining.toLocaleString() + ' ብር')
+          //           ),
+          //           React.createElement(
+          //             'div',
+          //             { className: 'text-xs bg-gradient-to-b from-[#F9FBF8] to-[#F4F8F4] p-2.5 rounded-xl border border-[#EEF2EE] space-y-1.5' },
+          //             items.map((it, idx) => React.createElement(
+          //               'div',
+          //               { key: idx, className: 'flex justify-between gap-3 text-[#334155]' },
+          //               React.createElement('span', { className: 'min-w-0 break-words' }, '• ' + (it.product?.nameAm || 'እቃ') + ' (' + it.quantity + ' ' + (it.selectedUnit || it.unitType || 'ካርቶን') + ')'),
+          //               React.createElement('span', { className: 'font-bold shrink-0 whitespace-nowrap' }, (Number(it.unitPrice) * Number(it.quantity)).toLocaleString() + ' ብር')
+          //             ))
+          //           )
+          //         ),
+          //         React.createElement(
+          //           'div',
+          //           { className: 'flex flex-col md:items-end gap-3 md:gap-2 w-full md:w-auto shrink-0 border-t border-[#EEF2EE] pt-3 md:border-0 md:pt-0' },
+          //           React.createElement('div', { className: 'font-black text-lg drop-shadow-sm ' + (isPaid ? 'text-blue-700' : 'text-amber-700') },
+          //             Number(co.totalAmount || 0).toLocaleString() + ' ብር ' + (isPaid ? '(የተከፈለ)' : '(በብድር)')
+          //           ),
+          //           isWaiting ? React.createElement(
+          //             'div',
+          //             { className: 'flex gap-2 w-full md:w-auto' },
+          //             React.createElement(
+          //               'button',
+          //               {
+          //                 onClick: () => handleApproveCredit(co.id, true),
+          //                 className: 'flex-1 md:flex-none px-3.5 py-2.5 md:py-1.5 text-center ' + primaryBtn
+          //               },
+          //               'ፍቀድ (Approve)'
+          //             ),
+          //             React.createElement(
+          //               'button',
+          //               {
+          //                 onClick: () => handleApproveCredit(co.id, false),
+          //                 className: 'flex-1 md:flex-none px-3 py-2.5 md:py-1.5 text-center bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold cursor-pointer ring-1 ring-red-100 hover:ring-red-200 active:scale-[0.98] transition-all duration-200'
+          //               },
+          //               'ከልክል (Reject)'
+          //             )
+          //           ) : isApproved ? React.createElement(
+          //             'button',
+          //             {
+          //               onClick: () => handleSettleCredit(co.id),
+          //               className: 'w-full md:w-auto px-3.5 py-2.5 md:py-1.5 text-center bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl text-xs font-black cursor-pointer shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/45 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] transition-all duration-200'
+          //             },
+          //             'ተከፍሏል (Mark as Paid)'
+          //           ) : React.createElement(
+          //             'span',
+          //             { className: 'text-xs font-black ' + (isPaid ? 'text-blue-600' : 'text-gray-400') },
+          //             isPaid ? 'ክፍያው ተጠናቋል ✔' : 'ውድቅ ተደርጓል ✕'
+          //           )
+          //         )
+          //       );
+          //     })
+          //   )
+          // ) : null,
+       
+// ==========================================
           // TAB: CREDIT REQUESTS
           // ==========================================
           activeTab === 'credit' ? React.createElement(
@@ -1133,11 +1391,43 @@ React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full
               React.createElement('h2', { className: 'text-sm sm:text-base font-black text-[#12241A] tracking-tight' }, 'የብድር ጥያቄዎችና ሂሳብ መዝገብ (Credit Ledger - ' + creditOrders.length + ')'),
               React.createElement('span', { className: 'text-xs text-amber-700 font-bold' }, '*ፈቃድ የተሰጠው ብድር ሲከፈል "ተከፍሏል" የሚለውን ይጫኑ')
             ),
+
+            // --- SEARCH INPUT BAR ---
+            React.createElement(
+              'div',
+              { className: 'bg-white p-3 rounded-2xl border border-[#E6ECE7] shadow-sm flex items-center gap-2' },
+              React.createElement('span', { className: 'text-sm px-2 text-[#62726A]' }, '🔍'),
+              React.createElement('input', {
+                type: 'text',
+                placeholder: 'በሱቅ ስም፣ በስልክ ቁጥር ወይም በቀን ፈልግ...',
+                value: creditSearchQuery,
+                onChange: (e) => setCreditSearchQuery(e.target.value),
+                className: 'w-full text-xs font-semibold text-[#12241A] focus:outline-none bg-transparent placeholder-[#94A3B8]'
+              }),
+              creditSearchQuery ? React.createElement(
+                'button',
+                {
+                  type: 'button',
+                  onClick: () => setCreditSearchQuery(''),
+                  className: 'text-xs text-red-500 font-bold px-2 py-1 hover:bg-red-50 rounded-lg transition-colors'
+                },
+                'Clear'
+              ) : null
+            ),
+
             creditOrders.length === 0 ? React.createElement('div', { className: 'bg-white p-10 sm:p-12 text-center rounded-2xl border border-[#E6ECE7] shadow-sm text-xs text-[#62726A] font-semibold' }, 'ምንም የብድር ጥያቄ የለም') :
             React.createElement(
               'div',
               { className: 'space-y-3' },
-              creditOrders.map((co) => {
+              creditOrders.filter((co) => {
+                if (!creditSearchQuery) return true;
+                const query = creditSearchQuery.toLowerCase().trim();
+                const shopName = (co.user?.shopName || '').toLowerCase();
+                const phone = (co.user?.phoneNumber || '').toLowerCase();
+                const formattedDate = new Date(co.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }).toLowerCase();
+                
+                return shopName.includes(query) || phone.includes(query) || formattedDate.includes(query);
+              }).map((co) => {
                 const items = co.items || co.orderItems || [];
                 const isPaid = co.isCreditSettled === true;
                 const isApproved = co.creditApproved === true && !isPaid;
@@ -1185,6 +1475,12 @@ React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full
                       React.createElement('span', null, 'የብድር ጣሪያ: ' + limit.toLocaleString() + ' ብር'),
                       React.createElement('span', null, 'የተወሰደ: ' + used.toLocaleString() + ' ብር'),
                       React.createElement('span', { className: 'font-bold text-[#0F7B4A]' }, 'የቀረ ጣሪያ: ' + remaining.toLocaleString() + ' ብር')
+                    ),
+                    React.createElement(
+                      'div',
+                      { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
+                      React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (co.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+                      React.createElement('span', null, 'ቀን: ' + new Date(co.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
                     ),
                     React.createElement(
                       'div',
@@ -1239,7 +1535,6 @@ React.createElement('span', { className: 'text-[11px] px-2.5 py-0.5 rounded-full
               })
             )
           ) : null,
-
           // ==========================================
           // TAB: PRODUCTS
           // ==========================================

@@ -7,7 +7,10 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",
   },
+  // datasource: {
+  //   url: env("DATABASE_URL"),
+  // },
   datasource: {
-    url: env("DATABASE_URL"),
-  },
+  url: "postgresql://letif:Letif73274465@91.204.209.21:5432/qinash_db",
+},
 });

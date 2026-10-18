@@ -3,14 +3,15 @@ import React from 'react';
 import { Stack, ErrorBoundaryProps } from 'expo-router';
 import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
 import { SessionProvider } from '../context/SessionContext';
-// import * as Notifications from 'expo-notifications';
-// Notifications.setNotificationHandler({
-//   handleNotification: async () => ({
-//     shouldShowAlert: true,
-//     shouldPlaySound: true,
-//     shouldSetBadge: false,
-//   }),
-// });
+import * as Notifications from 'expo-notifications';
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 export function ErrorBoundary({ error }) {
   return (
     <View style={styles.errorContainer}>

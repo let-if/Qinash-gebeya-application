@@ -853,6 +853,7 @@ const TEXTS = {
     warnMessage: 'እባክዎ ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (በ 9 ወይም 7 የሚጀምር)',
     errorTitle: 'ስህተት',
     errorFallback: 'ግንኙነት አልተሳካም፤ እባክዎ ደግመው ይሞክሩ',
+    errorFallback: 'እባክዎ ዋይፋይ ወይም የሞባይል ዳታ ያብሩ',
   },
   en: {
     toggleLabel: 'አማርኛ',
@@ -871,6 +872,7 @@ const TEXTS = {
     warnMessage: 'Please enter a valid Ethiopian phone number starting with 9 or 7',
     errorTitle: 'Error',
     errorFallback: 'Connection failed. Please try again',
+    errorFallback: 'Please turn on Wi-Fi or mobile data',
   },
 };
 

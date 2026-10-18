@@ -23,7 +23,14 @@ cloudinary.config({
 });
 
 const PORT = process.env.PORT || 5000;
-
+// Add this test/welcome route to your main Express setup
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'ቅናሽ ገበያ Backend API is up and running!',
+    timestamp: new Date().toISOString()
+  });
+});
 app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`\n==================================================`);
   console.log(`🚀 Retail Aggregator Backend running on http://0.0.0.0:${PORT}`);

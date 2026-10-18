@@ -19,7 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiRequest } from '../../lib/api';
 import { useSession } from '../../context/SessionContext';
 import { useVideoPlayer, VideoView } from 'expo-video';
-// import * as Notifications from 'expo-notifications';
+import * as Notifications from 'expo-notifications';
 
 const DEFAULT_CATEGORIES = [
   { id: 'cat_groc', name: 'ግሮሰሪ እና የባልትና ውጤቶች', icon: '🛒', slug: 'grocery' },
