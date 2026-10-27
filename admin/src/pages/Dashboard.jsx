@@ -2029,33 +2029,66 @@ React.createElement(
                 React.createElement('button', { type: 'submit', className: 'w-full py-3 sm:py-2.5 ' + primaryBtn }, 'ማስታወቂያውን በሞባይል ላይ ልቀቅ')
               ),
 
+              // React.createElement(
+              //   'div',
+              //   { className: panelBase + ' p-4 sm:p-6 space-y-3 flex flex-col max-h-[420px]' },
+              //   React.createElement('h3', { className: 'text-sm font-black text-[#12241A] tracking-tight shrink-0' }, 'በአሁኑ ሰዓት የሚሰሩ ማስታወቂያዎች (' + banners.length + ')'),
+              //   React.createElement(
+              //     'div',
+              //     { className: 'overflow-y-auto space-y-2 pr-1 flex-1 min-h-0' },
+              //     banners.map((b) => {
+              //       const totalMedia = Array.isArray(b.mediaUrls) && b.mediaUrls.length > 0 ? b.mediaUrls.length : (b.mediaUrl ? 1 : 0);
+              //       const isVideo = b.mediaType === 'VIDEO';
+
+              //       return React.createElement(
+              //         'div',
+              //         { key: b.id, className: 'p-3 border border-[#E6ECE7] rounded-xl text-xs flex gap-3 items-center bg-gradient-to-r from-white to-[#FCFDFB] hover:border-[#CFE7D9] hover:shadow-sm transition-all duration-200' },
+              //       isVideo
+              //         ? React.createElement('div', { className: 'w-14 h-14 bg-gradient-to-br from-[#12241A] to-black text-white flex items-center justify-center rounded-lg text-[10px] font-black shrink-0 ring-1 ring-white/10' }, '▶ ቪዲዮ')
+              //         : React.createElement('img', { src: b.mediaUrl || b.mediaUrls?.[0], className: 'w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-[#E6ECE7] shadow-sm', alt: '' }),
+              //       React.createElement(
+              //         'div',
+              //         { className: 'overflow-hidden flex-1 min-w-0' },
+              //         React.createElement('p', { className: 'font-black truncate text-[#12241A]' }, b.title),
+              //         React.createElement('p', { className: 'text-[11px] text-[#62726A] font-semibold' }, isVideo ? 'የቪዲዮ ማስታወቂያ' : 'የምስል ማስታወቂያ'),
+              //         React.createElement('span', { className: 'text-[10px] text-[#0F7B4A] font-bold bg-[#E4F2EA] px-2 py-0.5 rounded-full inline-block mt-1' }, totalMedia + ' ሚዲያ ፋይሎች (Files)')
+              //       )
+              //     );
+              //     })
+              //   )
+              // )
               React.createElement(
                 'div',
-                { className: panelBase + ' p-4 sm:p-6 space-y-3 flex flex-col max-h-[420px]' },
-                React.createElement('h3', { className: 'text-sm font-black text-[#12241A] tracking-tight shrink-0' }, 'በአሁኑ ሰዓት የሚሰሩ ማስታወቂያዎች (' + banners.length + ')'),
-                React.createElement(
-                  'div',
-                  { className: 'overflow-y-auto space-y-2 pr-1 flex-1 min-h-0' },
-                  banners.map((b) => {
-                    const totalMedia = Array.isArray(b.mediaUrls) && b.mediaUrls.length > 0 ? b.mediaUrls.length : (b.mediaUrl ? 1 : 0);
-                    const isVideo = b.mediaType === 'VIDEO';
-
-                    return React.createElement(
-                      'div',
-                      { key: b.id, className: 'p-3 border border-[#E6ECE7] rounded-xl text-xs flex gap-3 items-center bg-gradient-to-r from-white to-[#FCFDFB] hover:border-[#CFE7D9] hover:shadow-sm transition-all duration-200' },
-                    isVideo
-                      ? React.createElement('div', { className: 'w-14 h-14 bg-gradient-to-br from-[#12241A] to-black text-white flex items-center justify-center rounded-lg text-[10px] font-black shrink-0 ring-1 ring-white/10' }, '▶ ቪዲዮ')
-                      : React.createElement('img', { src: b.mediaUrl || b.mediaUrls?.[0], className: 'w-14 h-14 rounded-lg object-cover shrink-0 ring-1 ring-[#E6ECE7] shadow-sm', alt: '' }),
+                { className: 'p-4 rounded-xl border border-emerald-200 bg-white shadow-sm space-y-2' },
+                React.createElement('div', { className: 'flex justify-between items-center text-xs font-bold text-gray-700' },
+                  React.createElement('span', null, 'የአሁኑ ንቁ መነሻ ማስታወቂያ (Active Carousel):'),
+                  React.createElement('span', { className: 'px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-black' }, '3-Slot Studio')
+                ),
+                banners.length > 0 && banners[banners.length - 1] ? (() => {
+                  const b = banners[banners.length - 1];
+                  const mediaList = Array.isArray(b.mediaUrls) && b.mediaUrls.length > 0 ? b.mediaUrls : (b.mediaUrl ? [b.mediaUrl] : []);
+                  return React.createElement(
+                    'div',
+                    { className: 'space-y-2 pt-1' },
                     React.createElement(
                       'div',
-                      { className: 'overflow-hidden flex-1 min-w-0' },
-                      React.createElement('p', { className: 'font-black truncate text-[#12241A]' }, b.title),
-                      React.createElement('p', { className: 'text-[11px] text-[#62726A] font-semibold' }, isVideo ? 'የቪዲዮ ማስታወቂያ' : 'የምስል ማስታወቂያ'),
-                      React.createElement('span', { className: 'text-[10px] text-[#0F7B4A] font-bold bg-[#E4F2EA] px-2 py-0.5 rounded-full inline-block mt-1' }, totalMedia + ' ሚዲያ ፋይሎች (Files)')
-                    )
+                      { className: 'grid grid-cols-3 gap-2' },
+                      [0, 1, 2].map((idx) => {
+                        const m = mediaList[idx];
+                        return React.createElement(
+                          'div',
+                          { key: idx, className: 'h-24 bg-gray-100 rounded-lg border overflow-hidden flex items-center justify-center relative' },
+                          m ? (
+                            m.includes('video') || m.endsWith('.mp4') ?
+                              React.createElement('div', { className: 'w-full h-full bg-black text-white flex items-center justify-center text-xs font-bold' }, '▶ ቪዲዮ ' + (idx + 1)) :
+                              React.createElement('img', { src: m, className: 'w-full h-full object-cover', alt: '' })
+                          ) : React.createElement('span', { className: 'text-[10px] text-gray-400 font-bold' }, 'ክፍል ' + (idx + 1))
+                        );
+                      })
+                    ),
+                    React.createElement('p', { className: 'text-xs font-black text-gray-800 mt-1' }, b.title || 'ያለ ርዕስ')
                   );
-                  })
-                )
+                })() : React.createElement('div', { className: 'p-8 text-center text-xs text-gray-400' }, 'ምንም ንቁ መነሻ ማስታወቂያ የለም')
               )
             ),
 

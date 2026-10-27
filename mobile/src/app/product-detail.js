@@ -44,18 +44,39 @@ export default function ProductDetailScreen() {
   // Pure In-App Amharic Modal State (No "localhost says..." popups)
   const [clearModalVisible, setClearModalVisible] = useState(false);
 
+  // const syncCartFromStorage = async () => {
+  //   try {
+  //     const savedCart = await AsyncStorage.getItem('user_cart');
+  //     if (savedCart) {
+  //       setCart(JSON.parse(savedCart) || {});
+  //     } else {
+  //       setCart({});
+  //     }
+  //   } catch {
+  //     setCart({});
+  //   }
+  // };
   const syncCartFromStorage = async () => {
-    try {
-      const savedCart = await AsyncStorage.getItem('user_cart');
-      if (savedCart) {
-        setCart(JSON.parse(savedCart) || {});
-      } else {
-        setCart({});
-      }
-    } catch {
+  try {
+    // If the user just checked out, do not restore the old cart
+    const justCheckedOut = await AsyncStorage.getItem('just_checked_out');
+    if (justCheckedOut === 'true') {
+      await AsyncStorage.removeItem('just_checked_out');
+      await AsyncStorage.removeItem('user_cart');
+      setCart({});
+      return;
+    }
+
+    const savedCart = await AsyncStorage.getItem('user_cart');
+    if (savedCart) {
+      setCart(JSON.parse(savedCart) || {});
+    } else {
       setCart({});
     }
-  };
+  } catch {
+    setCart({});
+  }
+};
 
   useFocusEffect(
     useCallback(() => {
@@ -368,25 +389,57 @@ const addItemToCart = async (item, chosenUnit, price) => {
     }
   };
 
+  // const handleGoToCheckout = async () => {
+  //   let userId = 'guest';
+  //   try {
+  //     const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
+  //     if (storedUser) {
+  //       const parsed = JSON.parse(storedUser);
+  //       userId = String(parsed?.id || parsed?._id || 'guest');
+  //     }
+  //   } catch {}
+
+  //   const cartKey = `user_cart_${userId}`;
+  //   await AsyncStorage.setItem(cartKey, JSON.stringify(cart));
+  //   await AsyncStorage.setItem('user_cart', JSON.stringify(cart));
+
+  //   router.push({
+  //     pathname: '/checkout',
+  //     params: { cartData: JSON.stringify(cart) },
+  //   });
+  // };
   const handleGoToCheckout = async () => {
-    let userId = 'guest';
-    try {
-      const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser);
-        userId = String(parsed?.id || parsed?._id || 'guest');
-      }
-    } catch {}
+  let userId = 'guest';
+  try {
+    const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      userId = String(parsed?.id || parsed?._id || 'guest');
+    }
+  } catch {}
 
-    const cartKey = `user_cart_${userId}`;
-    await AsyncStorage.setItem(cartKey, JSON.stringify(cart));
-    await AsyncStorage.setItem('user_cart', JSON.stringify(cart));
+  const cartKey = `user_cart_${userId}`;
+  const cartSnapshot = JSON.stringify(cart);
 
-    router.push({
-      pathname: '/checkout',
-      params: { cartData: JSON.stringify(cart) },
-    });
-  };
+  try {
+    // Set checkout lock flag so screens don't reload old cart on return
+    await AsyncStorage.setItem('just_checked_out', 'true');
+
+    // Wipe cart from storage completely
+    await AsyncStorage.removeItem('user_cart').catch(() => {});
+    await AsyncStorage.removeItem(cartKey).catch(() => {});
+
+    // Clear local state if available (e.g. setCart({}) if you have it in detail page)
+    if (typeof setCart === 'function') {
+      setCart({});
+    }
+  } catch {}
+
+  router.push({
+    pathname: '/checkout',
+    params: { cartData: cartSnapshot },
+  });
+};
   const totalCount = Object.values(cart).reduce(
     (sum, item) => sum + (Number(item?.quantity) || 0),
     0
@@ -658,7 +711,7 @@ const addItemToCart = async (item, chosenUnit, price) => {
                 onPress={handleSaveToDraft}
                 activeOpacity={0.85}
               >
-                <Text style={styles.floatingDraftText}>ረቂቅ</Text>
+                <Text style={styles.floatingDraftText}>ረቂቅ|draft</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

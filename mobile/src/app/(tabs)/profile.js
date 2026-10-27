@@ -1149,7 +1149,7 @@ const DICTIONARY = {
     supportTitle: 'የደንበኞች ድጋፍ መስመር',
     supportSub: '8:00 AM - 8:00 PM ይደውሉ',
     supportModalTitle: 'የደንበኞች አገልግሎት',
-    supportModalBody: 'የደንበኞች እርዳታ መስመር: +251 900 460 680\nየስራ ሰዓት: ከጠዋቱ 2:00 እስከ ማታ 2:00',
+    supportModalBody: 'የደንበኞች እርዳታ መስመር: +251968821059\nየስራ ሰዓት: ከጠዋቱ 2:00 እስከ ማታ 2:00',
     callBtn: 'ደውል (Call)',
     logoutBtn: 'ከመለያ ውጣ (Sign Out)',
     logoutConfirmTitle: 'ከመለያ መውጫ',
@@ -1179,7 +1179,7 @@ const DICTIONARY = {
     supportTitle: 'Gargaarsa Maamiltootaa',
     supportSub: 'Bilbilaa: 8:00 AM - 8:00 PM',
     supportModalTitle: 'Tajaajila Maamiltootaa',
-    supportModalBody: 'Bilbila gargaarsaa: +251 900 460 680\nSa’aatii hojii: Ganama 2:00 - Galgala 2:00',
+    supportModalBody: 'Bilbila gargaarsaa: +251 968821059\nSa’aatii hojii: Ganama 2:00 - Galgala 2:00',
     callBtn: 'Bilbili (Call)',
     logoutBtn: 'Ba’i (Sign Out)',
     logoutConfirmTitle: 'Ba’uu Mirkaneessi',
@@ -1209,7 +1209,7 @@ const DICTIONARY = {
     supportTitle: 'Retailer Helpline Support',
     supportSub: 'Live agents: 8:00 AM - 8:00 PM',
     supportModalTitle: 'Customer Care Helpline',
-    supportModalBody: 'Helpline Number: +251 900 460 680\nWorking Hours: 8:00 AM - 8:00 PM',
+    supportModalBody: 'Helpline Number: +251 968821059\nWorking Hours: 8:00 AM - 8:00 PM',
     callBtn: 'Call Now',
     logoutBtn: 'Log Out',
     logoutConfirmTitle: 'Confirm Sign Out',
@@ -1305,7 +1305,7 @@ export default function ProfileScreen() {
     router.replace('/(auth)/phone');
   };
 
-  const displayedPhone = user?.phoneNumber || '0900460680';
+  const displayedPhone = user?.phoneNumber || '0968821059';
   const displayedShopName = user?.shopName || t.shopTitle;
 
   return (
@@ -1467,7 +1467,7 @@ export default function ProfileScreen() {
                 style={styles.modalConfirmButton}
                 onPress={() => {
                   setSupportModalVisible(false);
-                  Linking.openURL('tel:+251900460680').catch(() => {});
+                  Linking.openURL('tel:+251968821059').catch(() => {});
                 }}
                 activeOpacity={0.8}
               >

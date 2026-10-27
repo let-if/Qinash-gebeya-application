@@ -1,8 +1,109 @@
 
-import React from 'react';
-import { Stack, ErrorBoundaryProps } from 'expo-router';
-import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
-import { SessionProvider } from '../context/SessionContext';
+// import React from 'react';
+// import { Stack, ErrorBoundaryProps } from 'expo-router';
+// import { View, Text, StyleSheet, Platform, ScrollView } from 'react-native';
+// import { SessionProvider } from '../context/SessionContext';
+// // import * as Notifications from 'expo-notifications';
+// // Notifications.setNotificationHandler({
+// //   handleNotification: async () => ({
+// //     shouldShowAlert: true,
+// //     shouldPlaySound: true,
+// //     shouldSetBadge: false,
+// //   }),
+// // });
+
+// export function ErrorBoundary({ error }) {
+//   return (
+//     <View style={styles.errorContainer}>
+//       <Text style={styles.errorTitle}>⚠️ መተግበሪያው ላይ ስህተት ተፈጥሯል (App Crash)</Text>
+//       <ScrollView style={styles.scrollBox}>
+//         <Text style={styles.errorText}>{error?.message}</Text>
+//         <Text style={styles.stackText}>{error?.stack}</Text>
+//       </ScrollView>
+//     </View>
+//   );
+// }
+
+
+// export default function RootLayout() {
+//   const isWeb = Platform.OS === 'web';
+
+//   if (isWeb) {
+//     return (
+//       <SessionProvider>
+//         <View style={styles.webContainer}>
+//           <View style={styles.phoneFrame}>
+//             <Stack screenOptions={{ headerShown: false }} />
+//           </View>
+//         </View>
+//       </SessionProvider>
+//     );
+//   }
+
+//   return (
+//     <SessionProvider>
+//       <Stack screenOptions={{ headerShown: false }} />
+//     </SessionProvider>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   webContainer: {
+//     flex: 1,
+//     backgroundColor: '#0D1712',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     minHeight: '100vh',
+//     width: '100%',
+//   },
+//   phoneFrame: {
+//     width: '100%',
+//     maxWidth: 400,
+//     height: '92vh',
+//     maxHeight: 844,
+//     backgroundColor: '#F5F7F3',
+//     borderRadius: 44,
+//     overflow: 'hidden',
+//     borderWidth: 8,
+//     borderColor: '#1C2E24',
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//     padding: 24,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   errorTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     color: '#D32F2F',
+//     marginBottom: 12,
+//     textAlign: 'center',
+//   },
+//   scrollBox: {
+//     maxHeight: '80%',
+//     width: '100%',
+//     backgroundColor: '#F5F5F5',
+//     padding: 12,
+//     borderRadius: 8,
+//   },
+//   errorText: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//     color: '#333',
+//     marginBottom: 8,
+//   },
+//   stackText: {
+//     fontSize: 11,
+//     color: '#666',
+//     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+//   },
+// });
+import React, { useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import { View, Text, StyleSheet, Platform, ScrollView, ActivityIndicator } from 'react-native';
+import { SessionProvider, useSession } from '../context/SessionContext';
 import * as Notifications from 'expo-notifications';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -11,6 +112,36 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+// Inner component to handle route protection & persistence check
+function RootNavigator() {
+  const { token, loading } = useSession();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!token && !inAuthGroup) {
+      // If not logged in and not already in auth pages, push to phone login
+      router.replace('/(auth)/phone');
+    } else if (token && inAuthGroup) {
+      // If logged in, prevent going back to auth and push straight to shop feed
+      router.replace('/(tabs)');
+    }
+  }, [token, loading, segments]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0F7B4A" />
+      </View>
+    );
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
 
 export function ErrorBoundary({ error }) {
   return (
@@ -24,7 +155,6 @@ export function ErrorBoundary({ error }) {
   );
 }
 
-
 export default function RootLayout() {
   const isWeb = Platform.OS === 'web';
 
@@ -33,7 +163,7 @@ export default function RootLayout() {
       <SessionProvider>
         <View style={styles.webContainer}>
           <View style={styles.phoneFrame}>
-            <Stack screenOptions={{ headerShown: false }} />
+            <RootNavigator />
           </View>
         </View>
       </SessionProvider>
@@ -42,12 +172,18 @@ export default function RootLayout() {
 
   return (
     <SessionProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <RootNavigator />
     </SessionProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#F5F7F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   webContainer: {
     flex: 1,
     backgroundColor: '#0D1712',

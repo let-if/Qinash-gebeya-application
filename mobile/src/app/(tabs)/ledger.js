@@ -1811,8 +1811,8 @@ export default function LedgerScreen() {
                       >
                         {dateStr} ·{' '}
                         {ord.deliverySlot === 'BATCH_6AM'
-                          ? '🌅 ጠዋት 6:00'
-                          : '☀️ ቀትር 12:00'}
+                          ? '🌅 ጠዋት 12:00'
+                          : '☀️ ቀትር 6:00'}
                       </Text>
                     </View>
 

@@ -128,8 +128,30 @@ const lastNotifIdRef = useRef(null);
     : 1;
   const dynSearch = buildSearchDynamic(S, isTablet);
 
-  const syncCart = async () => {
+  // const syncCart = async () => {
+  //   try {
+  //     const stored = await AsyncStorage.getItem('user_cart');
+  //     if (stored) {
+  //       setCart(JSON.parse(stored) || {});
+  //     } else {
+  //       setCart({});
+  //     }
+  //   } catch {
+  //     setCart({});
+  //   }
+  // };
+const syncCart = async () => {
     try {
+      // Check if we just came back from checkout
+      const justCheckedOut = await AsyncStorage.getItem('just_checked_out');
+      if (justCheckedOut === 'true') {
+        // Clear the flag and ensure cart is empty
+        await AsyncStorage.removeItem('just_checked_out');
+        await AsyncStorage.removeItem('user_cart');
+        setCart({});
+        return;
+      }
+
       const stored = await AsyncStorage.getItem('user_cart');
       if (stored) {
         setCart(JSON.parse(stored) || {});
@@ -140,7 +162,6 @@ const lastNotifIdRef = useRef(null);
       setCart({});
     }
   };
-
   useFocusEffect(
     useCallback(() => {
       syncCart();
@@ -603,6 +624,36 @@ const handleSaveToDraft = async () => {
   }
 };
 
+// const handleProceedToCheckout = async () => {
+//   try {
+//     let userId = 'guest';
+//     const storedUser = await AsyncStorage.getItem('user_data').catch(() => null);
+//     if (storedUser) {
+//       const parsed = JSON.parse(storedUser);
+//       userId = String(parsed?.id || parsed?._id || 'guest');
+//     }
+
+//     const cartKey = `user_cart_${userId}`;
+//     const cartSnapshot = JSON.stringify(cart);
+
+//     // Checkout keeps its own copy under the user-scoped key
+//     await AsyncStorage.setItem(cartKey, cartSnapshot);
+
+//     // Empty the shop cart so it is clear when the user comes back
+//     await AsyncStorage.removeItem('user_cart').catch(() => {});
+//     setCart({});
+//     setActiveProductId(null);
+
+//     router.push({
+//       pathname: '/checkout',
+//       params: {
+//         cartData: cartSnapshot,
+//       },
+//     });
+//   } catch {
+//     router.push('/checkout');
+//   }
+// };
 const handleProceedToCheckout = async () => {
   try {
     let userId = 'guest';
@@ -615,11 +666,13 @@ const handleProceedToCheckout = async () => {
     const cartKey = `user_cart_${userId}`;
     const cartSnapshot = JSON.stringify(cart);
 
-    // Checkout keeps its own copy under the user-scoped key
-    await AsyncStorage.setItem(cartKey, cartSnapshot);
+    // Set a flag so ShopScreen knows not to reload the cart on return
+    await AsyncStorage.setItem('just_checked_out', 'true');
 
-    // Empty the shop cart so it is clear when the user comes back
+    // Completely wipe the cart from storage
     await AsyncStorage.removeItem('user_cart').catch(() => {});
+    await AsyncStorage.removeItem(cartKey).catch(() => {});
+
     setCart({});
     setActiveProductId(null);
 
@@ -629,7 +682,7 @@ const handleProceedToCheckout = async () => {
         cartData: cartSnapshot,
       },
     });
-  } catch {
+  } catch (error) {
     router.push('/checkout');
   }
 };
@@ -803,33 +856,63 @@ const handleProceedToCheckout = async () => {
           </View>
         </View>
 
-        {/* ---------- 1-TAP POPULATE CART BANNER ---------- */}
-        {lastOrder && (
-          <TouchableOpacity
-            style={styles.reorderBannerSlim}
-            onPress={handleExecuteReorder}
-            activeOpacity={0.85}
-            disabled={reordering}
-          >
-            <View pointerEvents="none" style={styles.reorderShine} />
-            <View style={styles.reorderLeftSlim}>
-              <View style={styles.reorderBadgeSlim}>
-                <Text style={styles.reorderBadgeTextSlim}>🔄 1-Tap</Text>
-              </View>
-              <Text style={styles.reorderTitleSlim} numberOfLines={1}>
-                ያለፈውን ድገም: <Text style={styles.reorderAmountSlim}>{Number(lastOrder.totalAmount).toLocaleString()} ብር</Text> ({((lastOrder.items || []).length)} እቃዎች)
-              </Text>
+    {/* ---------- 1-TAP POPULATE CART BANNER ---------- */}
+      {lastOrder && (
+        <TouchableOpacity
+          style={{
+            backgroundColor: '#0D7C4C', // Richer, deeper green
+            borderRadius: 30, // Perfectly curvy ends
+            paddingHorizontal: 20,
+            paddingVertical: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginHorizontal: 12, // Slight margin so ends don't touch the phone edges
+            marginVertical: 6,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
+          onPress={handleExecuteReorder}
+          activeOpacity={0.85}
+          disabled={reordering}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+            {/* Icon Badge on the left */}
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20, // Circular icon badge inside
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Text style={{ fontSize: 18 }}>🔄</Text>
             </View>
 
-            <View style={styles.reorderActionBtnSlim}>
-              {reordering ? (
-                <ActivityIndicator size="small" color="#0F7B4A" />
-              ) : (
-                <Text style={styles.reorderActionTextSlim}>ቅርጫት ሙላ ›</Text>
-              )}
+            {/* Stacked Title & Amount */}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF', marginBottom: 2 }} numberOfLines={1}>
+                ያለፈውን ትእዛዝ ደግም
+              </Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: 'rgba(255, 255, 255, 0.9)' }} numberOfLines={1}>
+                {Number(lastOrder.totalAmount).toLocaleString()} ብር
+              </Text>
             </View>
-          </TouchableOpacity>
-        )}
+          </View>
+
+          {/* Action / Loading Indicator on the right */}
+          <View style={{ paddingLeft: 8 }}>
+            {reordering ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF' }}>›</Text>
+            )}
+          </View>
+        </TouchableOpacity>
+      )}
 
         {/* ---------- ADVERTISEMENT CAROUSEL (Clear & Unblurred) ---------- */}
         {activeMedia && (
@@ -1192,7 +1275,7 @@ const handleProceedToCheckout = async () => {
                 onPress={handleSaveToDraft}
                 activeOpacity={0.85}
               >
-                <Text style={styles.floatingDraftText}>ረቂቅ</Text>
+                <Text style={styles.floatingDraftText}>ረቂቅ|draft</Text>
               </TouchableOpacity>
 
               {/* <TouchableOpacity
