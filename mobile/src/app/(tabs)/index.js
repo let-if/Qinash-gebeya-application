@@ -372,7 +372,7 @@ const syncCart = async () => {
           ? Number(product.priceHalfDozen)
           : Math.round(base * 0.5);
 
-      case 'ፓኬት':
+      case 'ፍሬ':
         return product.pricePacket !== null && product.pricePacket !== undefined
           ? Number(product.pricePacket)
           : Math.round((base / 12) * 1.08);
@@ -390,10 +390,10 @@ const syncCart = async () => {
 
     if (product.allowsHalfCarton) units.push('ግማሽ ካርቶን');
     if (product.allowsHalfDozen) units.push('ግማሽ ደርዘን');
-    if (product.allowsPacket) units.push('ፓኬት');
+    if (product.allowsPacket) units.push('ፍሬ');
 
     if (units.length === 1 && !product.allowsHalfCarton && !product.allowsHalfDozen && !product.allowsPacket) {
-      units.push('ግማሽ ካርቶን', 'ፓኬት');
+      units.push('ግማሽ ካርቶን', 'ፍሬ');
     }
 
     return units;
@@ -522,7 +522,7 @@ const handleAdd = async (product) => {
         let unit = it.selectedUnit || 'ካርቶን';
         if (unit === 'HALF_CARTON') unit = 'ግማሽ ካርቶን';
         if (unit === 'HALF_DOZEN') unit = 'ግማሽ ደርዘን';
-        if (unit === 'PACK' || unit === 'PACKET') unit = 'ፓኬት';
+        if (unit === 'PACK' || unit === 'PACKET') unit = 'ፍሬ';
         if (unit === 'DOZEN') unit = 'ደርዘን';
         if (unit === 'CARTON') unit = 'ካርቶን';
 
@@ -1117,6 +1117,127 @@ const handleProceedToCheckout = async () => {
             </TouchableOpacity>
           </View>
         ) : (
+          // <View style={styles.productStack}>
+          //   {visibleProducts.map((item) => {
+          //     const defaultUnit = item.unitType === 'DOZEN' ? 'ደርዘን' : 'ካርቶን';
+          //     const currentUnit = selectedUnits[item.id] || defaultUnit;
+          //     const dynamicPrice = computeUnitPrice(item, currentUnit);
+          //     const isImageFile = item.imageUrl && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('/'));
+          //     const availableUnits = getAvailableUnitsForProduct(item);
+          //     const cartKey = `${item.id}_${currentUnit}`;
+          //     const itemCartQty = cart[cartKey]?.quantity || 0;
+          //     const isItemActive = activeProductId === item.id || itemCartQty > 0;
+
+          //     return (
+          //       <View style={styles.productCard} key={item.id}>
+          //         <View pointerEvents="none" style={styles.cardShine} />
+
+          //         <TouchableOpacity
+          //           style={styles.cardHeaderArea}
+          //           activeOpacity={0.75}
+          //           onPress={() => {
+          //             router.push({
+          //               pathname: '/product-detail',
+          //               params: { productId: item.id },
+          //             });
+          //           }}
+          //         >
+          //           <View style={styles.avatarBox}>
+          //             {isImageFile ? (
+          //               <Image
+          //                 source={{ uri: item.imageUrl }}
+          //                 style={{ width: '100%', height: '100%', borderRadius: 12 }}
+          //                 resizeMode="cover"
+          //               />
+          //             ) : (
+          //               <Text style={styles.avatarEmoji}>{item.imageUrl || '📦'}</Text>
+          //             )}
+          //           </View>
+
+          //           <View style={styles.headerInfo}>
+          //             <Text style={styles.productName} numberOfLines={1}>
+          //               {lang === 'om' ? item.nameOm || item.nameAm : item.nameAm || item.nameOm}
+          //             </Text>
+
+          //             <View style={styles.metaRow}>
+          //               <Text style={styles.priceAmount}>{dynamicPrice.toLocaleString()}</Text>
+          //               <Text style={styles.priceUnitLabel} numberOfLines={1}>
+          //                 {' '}ብር / {currentUnit}
+          //               </Text>
+
+          //               <View style={styles.stockPill}>
+          //                 <View style={styles.stockDot} />
+          //                 <Text style={styles.stockText} numberOfLines={1}>
+          //                   ክምችት: {item.currentStock ?? 50}
+          //                 </Text>
+          //               </View>
+          //             </View>
+          //           </View>
+
+          //           <View pointerEvents="none" style={styles.chevronWrap}>
+          //             <Text style={styles.chevron}>›</Text>
+          //           </View>
+          //         </TouchableOpacity>
+
+          //         <View style={styles.cardActionRow}>
+          //           <View style={styles.unitPillsRow}>
+          //             {availableUnits.map((u) => {
+          //               const isSel = currentUnit === u;
+          //               return (
+          //                 <TouchableOpacity
+          //                   key={u}
+          //                   style={[styles.unitPill, isSel && styles.unitPillActive]}
+          //                   onPress={() => handleUnitSelect(item.id, u)}
+          //                   activeOpacity={0.7}
+          //                 >
+          //                   <Text
+          //                     style={[styles.unitPillText, isSel && styles.unitPillTextActive]}
+          //                     numberOfLines={1}
+          //                   >
+          //                     {u}
+          //                   </Text>
+          //                 </TouchableOpacity>
+          //               );
+          //             })}
+          //           </View>
+
+          //           {isItemActive && itemCartQty > 0 ? (
+          //             <View style={styles.activeStepperGroup}>
+          //               <TouchableOpacity
+          //                 style={styles.stepBtn}
+          //                 onPress={() => handleUpdateCartQty(item, -1)}
+          //                 activeOpacity={0.7}
+          //               >
+          //                 <Text style={styles.stepBtnText}>−</Text>
+          //               </TouchableOpacity>
+
+          //               <View style={styles.stepQtyBox}>
+          //                 <Text style={styles.stepQtyText}>{itemCartQty}</Text>
+          //               </View>
+
+          //               <TouchableOpacity
+          //                 style={styles.stepBtn}
+          //                 onPress={() => handleUpdateCartQty(item, 1)}
+          //                 activeOpacity={0.7}
+          //               >
+          //                 <Text style={styles.stepBtnText}>+</Text>
+          //               </TouchableOpacity>
+          //             </View>
+          //           ) : (
+          //             <TouchableOpacity
+          //               style={styles.addBtn}
+          //               onPress={() => handleAdd(item)}
+          //               activeOpacity={0.85}
+          //             >
+          //               <View pointerEvents="none" style={styles.addBtnShine} />
+          //               <Text style={styles.addBtnText}>+ ጨምር</Text>
+          //             </TouchableOpacity>
+          //           )}
+          //         </View>
+          //       </View>
+          //     );
+          //   })}
+          // </View>
           <View style={styles.productStack}>
             {visibleProducts.map((item) => {
               const defaultUnit = item.unitType === 'DOZEN' ? 'ደርዘን' : 'ካርቶን';
@@ -1142,35 +1263,48 @@ const handleProceedToCheckout = async () => {
                       });
                     }}
                   >
-                    <View style={styles.avatarBox}>
+                    {/* --- ENLARGED PRODUCT IMAGE BOX --- */}
+                    {/* <View style={[styles.avatarBox, { width: 88, height: 88, borderRadius: 16 }]}>
                       {isImageFile ? (
                         <Image
                           source={{ uri: item.imageUrl }}
-                          style={{ width: '100%', height: '100%', borderRadius: 12 }}
+                          style={{ width: '100%', height: '100%', borderRadius: 16 }}
                           resizeMode="cover"
                         />
                       ) : (
-                        <Text style={styles.avatarEmoji}>{item.imageUrl || '📦'}</Text>
+                        <Text style={[styles.avatarEmoji, { fontSize: 40 }]}>{item.imageUrl || '📦'}</Text>
                       )}
-                    </View>
+                    </View> */}
+                    {/* --- ENLARGED PRODUCT IMAGE BOX --- */}
+                <View style={[styles.avatarBox, { width: 115, height: 115, borderRadius: 18 }]}>
+                  {isImageFile ? (
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={{ width: '100%', height: '100%', borderRadius: 18 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={[styles.avatarEmoji, { fontSize: 50 }]}>{item.imageUrl || '📦'}</Text>
+                  )}
+                </View>
 
-                    <View style={styles.headerInfo}>
-                      <Text style={styles.productName} numberOfLines={1}>
+                    <View style={[styles.headerInfo, { justifyContent: 'center' }]}>
+                      <Text style={[styles.productName, { fontSize: 16, marginBottom: 6 }]} numberOfLines={2}>
                         {lang === 'om' ? item.nameOm || item.nameAm : item.nameAm || item.nameOm}
                       </Text>
 
                       <View style={styles.metaRow}>
-                        <Text style={styles.priceAmount}>{dynamicPrice.toLocaleString()}</Text>
+                        <Text style={[styles.priceAmount, { fontSize: 17 }]}>{dynamicPrice.toLocaleString()}</Text>
                         <Text style={styles.priceUnitLabel} numberOfLines={1}>
                           {' '}ብር / {currentUnit}
                         </Text>
+                      </View>
 
-                        <View style={styles.stockPill}>
-                          <View style={styles.stockDot} />
-                          <Text style={styles.stockText} numberOfLines={1}>
-                            ክምችት: {item.currentStock ?? 50}
-                          </Text>
-                        </View>
+                      <View style={[styles.stockPill, { marginTop: 6 }]}>
+                        <View style={styles.stockDot} />
+                        <Text style={styles.stockText} numberOfLines={1}>
+                          ክምችት: {item.currentStock ?? 50}
+                        </Text>
                       </View>
                     </View>
 

@@ -23,12 +23,14 @@ import {
   Clock,
   Sparkles,
   Bell,
-  Navigation
+  Navigation,
+
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import api from '../api/client';
 
 const ALL_SYSTEM_TABS = [
+
   { id: 'orders', name: 'ትእዛዞች (Orders)', icon: ShoppingBag },
   { id: 'routes', name: 'የመንገድ ማስተካከያ (Smart Route)', icon: Navigation },
   { id: 'credit', name: 'የብድር ጥያቄዎች (Credit)', icon: CreditCard },
@@ -792,6 +794,7 @@ const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
           visibleNavTabs.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+          
             const count = item.id === 'orders' ? orders.length
               : item.id === 'routes' ? batchRouteOrders.length
               : item.id === 'credit' ? creditOrders.length
@@ -1033,6 +1036,7 @@ const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
 //               })
 //             )
 //           ) : null,
+
 // ==========================================
           // TAB: ORDERS
           // ==========================================
@@ -1117,10 +1121,16 @@ const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
                         '📍 አድራሻ (Google Maps)'
                       ) : null
                     ),
+                    // React.createElement(
+                    //   'div',
+                    //   { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
+                    //   React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (o.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+                    //   React.createElement('span', null, 'ቀን: ' + new Date(o.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
+                    // ),
                     React.createElement(
                       'div',
                       { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
-                      React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (o.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+                      React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (o.deliverySlot === 'BATCH_NIGHT' || o.deliverySlot === 'BATCH_6AM' ? '🌙 ማታ ከ 11 - 12 ሰዓት' : '☀️ ቀን ከ 5 - 6 ሰዓት')),
                       React.createElement('span', null, 'ቀን: ' + new Date(o.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
                     ),
                     React.createElement(
@@ -1187,45 +1197,45 @@ const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
                 React.createElement('h2', { className: 'text-sm sm:text-base font-black text-[#12241A] tracking-tight' }, 'ስማርት የመንገድ ማስተካከያ (Smart Route Optimization)'),
                 React.createElement('p', { className: 'text-xs text-[#62726A]' }, 'ለአሽከርካሪዎች እና ዲስፓቸሮች የተረጋገጡ ትእዛዞችን በጂኦግራፊያዊ ቅደም ተከተል ያቀናጅ።')
               ),
-  //             React.createElement(
-  //               'div',
-  //               { className: 'flex gap-2 w-full sm:w-auto' },
-               
-  //               React.createElement(
-  //   'button',
-  //   {
-  //     onClick: () => setSelectedRouteSlot('BATCH_6AM'),
-  //     className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_6AM' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-  //   },
-  //   '🌅 ጠዋት 12:00 (6:00 AM)'
-  // ),
-  // React.createElement(
-  //   'button',
-  //   {
-  //     onClick: () => setSelectedRouteSlot('BATCH_12PM'),
-  //     className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_12PM' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
-  //   },
-  //   '☀️ ቀትር 6:00 (12:00 PM)'
-  // )
-  //             )
-  React.createElement(
+
+//   React.createElement(
+//   'div',
+//   { className: 'flex gap-2 w-full sm:w-auto' },
+//   React.createElement(
+//     'button',
+//     {
+//       onClick: () => setSelectedRouteSlot('BATCH_6AM'),
+//       className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_6AM' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+//     },
+//     '🌅 ጠዋት 12:00 (6:00 AM)'
+//   ),
+//   React.createElement(
+//     'button',
+//     {
+//       onClick: () => setSelectedRouteSlot('BATCH_12PM'),
+//       className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_12PM' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+//     },
+//     '☀️ ቀትር 6:00 (12:00 PM)'
+//   )
+// )
+React.createElement(
   'div',
   { className: 'flex gap-2 w-full sm:w-auto' },
   React.createElement(
     'button',
     {
       onClick: () => setSelectedRouteSlot('BATCH_6AM'),
-      className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_6AM' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+      className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_6AM' || selectedRouteSlot === 'BATCH_NIGHT' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
     },
-    '🌅 ጠዋት 12:00 (6:00 AM)'
+    '🌙 ማታ ከ 11 - 12 ሰዓት'
   ),
   React.createElement(
     'button',
     {
       onClick: () => setSelectedRouteSlot('BATCH_12PM'),
-      className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_12PM' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
+      className: 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-all ' + (selectedRouteSlot === 'BATCH_12PM' || selectedRouteSlot === 'BATCH_DAY' ? 'bg-[#0F7B4A] text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
     },
-    '☀️ ቀትር 6:00 (12:00 PM)'
+    '☀️ ቀን ከ 5 - 6 ሰዓት'
   )
 )
             ),
@@ -1476,10 +1486,16 @@ const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
                       React.createElement('span', null, 'የተወሰደ: ' + used.toLocaleString() + ' ብር'),
                       React.createElement('span', { className: 'font-bold text-[#0F7B4A]' }, 'የቀረ ጣሪያ: ' + remaining.toLocaleString() + ' ብር')
                     ),
+                    // React.createElement(
+                    //   'div',
+                    //   { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
+                    //   React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (co.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+                    //   React.createElement('span', null, 'ቀን: ' + new Date(co.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
+                    // ),
                     React.createElement(
                       'div',
                       { className: 'text-xs text-[#62726A] flex flex-wrap gap-x-4 gap-y-1 font-semibold' },
-                      React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (co.deliverySlot === 'BATCH_6AM' ? '🌅 ጠዋት 12:00 (6:00 AM)' : '☀️ ቀትር 6:00 (12:00 PM)')),
+                      React.createElement('span', null, 'የማድረሻ ሰዓት: ' + (co.deliverySlot === 'BATCH_6AM' || co.deliverySlot === 'BATCH_NIGHT' ? '🌙 ማታ ከ 11 - 12 ሰዓት' : '☀️ ቀን ከ 5 - 6 ሰዓት')),
                       React.createElement('span', null, 'ቀን: ' + new Date(co.createdAt).toLocaleDateString('am-ET', { timeZone: 'Africa/Addis_Ababa' }))
                     ),
                     React.createElement(
@@ -1668,12 +1684,12 @@ const [creditSearchQuery, setCreditSearchQuery] = React.useState('');
                         onChange: (e) => setProdForm({ ...prodForm, allowsPacket: e.target.checked }),
                         className: 'h-4 w-4 rounded text-[#0F7B4A] focus:ring-[#0F7B4A]'
                       }),
-                      React.createElement('span', null, 'ፓኬት / ቁራጭ (Packet / Piece)')
+                      React.createElement('span', null, 'ፍሬ / ቁራጭ (Packet / Piece)')
                     ),
                     prodForm.allowsPacket ? React.createElement('input', {
                       type: 'number',
                       inputMode: 'decimal',
-                      placeholder: 'የአንድ ፓኬት ዋጋ (ብር)',
+                      placeholder: 'የአንድ ፍሬ ዋጋ (ብር)',
                       value: prodForm.pricePacket,
                       onChange: (e) => setProdForm({ ...prodForm, pricePacket: e.target.value }),
                       className: inputBase + ' font-bold'
@@ -2784,7 +2800,7 @@ React.createElement(
                 checked: editingProduct.allowsPacket,
                 onChange: (e) => setEditingProduct({ ...editingProduct, allowsPacket: e.target.checked })
               }),
-              React.createElement('span', { className: 'text-xs font-bold w-24 sm:w-28 shrink-0' }, 'ፓኬት / ቁራጭ'),
+              React.createElement('span', { className: 'text-xs font-bold w-24 sm:w-28 shrink-0' }, 'ፍሬ / ቁራጭ'),
               React.createElement('input', {
                 type: 'number',
                 inputMode: 'decimal',

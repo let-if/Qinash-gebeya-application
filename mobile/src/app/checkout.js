@@ -4443,7 +4443,16 @@ export default function CheckoutScreen() {
       });
       return;
     }
-
+const parsedKm = Number(numericKm);
+    if (!distanceKm || isNaN(parsedKm) || parsedKm <= 0) {
+      setAlertConfig({
+        visible: true,
+        title: 'መገኛ አልተገኘም! 📍',
+        message: 'እባክዎ ትእዛዝ ከመላክዎ በፊት "የሱቄን መገኛ ፈልግ" የሚለውን በመጫን የመላኪያ ርቀትዎን ያስሉ።',
+        type: 'error',
+      });
+      return;
+    }
     setSubmitting(true);
     const isOnline = await checkIsDeviceOnline();
 
@@ -4470,11 +4479,24 @@ export default function CheckoutScreen() {
         unitPrice: Number(item.price),
       }));
 
+      // const res = await apiRequest('/orders', {
+      //   method: 'POST',
+      //   token,
+      //   body: {
+      //     deliverySlot: slot,
+      //     isCreditOrder: Boolean(isCredit && canOrderOnCredit),
+      //     latitude: gpsLocation.latitude,
+      //     longitude: gpsLocation.longitude,
+      //     deliveryFee: Number(deliveryFee),
+      //     distanceKm: Number(numericKm),
+      //     items: payload,
+      //   },
+      // }
       const res = await apiRequest('/orders', {
         method: 'POST',
         token,
         body: {
-          deliverySlot: slot,
+          deliverySlot: slot === 'BATCH_NIGHT' || slot === 'BATCH_6AM' ? 'BATCH_6AM' : 'BATCH_12PM', // <--- GUARANTEES backend compliance!
           isCreditOrder: Boolean(isCredit && canOrderOnCredit),
           latitude: gpsLocation.latitude,
           longitude: gpsLocation.longitude,
@@ -4483,16 +4505,20 @@ export default function CheckoutScreen() {
           items: payload,
         },
       });
+    
 
       const orderData = res?.order || res;
       const orderId = orderData?.id || `${Math.floor(1000 + Math.random() * 9000)}`;
       const orderNumber = String(orderId).slice(-4).toUpperCase();
 
-      const slotTimeText =
-        slot === 'BATCH_6AM'
-          ? 'ጠዋት 6:00 ሰዓት'
-          : 'ቀትር 12:00 ሰዓት';
-
+      // const slotTimeText =
+      //   slot === 'BATCH_6AM'
+      //     ? 'ቀትር  6:00 ሰዓት'
+      //     : 'ተዋት 12:00 ሰዓት';
+const slotTimeText =
+  slot === 'BATCH_DAY'
+    ? 'ቀን ከ 5 - 6 ሰዓት'
+    : 'ማታ ከ 11 - 12 ሰዓት';
       await AsyncStorage.removeItem(`user_cart_${currentUserId}`);
       setCart({});
 
@@ -4855,7 +4881,7 @@ export default function CheckoutScreen() {
               </View>
 
               <View style={[styles.slotRow, dyn.slotRow]}>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={[
                     styles.slotPill,
                     dyn.slotPill,
@@ -4894,6 +4920,48 @@ export default function CheckoutScreen() {
                     numberOfLines={1}
                   >
                     ☀️ 12:00 ሰዓት (ተዋት)
+                  </Text>
+                </TouchableOpacity>
+              </View> */}
+              <TouchableOpacity
+                  style={[
+                    styles.slotPill,
+                    dyn.slotPill,
+                    slot === 'BATCH_DAY' && styles.slotPillActive,
+                  ]}
+                  onPress={() => setSlot('BATCH_DAY')}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.slotPillText,
+                      dyn.slotPillText,
+                      slot === 'BATCH_DAY' && styles.slotPillTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    ☀️ ቀን ከ 5 - 6 ሰዓት
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.slotPill,
+                    dyn.slotPill,
+                    slot === 'BATCH_NIGHT' && styles.slotPillActive,
+                  ]}
+                  onPress={() => setSlot('BATCH_NIGHT')}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.slotPillText,
+                      dyn.slotPillText,
+                      slot === 'BATCH_NIGHT' && styles.slotPillTextActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    🌙 ማታ ከ 11 - 12 ሰዓት
                   </Text>
                 </TouchableOpacity>
               </View>

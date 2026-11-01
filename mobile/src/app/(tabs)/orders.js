@@ -145,12 +145,21 @@ export default function OrdersScreen() {
     }
   };
 
-  const getSlotLabel = (slot) => {
-    return slot === 'BATCH_12PM'
-      ? '🌅 ቀትር 6:00 (12:00 PM ዙር)'
-      : '☀️ ተዋት 12፡00 (6:00 AM  ዙር)';
+  // const getSlotLabel = (slot) => {
+  //   return slot === 'BATCH_12PM'
+  //     ? '🌅 ቀትር 6:00 (12:00 PM ዙር)'
+  //     : '☀️ ተዋት 12፡00 (6:00 AM  ዙር)';
+  // };
+const getSlotLabel = (slot) => {
+    if (slot === 'BATCH_DAY' || slot === 'BATCH_12PM') {
+      return '☀️ ቀን ከ 5 - 6 ሰዓት';
+    }
+    if (slot === 'BATCH_NIGHT' || slot === 'BATCH_6AM') {
+      return '🌙 ማታ ከ 11 - 12 ሰዓት';
+    }
+    // ማንኛውም ሌላ ካለ ነባሪውን እንሰጣለን
+    return slot || '☀️ ቀን ከ 5 - 6 ሰዓት';
   };
-
   if (loading && !refreshing) {
     return (
       <View style={styles.center}>

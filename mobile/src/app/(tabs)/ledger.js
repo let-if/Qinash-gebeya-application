@@ -1802,7 +1802,7 @@ export default function LedgerScreen() {
                           .toUpperCase()}
                       </Text>
 
-                      <Text
+                      {/* <Text
                         style={[
                           styles.orderDateText,
                           dyn.orderDateText,
@@ -1813,7 +1813,19 @@ export default function LedgerScreen() {
                         {ord.deliverySlot === 'BATCH_6AM'
                           ? '🌅 ጠዋት 12:00'
                           : '☀️ ቀትር 6:00'}
-                      </Text>
+                      </Text> */}
+                      <Text
+  style={[
+    styles.orderDateText,
+    dyn.orderDateText,
+  ]}
+  numberOfLines={1}
+>
+  {dateStr} ·{' '}
+  {ord.deliverySlot === 'BATCH_NIGHT' || ord.deliverySlot === 'BATCH_6AM'
+    ? '🌙 ማታ ከ 11 - 12 ሰዓት'
+    : '☀️ ቀን ከ 5 - 6 ሰዓት'}
+</Text>
                     </View>
 
                     {/* 3-Stage Badges */}

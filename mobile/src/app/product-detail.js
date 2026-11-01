@@ -145,7 +145,7 @@ export default function ProductDetailScreen() {
           ? Number(prod.priceHalfDozen)
           : Math.round(base * 0.5);
 
-      case 'ፓኬት':
+      case 'ፍሬ':
         return prod.pricePacket !== null && prod.pricePacket !== undefined
           ? Number(prod.pricePacket)
           : Math.round((base / 12) * 1.08);
@@ -183,15 +183,15 @@ export default function ProductDetailScreen() {
 
     if (prod.allowsPacket) {
       tiers.push({
-        unit: 'ፓኬት',
-        price: computePrice(prod, 'ፓኬት'),
+        unit: 'ፍሬ',
+        price: computePrice(prod, 'ፍሬ'),
       });
     }
 
     if (tiers.length === 1 && !prod.allowsHalfCarton && !prod.allowsHalfDozen && !prod.allowsPacket) {
       tiers.push(
         { unit: 'ግማሽ ካርቶን', price: computePrice(prod, 'ግማሽ ካርቶን') },
-        { unit: 'ፓኬት', price: computePrice(prod, 'ፓኬት') }
+        { unit: 'ፍሬ', price: computePrice(prod, 'ፍሬ') }
       );
     }
 
